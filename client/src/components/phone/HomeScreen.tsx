@@ -76,33 +76,54 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
             })}
           </div>
           
-          {/* Quick Actions Dock */}
-          <div className="absolute bottom-8 left-6 right-6 bg-surface-dark/50 backdrop-blur-md rounded-samsung p-4">
-            <div className="flex justify-around items-center">
-              <button 
-                className="oneui-button p-3 rounded-full bg-samsung-blue/20"
-                data-testid="quick-flashlight"
-              >
-                <Flashlight className="w-5 h-5 text-samsung-blue" />
-              </button>
-              <button 
-                className="oneui-button p-3 rounded-full bg-samsung-blue/20"
-                data-testid="quick-wifi"
-              >
-                <Wifi className="w-5 h-5 text-samsung-blue" />
-              </button>
-              <button 
-                className="oneui-button p-3 rounded-full bg-samsung-blue/20"
-                data-testid="quick-bluetooth"
-              >
-                <Bluetooth className="w-5 h-5 text-samsung-blue" />
-              </button>
-              <button 
-                className="oneui-button p-3 rounded-full bg-samsung-blue/20"
-                data-testid="quick-airplane"
-              >
-                <Plane className="w-5 h-5 text-samsung-blue" />
-              </button>
+          {/* Professional Dock - One UI Style */}
+          <div className="absolute bottom-6 left-4 right-4">
+            <div className="bg-black/60 backdrop-blur-xl rounded-[32px] px-6 py-4 border border-white/10">
+              <div className="flex justify-between items-center">
+                <button 
+                  className="oneui-button flex flex-col items-center space-y-1"
+                  onClick={() => onAppOpen('contacts')}
+                  data-testid="dock-contacts"
+                >
+                  <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="text-white text-[10px] font-medium">Contacts</span>
+                </button>
+                
+                <button 
+                  className="oneui-button flex flex-col items-center space-y-1"
+                  onClick={() => onAppOpen('banking')}
+                  data-testid="dock-bank"
+                >
+                  <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
+                    <CreditCard className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="text-white text-[10px] font-medium">Bank</span>
+                </button>
+                
+                <button 
+                  className="oneui-button flex flex-col items-center space-y-1"
+                  onClick={() => onAppOpen('camera')}
+                  data-testid="dock-camera"
+                >
+                  <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-gray-600 to-slate-700 shadow-lg">
+                    <Camera className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="text-white text-[10px] font-medium">Camera</span>
+                </button>
+                
+                <button 
+                  className="oneui-button flex flex-col items-center space-y-1"
+                  onClick={() => onAppOpen('settings')}
+                  data-testid="dock-settings"
+                >
+                  <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg">
+                    <Settings className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="text-white text-[10px] font-medium">Settings</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

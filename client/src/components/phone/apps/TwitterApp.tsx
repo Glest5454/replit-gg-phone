@@ -52,7 +52,7 @@ export const TwitterApp = ({ onBack }: TwitterAppProps) => {
   return (
     <div className="absolute inset-0 bg-oneui-dark flex flex-col">
       {/* App Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
+      <div className="flex items-center justify-between p-4 border-b border-white/10 mt-2">
         <button 
           className="oneui-button p-2 -ml-2" 
           onClick={onBack}

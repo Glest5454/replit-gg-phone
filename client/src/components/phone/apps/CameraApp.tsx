@@ -17,7 +17,7 @@ export const CameraApp = ({ onBack }: CameraAppProps) => {
   return (
     <div className="absolute inset-0 bg-black flex flex-col">
       {/* Camera Header */}
-      <div className="flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent relative z-10">
+      <div className="flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent relative z-10 mt-2">
         <button 
           className="oneui-button p-2" 
           onClick={onBack}

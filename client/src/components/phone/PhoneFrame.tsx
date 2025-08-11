@@ -59,12 +59,20 @@ export const PhoneFrame = () => {
 
   return (
     <div className="relative">
-      {/* Phone Frame */}
-      <div className="phone-frame rounded-samsung w-80 h-[640px] p-2 relative">
-        {/* Screen Container */}
-        <div className="screen-content rounded-samsung w-full h-full relative overflow-hidden">
+      {/* Phone Frame using background image */}
+      <div 
+        className="relative w-96 h-[720px]"
+        style={{
+          backgroundImage: `url('/attached_assets/frame_1754954620163.png')`,
+          backgroundSize: 'contain',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center'
+        }}
+      >
+        {/* Screen Container positioned within the frame */}
+        <div className="absolute top-6 left-6 right-6 bottom-6 bg-black rounded-[32px] overflow-hidden">
           <StatusBar />
-          <div className="w-full h-full">
+          <div className="w-full h-full pt-10">
             {renderCurrentScreen()}
           </div>
         </div>

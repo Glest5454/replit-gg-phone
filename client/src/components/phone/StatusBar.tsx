@@ -23,7 +23,7 @@ export const StatusBar = () => {
   }, []);
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-50 px-6 py-3 flex justify-between items-center text-white bg-gradient-to-b from-black/50 to-transparent">
+    <div className="absolute top-0 left-0 right-0 z-50 px-6 py-2 h-10 flex justify-between items-center text-white bg-gradient-to-b from-black/50 to-transparent">
       <div className="flex items-center space-x-1">
         <span className="text-sm font-medium" data-testid="status-time">{currentTime}</span>
       </div>

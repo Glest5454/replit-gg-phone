@@ -1,4 +1,5 @@
-import { ArrowLeft, Search, Moon, Sun, Volume2, Smartphone, MapPin, Shield, HardDrive, Info, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Search, Moon, Sun, Volume2, Smartphone, MapPin, Shield, HardDrive, Info, ChevronRight, Globe } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface SettingsAppProps {
   onBack: () => void;
@@ -7,10 +8,48 @@ interface SettingsAppProps {
 }
 
 export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) => {
+  const [brightness, setBrightness] = useState(75);
+  const [language, setLanguage] = useState('English');
+  const [showBrightnessSlider, setShowBrightnessSlider] = useState(false);
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+
+  const languages = [
+    { code: 'en', name: 'English' },
+    { code: 'tr', name: 'Türkçe' },
+    { code: 'es', name: 'Español' },
+    { code: 'fr', name: 'Français' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'zh', name: '中文' },
+    { code: 'ja', name: '日本語' },
+  ];
+
+  useEffect(() => {
+    const savedBrightness = localStorage.getItem('phone-brightness');
+    const savedLanguage = localStorage.getItem('phone-language');
+    
+    if (savedBrightness) setBrightness(parseInt(savedBrightness));
+    if (savedLanguage) setLanguage(savedLanguage);
+  }, []);
+
+  const handleBrightnessChange = (value: number) => {
+    setBrightness(value);
+    localStorage.setItem('phone-brightness', value.toString());
+    // Apply brightness effect to the phone screen
+    const screen = document.querySelector('.screen-content') as HTMLElement;
+    if (screen) {
+      screen.style.filter = `brightness(${value}%)`;
+    }
+  };
+
+  const handleLanguageChange = (newLanguage: string) => {
+    setLanguage(newLanguage);
+    localStorage.setItem('phone-language', newLanguage);
+    setShowLanguageSelector(false);
+  };
   return (
     <div className="absolute inset-0 bg-oneui-dark flex flex-col">
       {/* App Header */}
-      <div className="flex items-center justify-between p-6 border-b border-white/10">
+      <div className="flex items-center justify-between p-6 border-b border-white/10 mt-2">
         <button 
           className="oneui-button p-2 -ml-2" 
           onClick={onBack}
@@ -70,14 +109,64 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
             
             <button 
               className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
+              onClick={() => setShowBrightnessSlider(!showBrightnessSlider)}
               data-testid="brightness-settings"
             >
               <div className="flex items-center space-x-3">
                 <Sun className="w-5 h-5 text-samsung-blue" />
                 <span className="text-white">Brightness</span>
               </div>
-              <span className="text-white/60">Auto</span>
+              <span className="text-white/60">{brightness}%</span>
             </button>
+            
+            {showBrightnessSlider && (
+              <div className="p-4 bg-surface-dark/20 rounded-samsung-sm mb-3 ml-8">
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={brightness}
+                  onChange={(e) => handleBrightnessChange(parseInt(e.target.value))}
+                  className="w-full h-2 bg-white/20 rounded-lg appearance-none brightness-slider"
+                  data-testid="brightness-slider"
+                />
+                <div className="flex justify-between text-xs text-white/60 mt-2">
+                  <span>10%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+            )}
+            
+            <button 
+              className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
+              onClick={() => setShowLanguageSelector(!showLanguageSelector)}
+              data-testid="language-settings"
+            >
+              <div className="flex items-center space-x-3">
+                <Globe className="w-5 h-5 text-samsung-blue" />
+                <span className="text-white">Language</span>
+              </div>
+              <span className="text-white/60">{language}</span>
+            </button>
+            
+            {showLanguageSelector && (
+              <div className="p-2 bg-surface-dark/20 rounded-samsung-sm mb-3 ml-8 max-h-48 overflow-y-auto">
+                {languages.map((lang) => (
+                  <button
+                    key={lang.code}
+                    className={`oneui-button w-full text-left p-3 rounded-lg mb-1 transition-colors ${
+                      language === lang.name 
+                        ? 'bg-samsung-blue text-white' 
+                        : 'text-white/80 hover:bg-white/10'
+                    }`}
+                    onClick={() => handleLanguageChange(lang.name)}
+                    data-testid={`language-${lang.code}`}
+                  >
+                    {lang.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           
           {/* Sound Settings */}
