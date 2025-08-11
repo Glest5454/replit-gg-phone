@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(210 25% 7.8431%);
+  --card: hsl(180 6.6667% 97.0588%);
+  --card-foreground: hsl(210 25% 7.8431%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(210 25% 7.8431%);
+  --primary: hsl(203.8863 88.2845% 53.1373%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(210 25% 7.8431%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(240 1.9608% 90%);
+  --muted-foreground: hsl(210 25% 7.8431%);
+  --accent: hsl(211.5789 51.3514% 92.7451%);
+  --accent-foreground: hsl(203.8863 88.2845% 53.1373%);
+  --destructive: hsl(356.3033 90.5579% 54.3137%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(201.4286 30.4348% 90.9804%);
+  --input: hsl(200 23.0769% 97.4510%);
+  --ring: hsl(202.8169 89.1213% 53.1373%);
+  
+  /* Samsung One UI Colors */
+  --samsung-blue: hsl(203 100% 50%);
+  --samsung-green: hsl(145 65% 53%);
+  --oneui-dark: hsl(220 10% 11%);
+  --oneui-light: hsl(210 20% 97%);
+  --surface-dark: hsl(220 10% 17%);
+  --surface-light: hsl(0 0% 100%);
+  --text-primary-dark: hsl(0 0% 100%);
+  --text-primary-light: hsl(220 10% 11%);
+  --text-secondary-dark: hsl(0 0% 60%);
+  --text-secondary-light: hsl(220 10% 40%);
+  
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --radius: 22px;
+  --radius-sm: 12px;
+}
+
+.dark {
+  --background: hsl(220 10% 11%);
+  --foreground: hsl(0 0% 100%);
+  --card: hsl(220 10% 17%);
+  --card-foreground: hsl(0 0% 100%);
+  --popover: hsl(220 10% 11%);
+  --popover-foreground: hsl(0 0% 100%);
+  --primary: hsl(203 100% 50%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(210 20% 97%);
+  --secondary-foreground: hsl(220 10% 11%);
+  --muted: hsl(220 10% 15%);
+  --muted-foreground: hsl(0 0% 60%);
+  --accent: hsl(220 30% 8%);
+  --accent-foreground: hsl(203 100% 50%);
+  --destructive: hsl(356.3033 90.5579% 54.3137%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(220 10% 20%);
+  --input: hsl(220 15% 18%);
+  --ring: hsl(203 100% 50%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .phone-frame {
+    background: linear-gradient(145deg, hsl(220 10% 17%), hsl(220 10% 11%));
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  
+  .screen-content {
+    background: hsl(220 10% 11%);
+    overflow: hidden;
+  }
+  
+  .oneui-button {
+    transition: all 0.2s ease-out;
+    transform: scale(1);
+  }
+  
+  .oneui-button:hover {
+    transform: scale(1.05);
+  }
+  
+  .oneui-button:active {
+    transform: scale(0.95);
+  }
+  
+  .app-icon {
+    background: linear-gradient(135deg, var(--samsung-blue) 0%, hsl(245 60% 60%) 100%);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  
+  .samsung-button {
+    @apply oneui-button bg-samsung-blue text-white font-medium rounded-[var(--radius)] px-6 py-3 transition-all duration-200;
+  }
+  
+  .samsung-button:hover {
+    @apply bg-samsung-blue/90;
+  }
+}
+
+@layer utilities {
+  .samsung-gradient {
+    background: linear-gradient(135deg, var(--samsung-blue) 0%, hsl(245 60% 60%) 100%);
+  }
+  
+  .oneui-slide {
+    animation: oneui-slide 0.3s ease-out;
+  }
+  
+  .oneui-fade {
+    animation: oneui-fade 0.3s ease-out;
+  }
+  
+  .pulse-slow {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes oneui-slide {
+  from { 
+    transform: translateX(100%); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateX(0); 
+    opacity: 1; 
+  }
+}
+
+@keyframes oneui-fade {
+  from { 
+    opacity: 0; 
+    transform: scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samsung Galaxy S25 Phone</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            background: transparent;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        #phone-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            height: 640px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #phone-container.visible {
+            opacity: 1;
+        }
+
+        .phone-frame {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-radius: 22px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+            padding: 8px;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #react-root {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Loading styles */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #333;
+            border-top: 4px solid #007aff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        
+        * {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="phone-container">
+        <div class="phone-frame">
+            <div class="phone-screen">
+                <div id="react-root">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading Phone...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // NUI Communication
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+            
+            if (data.action === 'openPhone') {
+                document.getElementById('phone-container').classList.add('visible');
+                if (window.ReactApp) {
+                    window.ReactApp.openPhone(data.data);
+                }
+            } else if (data.action === 'closePhone') {
+                document.getElementById('phone-container').classList.remove('visible');
+                if (window.ReactApp) {
+                    window.ReactApp.closePhone();
+                }
+            } else {
+                // Forward other messages to React app
+                if (window.ReactApp) {
+                    window.ReactApp.handleMessage(data);
+                }
+            }
+        });
+
+        // Send message to FiveM
+        function sendNUIMessage(data) {
+            fetch(`https://${GetParentResourceName()}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=UTF-8',
+                },
+                body: JSON.stringify(data)
+            });
+        }
+
+        // Make sendNUIMessage globally available
+        window.sendNUIMessage = sendNUIMessage;
+
+        // Close phone on ESC
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                sendNUIMessage({
+                    action: 'closePhone'
+                });
+            }
+        });
+
+        // Prevent context menu
+        document.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+        });
+
+        // Disable text selection
+        document.addEventListener('selectstart', (event) => {
+            event.preventDefault();
+        });
+    </script>
+</body>
+</html>
