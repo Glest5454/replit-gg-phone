@@ -199,3 +199,57 @@
   border: 2px solid white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
+
+/* Phone Theme Classes */
+.phone-screen.phone-dark-mode {
+  background: hsl(220 10% 11%);
+}
+
+.phone-screen.phone-light-mode {
+  background: hsl(210 20% 97%);
+}
+
+.phone-screen.phone-dark-mode .bg-oneui-dark {
+  background: hsl(220 10% 11%);
+}
+
+.phone-screen.phone-light-mode .bg-oneui-dark {
+  background: hsl(210 20% 97%);
+}
+
+.phone-screen.phone-dark-mode .text-white {
+  color: white;
+}
+
+.phone-screen.phone-light-mode .text-white {
+  color: hsl(220 10% 11%);
+}
+
+.phone-screen.phone-dark-mode .border-white\/10 {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.phone-screen.phone-light-mode .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Language-specific content */
+.phone-screen[data-language="turkish"] .settings-title::after {
+  content: "Ayarlar";
+}
+
+.phone-screen[data-language="turkish"] .dark-mode-label::after {
+  content: "Karanlık Mod";
+}
+
+.phone-screen[data-language="turkish"] .brightness-label::after {
+  content: "Parlaklık";
+}
+
+.phone-screen[data-language="turkish"] .language-label::after {
+  content: "Dil";
+}
+
+.phone-screen[data-language="turkish"] .wallpaper-label::after {
+  content: "Arkaplan";
+}

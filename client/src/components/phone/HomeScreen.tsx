@@ -42,7 +42,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
   return (
     <div className="absolute inset-0">
       {/* Background */}
-      <div className="h-full relative bg-gradient-to-br from-blue-900 via-purple-900 to-blue-800">
+      <div className="home-screen-bg h-full relative bg-gradient-to-br from-blue-900 via-purple-900 to-blue-800">
         <div 
           className="absolute inset-0 opacity-20"
           style={{

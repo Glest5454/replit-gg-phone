@@ -10,34 +10,46 @@ interface SettingsAppProps {
 export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) => {
   const [brightness, setBrightness] = useState(75);
   const [language, setLanguage] = useState('English');
+  const [wallpaper, setWallpaper] = useState('default');
   const [showBrightnessSlider, setShowBrightnessSlider] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  const [showWallpaperSelector, setShowWallpaperSelector] = useState(false);
 
   const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'tr', name: 'Türkçe' },
-    { code: 'es', name: 'Español' },
-    { code: 'fr', name: 'Français' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'zh', name: '中文' },
-    { code: 'ja', name: '日本語' },
+    { code: 'en', name: 'English', label: 'English' },
+    { code: 'tr', name: 'Türkçe', label: 'Turkish' },
+    { code: 'es', name: 'Español', label: 'Spanish' },
+    { code: 'fr', name: 'Français', label: 'French' },
+    { code: 'de', name: 'Deutsch', label: 'German' },
+    { code: 'zh', name: '中文', label: 'Chinese' },
+    { code: 'ja', name: '日本語', label: 'Japanese' },
+  ];
+
+  const wallpapers = [
+    { id: 'default', name: 'Default Blue', preview: 'bg-gradient-to-br from-blue-900 via-purple-900 to-blue-800' },
+    { id: 'sunset', name: 'Sunset', preview: 'bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600' },
+    { id: 'ocean', name: 'Ocean', preview: 'bg-gradient-to-br from-blue-400 via-cyan-500 to-teal-600' },
+    { id: 'forest', name: 'Forest', preview: 'bg-gradient-to-br from-green-600 via-emerald-500 to-teal-500' },
+    { id: 'space', name: 'Space', preview: 'bg-gradient-to-br from-purple-900 via-blue-900 to-black' },
+    { id: 'aurora', name: 'Aurora', preview: 'bg-gradient-to-br from-green-400 via-blue-500 to-purple-600' },
   ];
 
   useEffect(() => {
     const savedBrightness = localStorage.getItem('phone-brightness');
     const savedLanguage = localStorage.getItem('phone-language');
+    const savedWallpaper = localStorage.getItem('phone-wallpaper');
     
     if (savedBrightness) setBrightness(parseInt(savedBrightness));
     if (savedLanguage) setLanguage(savedLanguage);
+    if (savedWallpaper) setWallpaper(savedWallpaper);
   }, []);
 
   const handleBrightnessChange = (value: number) => {
     setBrightness(value);
     localStorage.setItem('phone-brightness', value.toString());
-    // Apply brightness effect to the phone screen
-    const screen = document.querySelector('.screen-content') as HTMLElement;
-    if (screen) {
-      screen.style.filter = `brightness(${value}%)`;
+    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
+    if (phoneScreen) {
+      phoneScreen.style.filter = `brightness(${value}%)`;
     }
   };
 
@@ -45,6 +57,41 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
     setLanguage(newLanguage);
     localStorage.setItem('phone-language', newLanguage);
     setShowLanguageSelector(false);
+    
+    // Apply language changes to the phone interface
+    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
+    if (phoneScreen) {
+      phoneScreen.setAttribute('data-language', newLanguage.toLowerCase());
+    }
+  };
+
+  const handleWallpaperChange = (newWallpaper: string) => {
+    setWallpaper(newWallpaper);
+    localStorage.setItem('phone-wallpaper', newWallpaper);
+    setShowWallpaperSelector(false);
+    
+    // Apply wallpaper changes
+    const homeScreens = document.querySelectorAll('.home-screen-bg') as NodeListOf<HTMLElement>;
+    homeScreens.forEach(screen => {
+      const selectedWallpaper = wallpapers.find(w => w.id === newWallpaper);
+      if (selectedWallpaper) {
+        screen.className = `home-screen-bg h-full relative ${selectedWallpaper.preview}`;
+      }
+    });
+  };
+
+  const handleThemeToggle = () => {
+    onToggleTheme();
+    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
+    if (phoneScreen) {
+      if (theme === 'dark') {
+        phoneScreen.classList.remove('phone-dark-mode');
+        phoneScreen.classList.add('phone-light-mode');
+      } else {
+        phoneScreen.classList.remove('phone-light-mode');
+        phoneScreen.classList.add('phone-dark-mode');
+      }
+    }
   };
   return (
     <div className="absolute inset-0 bg-oneui-dark flex flex-col">
@@ -91,7 +138,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
             
             <button 
               className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
-              onClick={onToggleTheme}
+              onClick={handleThemeToggle}
               data-testid="toggle-theme"
             >
               <div className="flex items-center space-x-3">
@@ -165,6 +212,43 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
                     {lang.name}
                   </button>
                 ))}
+              </div>
+            )}
+            
+            <button 
+              className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
+              onClick={() => setShowWallpaperSelector(!showWallpaperSelector)}
+              data-testid="wallpaper-settings"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-5 h-5 rounded-sm bg-gradient-to-br from-blue-500 to-purple-600 border border-white/20"></div>
+                <span className="text-white">Wallpaper</span>
+              </div>
+              <span className="text-white/60">{wallpapers.find(w => w.id === wallpaper)?.name || 'Default'}</span>
+            </button>
+            
+            {showWallpaperSelector && (
+              <div className="p-2 bg-surface-dark/20 rounded-samsung-sm mb-3 ml-8">
+                <div className="grid grid-cols-2 gap-3">
+                  {wallpapers.map((wp) => (
+                    <button
+                      key={wp.id}
+                      className={`oneui-button relative overflow-hidden rounded-lg transition-all ${
+                        wallpaper === wp.id 
+                          ? 'ring-2 ring-samsung-blue' 
+                          : 'hover:ring-1 hover:ring-white/30'
+                      }`}
+                      onClick={() => handleWallpaperChange(wp.id)}
+                      data-testid={`wallpaper-${wp.id}`}
+                    >
+                      <div className={`h-16 w-full ${wp.preview} flex items-center justify-center`}>
+                        <span className="text-white text-xs font-medium bg-black/50 px-2 py-1 rounded">
+                          {wp.name}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
