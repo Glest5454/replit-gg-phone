@@ -300,7 +300,7 @@ export const appsConfig: AppConfig[] = [
     order: 10,
     screen: 'yellowpages',
     description: 'Business directory and contacts',
-    version: '1.0.0',
+    version: '1.1.0',
     permissions: ['location'],
     settings: {
       hasSettings: true,
