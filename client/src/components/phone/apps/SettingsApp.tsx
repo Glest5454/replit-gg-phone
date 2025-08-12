@@ -1,17 +1,21 @@
-import { ArrowLeft, Search, Moon, Sun, Volume2, Smartphone, MapPin, Shield, HardDrive, Info, ChevronRight, Globe, Check } from 'lucide-react';
+import { ArrowLeft, Search, Moon, Sun, Volume2, Smartphone, MapPin, Shield, HardDrive, Info, ChevronRight, Globe, Check, Bell } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useLanguage, type Language } from '@/hooks/useLanguage';
+import { useNotifications } from '@/utils/notifications';
 
 interface SettingsAppProps {
   onBack: () => void;
   onToggleTheme: () => void;
   theme: 'light' | 'dark';
+  setWallpaper: (wallpaper: string) => void;
+  setBrightness: (brightness: number) => void;
 }
 
-export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) => {
+export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBrightness }: SettingsAppProps) => {
   const { language, setLanguage: setAppLanguage, t } = useLanguage();
-  const [brightness, setBrightness] = useState(75);
-  const [wallpaper, setWallpaper] = useState('default');
+  const { showInfo, showSuccess, showWarning, showError, showMessageNotification, showCallNotification } = useNotifications();
+  const [brightness, setBrightnessLocal] = useState(75);
+  const [wallpaper, setWallpaperLocal] = useState('default');
   const [showBrightnessSlider, setShowBrightnessSlider] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [showWallpaperSelector, setShowWallpaperSelector] = useState(false);
@@ -39,54 +43,34 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
     const savedWallpaper = localStorage.getItem('phone-wallpaper');
     const savedLockEnabled = localStorage.getItem('phone-lock-enabled');
     const savedCustomPin = localStorage.getItem('phone-custom-pin');
+    const savedLanguage = localStorage.getItem('phone-language');
     
-    if (savedBrightness) setBrightness(parseInt(savedBrightness));
-    if (savedWallpaper) setWallpaper(savedWallpaper);
+    if (savedBrightness) setBrightnessLocal(parseInt(savedBrightness));
+    if (savedWallpaper) setWallpaperLocal(savedWallpaper);
     if (savedLockEnabled) setIsLockEnabled(savedLockEnabled === 'true');
     if (savedCustomPin) setCustomPin(savedCustomPin);
-  }, []);
+    if (savedLanguage) setAppLanguage(savedLanguage as Language);
+  }, [setAppLanguage]);
 
   const handleBrightnessChange = (value: number) => {
-    setBrightness(value);
-    localStorage.setItem('phone-brightness', value.toString());
-    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
-    if (phoneScreen) {
-      phoneScreen.style.filter = `brightness(${value}%)`;
-    }
+    setBrightnessLocal(value);
+    setBrightness(value); // This will save to localStorage via usePhone hook
   };
 
   const handleLanguageChange = (newLanguage: Language) => {
     setAppLanguage(newLanguage);
+    localStorage.setItem('phone-language', newLanguage);
     setShowLanguageSelector(false);
   };
 
   const handleWallpaperChange = (newWallpaper: string) => {
-    setWallpaper(newWallpaper);
-    localStorage.setItem('phone-wallpaper', newWallpaper);
+    setWallpaperLocal(newWallpaper);
+    setWallpaper(newWallpaper); // This will save to localStorage via usePhone hook
     setShowWallpaperSelector(false);
-    
-    // Apply wallpaper changes
-    const homeScreens = document.querySelectorAll('.home-screen-bg') as NodeListOf<HTMLElement>;
-    homeScreens.forEach(screen => {
-      const selectedWallpaper = wallpapers.find(w => w.id === newWallpaper);
-      if (selectedWallpaper) {
-        screen.className = `home-screen-bg h-full relative ${selectedWallpaper.preview}`;
-      }
-    });
   };
 
   const handleThemeToggle = () => {
     onToggleTheme();
-    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
-    if (phoneScreen) {
-      if (theme === 'dark') {
-        phoneScreen.classList.remove('phone-dark-mode');
-        phoneScreen.classList.add('phone-light-mode');
-      } else {
-        phoneScreen.classList.remove('phone-light-mode');
-        phoneScreen.classList.add('phone-dark-mode');
-      }
-    }
   };
 
   const handleLockToggle = () => {
@@ -112,6 +96,17 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
   const handlePinDelete = () => {
     setNewPin(newPin.slice(0, -1));
   };
+
+  // Test notification functions
+  const testNotifications = () => {
+    showInfo('Test Info', 'This is an info notification', 'system', { duration: 3000 }); // 3 saniye
+   /* setTimeout(() => showSuccess('Test Success', 'Operation completed successfully', 'banking', { duration: 4000 }), 1000); // 4 saniye
+    setTimeout(() => showWarning('Test Warning', 'Please check your settings', 'settings', { duration: 5000 }), 2000); // 5 saniye
+    setTimeout(() => showError('Test Error', 'Something went wrong', 'system', { duration: 6000 }), 3000); // 6 saniye
+    setTimeout(() => showMessageNotification('John Doe', 'Hey, are you online?', { duration: 7000 }), 4000); // 7 saniye
+    setTimeout(() => showCallNotification('Jane Smith', { duration: 8000 }), 5000); // 8 saniye*/
+  };
+
   return (
     <div className="absolute inset-0 settings-background flex flex-col">
       {/* App Header */}
@@ -150,6 +145,23 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
         
         {/* Settings Groups */}
         <div className="px-6 py-4">
+          
+          {/* Notification Testing Section */}
+          <div className="mb-6">
+            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">Notification Testing</h4>
+            
+            <button 
+              className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
+              onClick={testNotifications}
+              data-testid="test-notifications"
+            >
+              <div className="flex items-center space-x-3">
+                <Bell className="w-5 h-5 text-samsung-blue" />
+                <span className="text-white">Test All Notifications</span>
+              </div>
+              <span className="text-white/60">Tap to test</span>
+            </button>
+          </div>
           
           {/* Display Settings */}
           <div className="mb-6">

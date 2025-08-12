@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import PhonePage from "@/pages/phone";
-import { LanguageProvider } from "@/hooks/useLanguage";
+import { NotificationProvider } from "@/context/NotificationContext";
+import { LanguageProvider } from "./hooks/useLanguage";
 
 function Router() {
   return (
@@ -19,12 +20,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </LanguageProvider>
+      <NotificationProvider>
+        <LanguageProvider >
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </LanguageProvider>
+      </NotificationProvider>
     </QueryClientProvider>
   );
 }

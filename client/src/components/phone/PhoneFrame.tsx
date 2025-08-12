@@ -1,4 +1,5 @@
 import { usePhone } from '@/hooks/usePhone';
+import framePng from '@assets/frame.png';
 import { useEffect } from 'react';
 import { StatusBar } from './StatusBar';
 import { LockScreen } from './LockScreen';
@@ -14,52 +15,33 @@ import { SpotifyApp } from './apps/SpotifyApp';
 import { ClockApp } from './apps/ClockApp';
 import { YellowPagesApp } from './apps/YellowPagesApp';
 import { ContactsApp } from './apps/ContactsApp';
+import { NotificationManager } from './NotificationManager';
 
 export const PhoneFrame = () => {
-  const { phoneState, navigateToScreen, goBack, addPinDigit, deletePinDigit, toggleTheme } = usePhone();
+  const { 
+    phoneState, 
+    navigateToScreen, 
+    goBack, 
+    addPinDigit, 
+    deletePinDigit, 
+    toggleTheme,
+    setWallpaper,
+    setBrightness
+  } = usePhone();
 
   useEffect(() => {
-    // Initialize saved settings on phone load
-    const savedTheme = localStorage.getItem('phone-theme') as 'light' | 'dark' | null;
-    const savedBrightness = localStorage.getItem('phone-brightness');
-    const savedWallpaper = localStorage.getItem('phone-wallpaper');
-    
+    // Apply saved settings on phone load
     const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
     
     if (phoneScreen) {
       // Apply saved theme
-      if (savedTheme) {
-        phoneScreen.classList.add(savedTheme === 'dark' ? 'phone-dark-mode' : 'phone-light-mode');
-      } else {
-        phoneScreen.classList.add('phone-dark-mode'); // Default to dark
-      }
+      phoneScreen.classList.remove('phone-dark-mode', 'phone-light-mode');
+      phoneScreen.classList.add(phoneState.theme === 'dark' ? 'phone-dark-mode' : 'phone-light-mode');
       
       // Apply saved brightness
-      if (savedBrightness) {
-        phoneScreen.style.filter = `brightness(${savedBrightness}%)`;
-      }
+      phoneScreen.style.filter = `brightness(${phoneState.brightness}%)`;
     }
-    
-    // Apply saved wallpaper
-    if (savedWallpaper) {
-      const wallpapers = [
-        { id: 'default', preview: 'bg-gradient-to-br from-blue-900 via-purple-900 to-blue-800' },
-        { id: 'sunset', preview: 'bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600' },
-        { id: 'ocean', preview: 'bg-gradient-to-br from-blue-400 via-cyan-500 to-teal-600' },
-        { id: 'forest', preview: 'bg-gradient-to-br from-green-600 via-emerald-500 to-teal-500' },
-        { id: 'space', preview: 'bg-gradient-to-br from-purple-900 via-blue-900 to-black' },
-        { id: 'aurora', preview: 'bg-gradient-to-br from-green-400 via-blue-500 to-purple-600' },
-      ];
-      
-      const homeScreens = document.querySelectorAll('.home-screen-bg') as NodeListOf<HTMLElement>;
-      homeScreens.forEach(screen => {
-        const selectedWallpaper = wallpapers.find(w => w.id === savedWallpaper);
-        if (selectedWallpaper) {
-          screen.className = `home-screen-bg h-full relative ${selectedWallpaper.preview}`;
-        }
-      });
-    }
-  }, []);
+  }, [phoneState.theme, phoneState.brightness]);
 
   const renderCurrentScreen = () => {
     switch (phoneState.currentScreen) {
@@ -79,7 +61,7 @@ export const PhoneFrame = () => {
       case 'twitter':
         return <TwitterApp onBack={goBack} />;
       case 'settings':
-        return <SettingsApp onBack={goBack} onToggleTheme={toggleTheme} theme={phoneState.theme} />;
+        return <SettingsApp onBack={goBack} onToggleTheme={toggleTheme} theme={phoneState.theme} setWallpaper={setWallpaper} setBrightness={setBrightness} />;
       case 'calculator':
         return <CalculatorApp onBack={goBack} />;
       case 'camera':
@@ -105,21 +87,27 @@ export const PhoneFrame = () => {
     <div className="relative">
       {/* Phone Frame using background image */}
       <div 
-        className="relative w-96 h-[720px]"
+        className="relative w-[380px] h-[750px]"
         style={{
-          backgroundImage: `url('/attached_assets/frame_1754954620163.png')`,
+          backgroundImage: `url(${framePng})`,
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center'
         }}
       >
         {/* Screen Container positioned within the frame */}
-        <div className="phone-screen absolute top-6 left-6 right-6 bottom-6 bg-black rounded-[32px] overflow-hidden">
+        <div className="phone-screen 
+        absolute top-10 left-7 right-8 bottom-4
+         bg-black rounded-[45px] 
+         overflow-hidden">
           <StatusBar />
           <div className="w-full h-full pt-10">
             {renderCurrentScreen()}
           </div>
         </div>
+        
+        {/* Notifications appear above the phone screen */}
+        <NotificationManager />
       </div>
     </div>
   );

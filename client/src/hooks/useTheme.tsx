@@ -11,11 +11,17 @@ export const useTheme = () => {
     const savedBrightness = localStorage.getItem('phone-brightness');
     const savedLanguage = localStorage.getItem('phone-language');
     const savedWallpaper = localStorage.getItem('phone-wallpaper');
-    
+    const savedLightDarkMode = localStorage.getItem('phone-light-dark-mode');
     if (savedTheme) setTheme(savedTheme);
     if (savedBrightness) setBrightness(parseInt(savedBrightness));
     if (savedLanguage) setLanguage(savedLanguage);
     if (savedWallpaper) setWallpaper(savedWallpaper);
+    if (savedLightDarkMode) {
+      const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
+      if (phoneScreen) {
+        phoneScreen.classList.add(savedLightDarkMode === 'light' ? 'phone-light-mode' : 'phone-dark-mode');
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -32,7 +38,7 @@ export const useTheme = () => {
       }
     }
   }, [theme]);
-
+  
   useEffect(() => {
     localStorage.setItem('phone-brightness', brightness.toString());
     const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;

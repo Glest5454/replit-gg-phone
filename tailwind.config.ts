@@ -80,6 +80,8 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "oneui-slide": "oneui-slide 0.3s ease-out",
+        "oneui-slide-up": "oneui-slide-up 0.3s ease-out",
+        "oneui-slide-down": "oneui-slide-down 0.3s ease-out",
         "oneui-fade": "oneui-fade 0.3s ease-out",
         "pulse-slow": "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
@@ -108,6 +110,26 @@ export default {
           to: {
             transform: "translateX(0)",
             opacity: "1",
+          },
+        },
+        "oneui-slide-up": {
+          from: {
+            opacity: "0",
+            transform: "translateY(20px)",
+          },
+          to: {
+            opacity: "1",
+            transform:"translateY(0)"
+          },
+        },
+        "oneui-slide-down": {
+          from: {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
+          to: {
+            opacity: "0",
+            transform: "translateY(20px)",
           },
         },
         "oneui-fade": {

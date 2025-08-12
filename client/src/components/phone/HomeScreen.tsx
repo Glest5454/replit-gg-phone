@@ -1,147 +1,114 @@
 import { 
-  MessageCircle, 
-  Phone, 
-  Camera, 
-  Settings, 
+  Users, 
   CreditCard, 
-  Twitter, 
-  Calculator, 
-  Images, 
-  StickyNote, 
-  Music, 
-  Clock, 
-  Book, 
-  Users,
-  Flashlight,
-  Wifi,
-  Bluetooth,
-  Plane
-} from 'lucide-react';
+  Camera as CameraIcon,
+  Settings,
+  Calculator,
+  Images,
+  Music,
+  Clock,
+  NotepadTextDashed
+  } from 'lucide-react';
+import contactsPng from '@apps/contacts.png';
+import settingsPng from '@apps/settings.png';
+import notesPng from '@apps/notes.png';
+import bankingPng from '@apps/mail.png';
+import cameraPng from '@apps/camera.png';
+import birdyPng from '@apps/birdy.png';
+import whatsappPng from '@apps/whatsapp.png';
 import type { Screen } from '@/hooks/usePhone';
+import { usePhone } from '@/hooks/usePhone';
 import { useLanguage } from '@/hooks/useLanguage';
+import { getTranslatedApps } from '@/config/apps';
 
 interface HomeScreenProps {
   onAppOpen: (screen: Screen) => void;
 }
 
-const apps = [
-  { id: 'contacts', name: 'Messages', icon: MessageCircle, color: 'from-purple-500 to-pink-500', screen: 'contacts' as Screen },
-  { id: 'phone', name: 'Phone', icon: Phone, color: 'from-green-500 to-emerald-500', screen: 'contacts' as Screen },
-  { id: 'camera', name: 'Camera', icon: Camera, color: 'from-gray-500 to-slate-500', screen: 'camera' as Screen },
-  { id: 'settings', name: 'Settings', icon: Settings, color: 'from-blue-500 to-purple-500', screen: 'settings' as Screen },
-  { id: 'banking', name: 'Bank', icon: CreditCard, color: 'from-pink-500 to-red-500', screen: 'banking' as Screen },
-  { id: 'twitter', name: 'Twitter', icon: Twitter, color: 'from-blue-400 to-blue-600', screen: 'twitter' as Screen },
-  { id: 'calculator', name: 'Calculator', icon: Calculator, color: 'from-cyan-400 to-blue-500', screen: 'calculator' as Screen },
-  { id: 'gallery', name: 'Gallery', icon: Images, color: 'from-yellow-400 to-orange-500', screen: 'gallery' as Screen },
-  { id: 'notes', name: 'Notes', icon: StickyNote, color: 'from-orange-300 to-yellow-500', screen: 'notes' as Screen },
-  { id: 'spotify', name: 'Spotify', icon: Music, color: 'from-green-500 to-green-600', screen: 'spotify' as Screen },
-  { id: 'clock', name: 'Clock', icon: Clock, color: 'from-indigo-500 to-purple-500', screen: 'clock' as Screen },
-  { id: 'yellowpages', name: 'Yellow Pages', icon: Book, color: 'from-yellow-400 to-teal-400', screen: 'yellowpages' as Screen },
-];
+// Not currently used but kept for future manual grid overrides
+const apps = [] as const;
 
 export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
   const { t } = useLanguage();
-
-  const translatedApps = [
-    { id: 'contacts', name: t('contacts', 'homeScreen'), icon: MessageCircle, color: 'from-purple-500 to-pink-500', screen: 'contacts' as Screen },
-    { id: 'phone', name: 'Phone', icon: Phone, color: 'from-green-500 to-emerald-500', screen: 'contacts' as Screen },
-    { id: 'camera', name: t('camera', 'homeScreen'), icon: Camera, color: 'from-gray-500 to-slate-500', screen: 'camera' as Screen },
-    { id: 'settings', name: t('settings', 'common'), icon: Settings, color: 'from-blue-500 to-purple-500', screen: 'settings' as Screen },
-    { id: 'banking', name: t('bank', 'homeScreen'), icon: CreditCard, color: 'from-pink-500 to-red-500', screen: 'banking' as Screen },
-    { id: 'twitter', name: t('twitter', 'homeScreen'), icon: Twitter, color: 'from-blue-400 to-blue-600', screen: 'twitter' as Screen },
-    { id: 'calculator', name: t('calculator', 'homeScreen'), icon: Calculator, color: 'from-cyan-400 to-blue-500', screen: 'calculator' as Screen },
-    { id: 'gallery', name: t('gallery', 'homeScreen'), icon: Images, color: 'from-yellow-400 to-orange-500', screen: 'gallery' as Screen },
-    { id: 'notes', name: t('notes', 'homeScreen'), icon: StickyNote, color: 'from-orange-300 to-yellow-500', screen: 'notes' as Screen },
-    { id: 'spotify', name: t('music', 'homeScreen'), icon: Music, color: 'from-green-500 to-green-600', screen: 'spotify' as Screen },
-    { id: 'clock', name: t('clock', 'homeScreen'), icon: Clock, color: 'from-indigo-500 to-purple-500', screen: 'clock' as Screen },
-    { id: 'yellowpages', name: 'Yellow Pages', icon: Book, color: 'from-yellow-400 to-teal-400', screen: 'yellowpages' as Screen },
-  ];
+  const { phoneState } = usePhone();
+  
+  // Get apps with translated names based on current language
+  const apps = getTranslatedApps(t('language', 'common') || 'en');
 
   return (
-    <div className="absolute inset-0">
-      {/* Background */}
-      <div className="home-screen-bg h-full relative bg-gradient-to-br from-blue-900 via-purple-900 to-blue-800">
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1557683316-973673baf926?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=1200')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        />
-        
-        {/* Home Indicator */}
-        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-white/50 rounded-full" />
-        
-        {/* App Grid */}
-        <div className="pt-16 px-6 h-full overflow-y-auto">
-          <div className="grid grid-cols-4 gap-6 mb-8">
-            {translatedApps.map((app) => {
-              const IconComponent = app.icon;
-              return (
-                <button
-                  key={app.id}
-                  className="oneui-button flex flex-col items-center space-y-2"
-                  onClick={() => onAppOpen(app.screen)}
-                  data-testid={`app-${app.id}`}
-                >
-                  <div className={`w-14 h-14 rounded-samsung-sm flex items-center justify-center bg-gradient-to-br ${app.color} shadow-lg`}>
-                    <IconComponent className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="home-screen-text text-xs font-medium text-center">{app.name}</span>
-                </button>
-              );
-            })}
-          </div>
-          
-          {/* Professional Dock - One UI Style */}
-          <div className="absolute bottom-6 left-4 right-4">
-            <div className="dock-app bg-black/60 backdrop-blur-xl rounded-[32px] px-6 py-4 border border-white/10">
-              <div className="flex justify-between items-center">
-                <button 
-                  className="oneui-button flex flex-col items-center space-y-1"
-                  onClick={() => onAppOpen('contacts')}
-                  data-testid="dock-contacts"
-                >
-                  <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg">
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="home-screen-text text-[10px] font-medium">{t('contacts', 'homeScreen')}</span>
-                </button>
-                
-                <button 
-                  className="oneui-button flex flex-col items-center space-y-1"
-                  onClick={() => onAppOpen('banking')}
-                  data-testid="dock-bank"
-                >
-                  <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
-                    <CreditCard className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="home-screen-text text-[10px] font-medium">{t('bank', 'homeScreen')}</span>
-                </button>
-                
-                <button 
-                  className="oneui-button flex flex-col items-center space-y-1"
-                  onClick={() => onAppOpen('camera')}
-                  data-testid="dock-camera"
-                >
-                  <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-gray-600 to-slate-700 shadow-lg">
-                    <Camera className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="home-screen-text text-[10px] font-medium">{t('camera', 'homeScreen')}</span>
-                </button>
-                
-                <button 
-                  className="oneui-button flex flex-col items-center space-y-1"
-                  onClick={() => onAppOpen('settings')}
-                  data-testid="dock-settings"
-                >
-                  <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg">
-                    <Settings className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="home-screen-text text-[10px] font-medium">{t('settings', 'common')}</span>
-                </button>
+    <div className="absolute inset-0 home-background flex flex-col">
+      {/* App Grid */}
+      <div className="pt-16 px-6 h-full overflow-y-auto">
+        <div className="grid grid-cols-4 gap-6 mb-8">
+          {apps.map((app) => (
+            <button
+              key={app.id}
+              onClick={() => onAppOpen(app.screen as Screen)}
+              className="flex flex-col items-center space-y-2 group"
+            >
+              <div className={`w-14 h-14 rounded-[18px] flex items-center justify-center shadow-lg ${
+                app.iconType === 'lucide' 
+                  ? `bg-gradient-to-br ${app.color}` 
+                  : 'bg-black/20'
+              }`}>
+                {app.iconType === 'png' ? (
+                  <img src={app.icon as string} alt={app.name} className="w-12 h-12 object-contain" />
+                ) : (
+                  <app.icon className="w-10 h-10 text-white" /> 
+                )}
               </div>
+              <span className="home-screen-text text-xs font-medium text-center text-white">{app.translatedName}</span>
+            </button>
+          ))}
+        </div>
+        
+        {/* Professional Dock - One UI Style */}
+        <div className="absolute bottom-10 left-4 right-4">
+          <div className="dock-app bg-black/60 backdrop-blur-xl rounded-[32px] px-6 py-4 border border-white/10">
+            <div className="flex justify-between items-center">
+              <button 
+                className="oneui-button flex flex-col items-center space-y-1"
+                onClick={() => onAppOpen('contacts')}
+                data-testid="dock-contacts"
+              >
+                <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <span className="home-screen-text text-[10px] font-medium">{t('contacts', 'homeScreen')}</span>
+              </button>
+              
+              <button 
+                className="oneui-button flex flex-col items-center space-y-1"
+                onClick={() => onAppOpen('banking')}
+                data-testid="dock-bank"
+              >
+                <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
+                  <CreditCard className="w-6 h-6 text-white" />
+                </div>
+                <span className="home-screen-text text-[10px] font-medium">{t('bank', 'homeScreen')}</span>
+              </button>
+              
+              <button 
+                className="oneui-button flex flex-col items-center space-y-1"
+                onClick={() => onAppOpen('camera')}
+                data-testid="dock-camera"
+              >
+                <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-gray-600 to-slate-700 shadow-lg">
+                  <CameraIcon className="w-6 h-6 text-white" />
+                </div>
+                <span className="home-screen-text text-[10px] font-medium">{t('camera', 'homeScreen')}</span>
+              </button>
+              
+              <button 
+                className="oneui-button flex flex-col items-center space-y-1"
+                onClick={() => onAppOpen('settings')}
+                data-testid="dock-settings"
+              >
+                <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg">
+                  <Settings className="w-6 h-6 text-white" />
+                </div>
+                <span className="home-screen-text text-[10px] font-medium">{t('settings', 'common')}</span>
+              </button>
             </div>
           </div>
         </div>

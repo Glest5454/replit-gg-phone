@@ -139,6 +139,17 @@
     opacity: 1; 
   }
 }
+/* One UI animations */
+@keyframes oneui-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 @keyframes oneui-fade {
   from { 
@@ -415,6 +426,11 @@
 
 /* Home Screen and Status Bar - Keep white text in light mode */
 .phone-screen.phone-light-mode .status-bar-text {
+  color: white !important;
+}
+
+/* Home Screen and Status Bar - Keep white text in light mode */
+.phone-screen.phone-dark-mode .status-bar-text {
   color: white !important;
 }
 

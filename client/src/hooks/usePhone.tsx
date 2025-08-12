@@ -21,6 +21,8 @@ export interface PhoneState {
   pin: string;
   notifications: Notification[];
   theme: 'light' | 'dark';
+  wallpaper: string;
+  brightness: number;
 }
 
 export interface Notification {
@@ -34,8 +36,11 @@ export interface Notification {
 
 export const usePhone = () => {
   const [phoneState, setPhoneState] = useState<PhoneState>(() => {
-    // Check if lock screen is enabled
+    // Load all saved settings from localStorage
     const isLockEnabled = localStorage.getItem('phone-lock-enabled') === 'true';
+    const savedTheme = localStorage.getItem('phone-theme') as 'light' | 'dark' | null;
+    const savedWallpaper = localStorage.getItem('phone-wallpaper') || 'default';
+    const savedBrightness = localStorage.getItem('phone-brightness');
     
     return {
       currentScreen: isLockEnabled ? 'lock' : 'home',
@@ -51,10 +56,12 @@ export const usePhone = () => {
           icon: 'message'
         }
       ],
-      theme: 'dark'
+      theme: savedTheme || 'dark',
+      wallpaper: savedWallpaper,
+      brightness: savedBrightness ? parseInt(savedBrightness) : 75
     };
   });
-
+  
   const navigateToScreen = useCallback((screen: Screen) => {
     setPhoneState(prev => ({
       ...prev,
@@ -116,10 +123,37 @@ export const usePhone = () => {
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setPhoneState(prev => ({
-      ...prev,
-      theme: prev.theme === 'light' ? 'dark' : 'light'
-    }));
+    setPhoneState(prev => {
+      const newTheme = prev.theme === 'light' ? 'dark' : 'light';
+      // Save to localStorage
+      localStorage.setItem('phone-theme', newTheme);
+      return {
+        ...prev,
+        theme: newTheme
+      };
+    });
+  }, []);
+
+  const setWallpaper = useCallback((wallpaper: string) => {
+    setPhoneState(prev => {
+      // Save to localStorage
+      localStorage.setItem('phone-wallpaper', wallpaper);
+      return {
+        ...prev,
+        wallpaper
+      };
+    });
+  }, []);
+
+  const setBrightness = useCallback((brightness: number) => {
+    setPhoneState(prev => {
+      // Save to localStorage
+      localStorage.setItem('phone-brightness', brightness.toString());
+      return {
+        ...prev,
+        brightness
+      };
+    });
   }, []);
 
   return {
@@ -130,6 +164,8 @@ export const usePhone = () => {
     lock,
     addPinDigit,
     deletePinDigit,
-    toggleTheme
+    toggleTheme,
+    setWallpaper,
+    setBrightness
   };
 };
