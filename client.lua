@@ -1,18 +1,46 @@
-local QBCore = nil
-local ESX = nil
+-- Samsung Galaxy S25 Phone Script - Client Side
+local QBCore = exports['qb-core']:GetCoreObject()
 
--- Framework Detection
-if Config.Framework == "qb-core" then
-    QBCore = exports['qb-core']:GetCoreObject()
-elseif Config.Framework == "esx" then
-    ESX = exports["es_extended"]:getSharedObject()
-end
-
--- Variables
 local phoneOpen = false
 local phoneData = {}
-local playerData = {}
-local currentCall = nil
+
+-- Phone UI Functions
+function OpenPhone()
+    if not phoneOpen then
+        phoneOpen = true
+        SetNuiFocus(true, true)
+        SendNUIMessage({
+            action = 'openPhone',
+            playerData = QBCore.Functions.GetPlayerData()
+        })
+        
+        -- Load initial data
+        TriggerServerEvent('gg-phone:server:getNotes')
+        TriggerServerEvent('gg-phone:server:getContacts')
+        TriggerServerEvent('gg-phone:server:getTransactions')
+    end
+end
+
+function ClosePhone()
+    if phoneOpen then
+        phoneOpen = false
+        SetNuiFocus(false, false)
+        SendNUIMessage({
+            action = 'closePhone'
+        })
+    end
+end
+
+-- Keybind to open phone
+RegisterCommand('phone', function()
+    if not phoneOpen then
+        OpenPhone()
+    else
+        ClosePhone()
+    end
+end)
+
+RegisterKeyMapping('phone', 'Open Phone', 'keyboard', 'F1')
 
 -- NUI Callbacks
 RegisterNUICallback('closePhone', function(data, cb)
@@ -20,386 +48,388 @@ RegisterNUICallback('closePhone', function(data, cb)
     cb('ok')
 end)
 
-RegisterNUICallback('getPhoneData', function(data, cb)
-    local playerData = GetPlayerData()
-    cb({
-        citizenId = playerData.citizenid or playerData.identifier,
-        phoneNumber = playerData.charinfo and playerData.charinfo.phone or playerData.phone,
-        name = GetPlayerName()
-    })
-end)
-
--- Contacts
-RegisterNUICallback('getContacts', function(data, cb)
-    TriggerServerEvent('phone:server:getContacts')
-    cb('ok')
-end)
-
-RegisterNUICallback('addContact', function(data, cb)
-    TriggerServerEvent('phone:server:addContact', data)
-    cb('ok')
-end)
-
-RegisterNUICallback('deleteContact', function(data, cb)
-    TriggerServerEvent('phone:server:deleteContact', data.id)
-    cb('ok')
-end)
-
-RegisterNUICallback('updateContact', function(data, cb)
-    TriggerServerEvent('phone:server:updateContact', data)
-    cb('ok')
-end)
-
--- Messages
-RegisterNUICallback('getMessages', function(data, cb)
-    TriggerServerEvent('phone:server:getMessages')
-    cb('ok')
-end)
-
-RegisterNUICallback('sendMessage', function(data, cb)
-    TriggerServerEvent('phone:server:sendMessage', data)
-    cb('ok')
-end)
-
-RegisterNUICallback('markMessageRead', function(data, cb)
-    TriggerServerEvent('phone:server:markMessageRead', data.id)
-    cb('ok')
-end)
-
--- Phone Calls
-RegisterNUICallback('startCall', function(data, cb)
-    local phoneNumber = data.phoneNumber
-    TriggerServerEvent('phone:server:startCall', phoneNumber)
-    cb('ok')
-end)
-
-RegisterNUICallback('endCall', function(data, cb)
-    TriggerServerEvent('phone:server:endCall')
-    cb('ok')
-end)
-
-RegisterNUICallback('acceptCall', function(data, cb)
-    TriggerServerEvent('phone:server:acceptCall')
-    cb('ok')
-end)
-
-RegisterNUICallback('declineCall', function(data, cb)
-    TriggerServerEvent('phone:server:declineCall')
-    cb('ok')
-end)
-
--- Banking
-RegisterNUICallback('getBankAccount', function(data, cb)
-    TriggerServerEvent('phone:server:getBankAccount')
-    cb('ok')
-end)
-
-RegisterNUICallback('getTransactions', function(data, cb)
-    TriggerServerEvent('phone:server:getTransactions')
-    cb('ok')
-end)
-
-RegisterNUICallback('bankTransfer', function(data, cb)
-    TriggerServerEvent('phone:server:bankTransfer', data)
-    cb('ok')
-end)
-
+-- Banking Callbacks
 RegisterNUICallback('bankDeposit', function(data, cb)
-    TriggerServerEvent('phone:server:bankDeposit', data)
+    TriggerServerEvent('gg-phone:server:deposit', data.amount, data.description)
     cb('ok')
 end)
 
 RegisterNUICallback('bankWithdraw', function(data, cb)
-    TriggerServerEvent('phone:server:bankWithdraw', data)
+    TriggerServerEvent('gg-phone:server:withdraw', data.amount, data.description)
     cb('ok')
 end)
 
--- Twitter/Warble
-RegisterNUICallback('getTweets', function(data, cb)
-    TriggerServerEvent('phone:server:getTweets', data)
+RegisterNUICallback('bankTransfer', function(data, cb)
+    TriggerServerEvent('gg-phone:server:transfer', data.targetAccount, data.amount, data.description)
     cb('ok')
 end)
 
-RegisterNUICallback('postTweet', function(data, cb)
-    TriggerServerEvent('phone:server:postTweet', data)
+-- Notes Callbacks
+RegisterNUICallback('createNote', function(data, cb)
+    TriggerServerEvent('gg-phone:server:createNote', data.title, data.content, data.color)
     cb('ok')
 end)
 
-RegisterNUICallback('likeTweet', function(data, cb)
-    TriggerServerEvent('phone:server:likeTweet', data.id)
-    cb('ok')
-end)
-
-RegisterNUICallback('retweetTweet', function(data, cb)
-    TriggerServerEvent('phone:server:retweetTweet', data.id)
-    cb('ok')
-end)
-
--- Notes
-RegisterNUICallback('getNotes', function(data, cb)
-    TriggerServerEvent('phone:server:getNotes')
-    cb('ok')
-end)
-
-RegisterNUICallback('saveNote', function(data, cb)
-    TriggerServerEvent('phone:server:saveNote', data)
+RegisterNUICallback('updateNote', function(data, cb)
+    TriggerServerEvent('gg-phone:server:updateNote', data.id, data.title, data.content, data.color)
     cb('ok')
 end)
 
 RegisterNUICallback('deleteNote', function(data, cb)
-    TriggerServerEvent('phone:server:deleteNote', data.id)
+    TriggerServerEvent('gg-phone:server:deleteNote', data.id)
     cb('ok')
 end)
 
--- Camera & Gallery
-RegisterNUICallback('takePhoto', function(data, cb)
-    TriggerServerEvent('phone:server:takePhoto')
+-- Contacts Callbacks
+RegisterNUICallback('addContact', function(data, cb)
+    TriggerServerEvent('gg-phone:server:addContact', data.name, data.phoneNumber)
     cb('ok')
 end)
 
-RegisterNUICallback('getPhotos', function(data, cb)
-    TriggerServerEvent('phone:server:getPhotos')
+RegisterNUICallback('callContact', function(data, cb)
+    TriggerServerEvent('gg-phone:server:startCall', data.phoneNumber)
     cb('ok')
 end)
 
-RegisterNUICallback('deletePhoto', function(data, cb)
-    TriggerServerEvent('phone:server:deletePhoto', data.id)
+RegisterNUICallback('endCall', function(data, cb)
+    TriggerServerEvent('gg-phone:server:endCall')
     cb('ok')
 end)
 
--- Yellow Pages
-RegisterNUICallback('searchBusinesses', function(data, cb)
-    TriggerServerEvent('phone:server:searchBusinesses', data)
+-- Messages Callbacks
+RegisterNUICallback('sendMessage', function(data, cb)
+    TriggerServerEvent('gg-phone:server:sendMessage', data.targetNumber, data.message)
     cb('ok')
 end)
 
-RegisterNUICallback('registerBusiness', function(data, cb)
-    TriggerServerEvent('phone:server:registerBusiness', data)
+RegisterNUICallback('getMessages', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getMessages', data.targetNumber)
     cb('ok')
 end)
 
--- Settings
-RegisterNUICallback('updateSettings', function(data, cb)
-    TriggerServerEvent('phone:server:updateSettings', data)
+RegisterNUICallback('getAllMessages', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getAllMessages')
     cb('ok')
 end)
 
--- Functions
-function GetPlayerData()
-    if Config.Framework == "qb-core" then
-        return QBCore.Functions.GetPlayerData()
-    elseif Config.Framework == "esx" then
-        return ESX.GetPlayerData()
-    end
-    return {}
-end
-
-function OpenPhone()
-    if phoneOpen then return end
-    
-    local playerData = GetPlayerData()
-    if not playerData then return end
-
-    phoneOpen = true
-    SetNuiFocus(true, true)
-    SendNUIMessage({
-        action = "openPhone",
-        data = {
-            citizenId = playerData.citizenid or playerData.identifier,
-            phoneNumber = playerData.charinfo and playerData.charinfo.phone or playerData.phone,
-            name = GetPlayerName(),
-            settings = Config.DefaultSettings
-        }
-    })
-
-    -- Animation
-    CreateThread(function()
-        local ped = PlayerPedId()
-        local phoneModel = GetHashKey("prop_phone_01")
-        
-        RequestModel(phoneModel)
-        while not HasModelLoaded(phoneModel) do
-            Wait(100)
-        end
-
-        local phone = CreateObject(phoneModel, 0, 0, 0, true, true, true)
-        AttachEntityToEntity(phone, ped, GetPedBoneIndex(ped, 57005), 0.14, 0.01, -0.02, 110.0, 120.0, -15.0, true, true, false, true, 1, true)
-        
-        -- Store phone object for cleanup
-        phoneData.phoneObject = phone
-    end)
-end
-
-function ClosePhone()
-    if not phoneOpen then return end
-    
-    phoneOpen = false
-    SetNuiFocus(false, false)
-    SendNUIMessage({
-        action = "closePhone"
-    })
-
-    -- Clean up phone object
-    if phoneData.phoneObject then
-        DeleteObject(phoneData.phoneObject)
-        phoneData.phoneObject = nil
-    end
-end
-
--- Events from Server
-RegisterNetEvent('phone:client:updateContacts', function(contacts)
-    SendNUIMessage({
-        action = "updateContacts",
-        data = contacts
-    })
+-- Twitter Callbacks
+RegisterNUICallback('twitterRegister', function(data, cb)
+    TriggerServerEvent('gg-phone:server:twitterRegister', data.username, data.email, data.password, data.displayName)
+    cb('ok')
 end)
 
-RegisterNetEvent('phone:client:updateMessages', function(messages)
-    SendNUIMessage({
-        action = "updateMessages",
-        data = messages
-    })
+RegisterNUICallback('twitterLogin', function(data, cb)
+    TriggerServerEvent('gg-phone:server:twitterLogin', data.username, data.password)
+    cb('ok')
 end)
 
-RegisterNetEvent('phone:client:newMessage', function(message)
-    SendNUIMessage({
-        action = "newMessage",
-        data = message
-    })
-    
-    -- Show notification
-    if Config.PhoneSettings.enableNotifications then
-        SendNUIMessage({
-            action = "showNotification",
-            data = {
-                title = "New Message",
-                message = message.message,
-                sender = message.senderName,
-                icon = "message"
-            }
-        })
-    end
+RegisterNUICallback('postTweet', function(data, cb)
+    TriggerServerEvent('gg-phone:server:postTweet', data.content, data.imageUrl, data.location)
+    cb('ok')
 end)
 
-RegisterNetEvent('phone:client:incomingCall', function(callerData)
-    currentCall = callerData
-    SendNUIMessage({
-        action = "incomingCall",
-        data = callerData
-    })
+RegisterNUICallback('getTweets', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getTweets')
+    cb('ok')
 end)
 
-RegisterNetEvent('phone:client:callAccepted', function()
-    SendNUIMessage({
-        action = "callAccepted"
-    })
+RegisterNUICallback('likeTweet', function(data, cb)
+    TriggerServerEvent('gg-phone:server:likeTweet', data.tweetId)
+    cb('ok')
 end)
 
-RegisterNetEvent('phone:client:callEnded', function()
-    currentCall = nil
-    SendNUIMessage({
-        action = "callEnded"
-    })
+RegisterNUICallback('retweetTweet', function(data, cb)
+    TriggerServerEvent('gg-phone:server:retweetTweet', data.tweetId)
+    cb('ok')
 end)
 
-RegisterNetEvent('phone:client:updateBankAccount', function(account)
+RegisterNUICallback('updateTwitterProfile', function(data, cb)
+    TriggerServerEvent('gg-phone:server:updateTwitterProfile', data.displayName, data.bio, data.avatar)
+    cb('ok')
+end)
+
+RegisterNUICallback('changeTwitterPassword', function(data, cb)
+    TriggerServerEvent('gg-phone:server:changeTwitterPassword', data.currentPassword, data.newPassword)
+    cb('ok')
+end)
+
+RegisterNUICallback('twitterLogout', function(data, cb)
+    TriggerServerEvent('gg-phone:server:twitterLogout')
+    cb('ok')
+end)
+
+-- Mail Callbacks
+RegisterNUICallback('createMailAccount', function(data, cb)
+    TriggerServerEvent('gg-phone:server:createMailAccount', data.email, data.password, data.displayName)
+    cb('ok')
+end)
+
+RegisterNUICallback('sendMail', function(data, cb)
+    TriggerServerEvent('gg-phone:server:sendMail', data.receiverEmail, data.subject, data.content)
+    cb('ok')
+end)
+
+-- Server Event Handlers
+RegisterNetEvent('gg-phone:client:transactionSuccess')
+AddEventHandler('gg-phone:client:transactionSuccess', function(transaction)
     SendNUIMessage({
-        action = "updateBankAccount",
-        data = account
+        action = 'transactionSuccess',
+        transaction = transaction
+    })
+    QBCore.Functions.Notify('Transaction completed successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:transactionError')
+AddEventHandler('gg-phone:client:transactionError', function(error)
+    SendNUIMessage({
+        action = 'transactionError',
+        error = error
+    })
+    QBCore.Functions.Notify('Transaction failed: ' .. error, 'error')
+end)
+
+RegisterNetEvent('gg-phone:client:noteCreated')
+AddEventHandler('gg-phone:client:noteCreated', function(note)
+    SendNUIMessage({
+        action = 'noteCreated',
+        note = note
+    })
+    QBCore.Functions.Notify('Note created successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:noteUpdated')
+AddEventHandler('gg-phone:client:noteUpdated', function(note)
+    SendNUIMessage({
+        action = 'noteUpdated',
+        note = note
+    })
+    QBCore.Functions.Notify('Note updated successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:noteDeleted')
+AddEventHandler('gg-phone:client:noteDeleted', function(noteId)
+    SendNUIMessage({
+        action = 'noteDeleted',
+        noteId = noteId
+    })
+    QBCore.Functions.Notify('Note deleted successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:contactAdded')
+AddEventHandler('gg-phone:client:contactAdded', function(contact)
+    SendNUIMessage({
+        action = 'contactAdded',
+        contact = contact
+    })
+    QBCore.Functions.Notify('Contact added successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:messageSent')
+AddEventHandler('gg-phone:client:messageSent', function(message)
+    SendNUIMessage({
+        action = 'messageSent',
+        message = message
     })
 end)
 
-RegisterNetEvent('phone:client:updateTransactions', function(transactions)
+RegisterNetEvent('gg-phone:client:messageReceived')
+AddEventHandler('gg-phone:client:messageReceived', function(message)
     SendNUIMessage({
-        action = "updateTransactions",
-        data = transactions
+        action = 'messageReceived',
+        message = message
+    })
+    QBCore.Functions.Notify('New message received', 'primary')
+end)
+
+RegisterNetEvent('gg-phone:client:messagesLoaded')
+AddEventHandler('gg-phone:client:messagesLoaded', function(data)
+    SendNUIMessage({
+        action = 'messagesLoaded',
+        targetNumber = data.targetNumber,
+        messages = data.messages
     })
 end)
 
-RegisterNetEvent('phone:client:updateTweets', function(tweets)
+RegisterNetEvent('gg-phone:client:allMessagesLoaded')
+AddEventHandler('gg-phone:client:allMessagesLoaded', function(conversations)
     SendNUIMessage({
-        action = "updateTweets",
-        data = tweets
+        action = 'allMessagesLoaded',
+        conversations = conversations
     })
 end)
 
-RegisterNetEvent('phone:client:updateNotes', function(notes)
+RegisterNetEvent('gg-phone:client:callStarted')
+AddEventHandler('gg-phone:client:callStarted', function(targetNumber)
     SendNUIMessage({
-        action = "updateNotes",
-        data = notes
+        action = 'callStarted',
+        targetNumber = targetNumber
     })
 end)
 
-RegisterNetEvent('phone:client:updatePhotos', function(photos)
+RegisterNetEvent('gg-phone:client:incomingCall')
+AddEventHandler('gg-phone:client:incomingCall', function(callerNumber)
     SendNUIMessage({
-        action = "updatePhotos",
-        data = photos
+        action = 'incomingCall',
+        callerNumber = callerNumber
     })
 end)
 
-RegisterNetEvent('phone:client:updateBusinesses', function(businesses)
+RegisterNetEvent('gg-phone:client:callEnded')
+AddEventHandler('gg-phone:client:callEnded', function()
     SendNUIMessage({
-        action = "updateBusinesses",
-        data = businesses
+        action = 'callEnded'
     })
 end)
 
-RegisterNetEvent('phone:client:showNotification', function(notification)
+-- Twitter Event Handlers
+RegisterNetEvent('gg-phone:client:twitterRegistered')
+AddEventHandler('gg-phone:client:twitterRegistered', function(account)
     SendNUIMessage({
-        action = "showNotification",
-        data = notification
+        action = 'twitterRegistered',
+        account = account
+    })
+    QBCore.Functions.Notify('Twitter account created successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:twitterLoggedIn')
+AddEventHandler('gg-phone:client:twitterLoggedIn', function(account)
+    SendNUIMessage({
+        action = 'twitterLoggedIn',
+        account = account
+    })
+    QBCore.Functions.Notify('Welcome back, ' .. account.displayName, 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:twitterLoggedOut')
+AddEventHandler('gg-phone:client:twitterLoggedOut', function()
+    SendNUIMessage({
+        action = 'twitterLoggedOut'
+    })
+    QBCore.Functions.Notify('Logged out from Twitter', 'primary')
+end)
+
+RegisterNetEvent('gg-phone:client:tweetPosted')
+AddEventHandler('gg-phone:client:tweetPosted', function(tweet)
+    SendNUIMessage({
+        action = 'tweetPosted',
+        tweet = tweet
+    })
+    QBCore.Functions.Notify('Tweet posted successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:newTweet')
+AddEventHandler('gg-phone:client:newTweet', function(tweet)
+    SendNUIMessage({
+        action = 'newTweet',
+        tweet = tweet
     })
 end)
 
--- Key Mapping
-RegisterKeyMapping('phone', 'Open/Close Phone', 'keyboard', Config.PhoneSettings.openKey)
-
-RegisterCommand('phone', function()
-    if phoneOpen then
-        ClosePhone()
-    else
-        OpenPhone()
-    end
-end, false)
-
--- Item Usage (QBCore)
-if Config.Framework == "qb-core" then
-    RegisterNetEvent('phone:client:use', function()
-        if phoneOpen then
-            ClosePhone()
-        else
-            OpenPhone()
-        end
-    end)
-end
-
--- Item Usage (ESX)
-if Config.Framework == "esx" then
-    RegisterNetEvent('phone:use', function()
-        if phoneOpen then
-            ClosePhone()
-        else
-            OpenPhone()
-        end
-    end)
-end
-
--- Cleanup on resource stop
-AddEventHandler('onResourceStop', function(resource)
-    if resource == GetCurrentResourceName() then
-        if phoneOpen then
-            ClosePhone()
-        end
-        if phoneData.phoneObject then
-            DeleteObject(phoneData.phoneObject)
-        end
-    end
+RegisterNetEvent('gg-phone:client:tweetsLoaded')
+AddEventHandler('gg-phone:client:tweetsLoaded', function(tweets)
+    SendNUIMessage({
+        action = 'tweetsLoaded',
+        tweets = tweets
+    })
 end)
 
--- Exports
-exports('IsPhoneOpen', function()
-    return phoneOpen
+RegisterNetEvent('gg-phone:client:tweetLiked')
+AddEventHandler('gg-phone:client:tweetLiked', function(tweetId)
+    SendNUIMessage({
+        action = 'tweetLiked',
+        tweetId = tweetId
+    })
 end)
 
-exports('OpenPhone', OpenPhone)
-exports('ClosePhone', ClosePhone)
+RegisterNetEvent('gg-phone:client:tweetUnliked')
+AddEventHandler('gg-phone:client:tweetUnliked', function(tweetId)
+    SendNUIMessage({
+        action = 'tweetUnliked',
+        tweetId = tweetId
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:tweetRetweeted')
+AddEventHandler('gg-phone:client:tweetRetweeted', function(tweetId)
+    SendNUIMessage({
+        action = 'tweetRetweeted',
+        tweetId = tweetId
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:tweetUnretweeted')
+AddEventHandler('gg-phone:client:tweetUnretweeted', function(tweetId)
+    SendNUIMessage({
+        action = 'tweetUnretweeted',
+        tweetId = tweetId
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:profileUpdated')
+AddEventHandler('gg-phone:client:profileUpdated', function(profile)
+    SendNUIMessage({
+        action = 'profileUpdated',
+        profile = profile
+    })
+    QBCore.Functions.Notify('Profile updated successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:passwordChanged')
+AddEventHandler('gg-phone:client:passwordChanged', function()
+    SendNUIMessage({
+        action = 'passwordChanged'
+    })
+    QBCore.Functions.Notify('Password changed successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:twitterError')
+AddEventHandler('gg-phone:client:twitterError', function(error)
+    SendNUIMessage({
+        action = 'twitterError',
+        error = error
+    })
+    QBCore.Functions.Notify('Twitter error: ' .. error, 'error')
+end)
+
+RegisterNetEvent('gg-phone:client:mailAccountCreated')
+AddEventHandler('gg-phone:client:mailAccountCreated', function(account)
+    SendNUIMessage({
+        action = 'mailAccountCreated',
+        account = account
+    })
+    QBCore.Functions.Notify('Mail account created successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:mailSent')
+AddEventHandler('gg-phone:client:mailSent', function(mail)
+    SendNUIMessage({
+        action = 'mailSent',
+        mail = mail
+    })
+    QBCore.Functions.Notify('Mail sent successfully', 'success')
+end)
+
+-- Data Loading Events
+RegisterNetEvent('gg-phone:client:notesLoaded')
+AddEventHandler('gg-phone:client:notesLoaded', function(notes)
+    SendNUIMessage({
+        action = 'notesLoaded',
+        notes = notes
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:contactsLoaded')
+AddEventHandler('gg-phone:client:contactsLoaded', function(contacts)
+    SendNUIMessage({
+        action = 'contactsLoaded',
+        contacts = contacts
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:transactionsLoaded')
+AddEventHandler('gg-phone:client:transactionsLoaded', function(transactions)
+    SendNUIMessage({
+        action = 'transactionsLoaded',
+        transactions = transactions
+    })
+end)

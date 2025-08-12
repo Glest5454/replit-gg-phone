@@ -9,8 +9,9 @@
   Clock,
   NotepadTextDashed,
   FileText,
-
-  BookOpen
+  MessageCircle,
+  BookOpen,
+  Mail
 } from 'lucide-react';
 import contactsPng from '@apps/contacts.png';
 import settingsPng from '@apps/settings.png';
@@ -334,6 +335,44 @@ export const appsConfig: AppConfig[] = [
       types: ['info', 'success'],
     },
   },
+  // add Mail app
+  {
+    id: 'mail',
+    name: 'Mail',
+    icon: Mail,
+    iconType: 'lucide',
+    color: 'from-blue-500 to-indigo-500',
+    category: 'utilities',
+    isActive: true,
+    isVisible: true,
+    order: 12,
+    screen: 'mail',
+    description: 'Manage your mail',
+  },
+  // add Messages app
+  {
+    id: 'messages',
+    name: 'Messages',
+    icon: MessageCircle,
+    iconType: 'lucide',
+    color: 'from-green-500 to-emerald-500',
+    category: 'social',
+    isActive: true,
+    isVisible: true,
+    order: 13,
+    screen: 'messages',
+    description: 'Send and receive text messages',
+    version: '1.0.0',
+    permissions: ['messages'],
+    settings: {
+      hasSettings: true,
+      settingsPath: '/messages/settings',
+    },
+    notifications: {
+      enabled: true,
+      types: ['info', 'success'],
+    },
+  },
 ];
 
 // Helper functions
@@ -360,6 +399,8 @@ export const getTranslatedApps = (language: string = 'en') => {
       'clock': 'Saat',
       'yellowpages': 'Sarı Sayfalar',
       'contacts': 'Kişiler',
+      'mail': 'E-posta',
+      'messages': 'Mesajlar',
     },
     en: {
       'banking': 'Banking',
@@ -373,6 +414,8 @@ export const getTranslatedApps = (language: string = 'en') => {
       'clock': 'Clock',
       'yellowpages': 'Yellow Pages',
       'contacts': 'Contacts',
+      'mail': 'Mail',
+      'messages': 'Messages',
     }
   };
 

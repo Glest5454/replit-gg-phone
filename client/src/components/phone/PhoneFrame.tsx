@@ -15,7 +15,9 @@ import { SpotifyApp } from './apps/SpotifyApp';
 import { ClockApp } from './apps/ClockApp';
 import { YellowPagesApp } from './apps/YellowPagesApp';
 import { ContactsApp } from './apps/ContactsApp';
+import { MessagesApp } from './apps/MessagesApp';
 import { NotificationManager } from './NotificationManager';
+import { MailApp } from './apps/MailApp';
 
 export const PhoneFrame = () => {
   const { 
@@ -79,6 +81,10 @@ export const PhoneFrame = () => {
         return <YellowPagesApp onBack={goBack} />;
       case 'contacts':
         return <ContactsApp onBack={goBack} />;
+      case 'messages':
+        return <MessagesApp onBack={goBack} />;
+      case 'mail':
+        return <MailApp onBack={goBack} />;
       default:
         return <HomeScreen onAppOpen={navigateToScreen} />;
     }

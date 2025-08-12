@@ -18,27 +18,27 @@ export const Notification = ({ notification, onDismiss, onAction }: Notification
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Debug logging
-  console.log('Notification component render:', notification);
-  console.log('Notification isVisible state:', isVisible);
+     /*console.log('Notification component render:', notification);
+  console.log('Notification isVisible state:', isVisible);*/
 
   useEffect(() => {
     // Slide in animation
-    console.log('Notification useEffect - setting visible to true');
+    /*console.log('Notification useEffect - setting visible to true');*/
     const timer = setTimeout(() => {
-      console.log('Setting notification visible');
+      /*console.log('Setting notification visible');*/
       setIsVisible(true);
     }, 100);
     return () => clearTimeout(timer);
   }, []);
 
   const handleDismiss = () => {
-    console.log('Notification handleDismiss called');
+    /*console.log('Notification handleDismiss called');*/
     setIsVisible(false);
     setTimeout(() => onDismiss(notification.id), 300);
   };
 
   const handleAction = () => {
-    console.log('Notification handleAction called');
+    /*console.log('Notification handleAction called');*/
     if (onAction) {
       onAction();
     }
@@ -48,7 +48,7 @@ export const Notification = ({ notification, onDismiss, onAction }: Notification
     handleDismiss();
   };
 
-  console.log('Notification render - isVisible:', isVisible, 'notification:', notification);
+  /*console.log('Notification render - isVisible:', isVisible, 'notification:', notification);*/      
 
   return (
     <div

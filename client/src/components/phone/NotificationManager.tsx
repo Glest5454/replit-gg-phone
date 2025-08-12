@@ -5,25 +5,25 @@ export const NotificationManager = () => {
   const { notifications, removeNotification } = useNotificationContext();
 
   // Debug logging
-  console.log('NotificationManager render - notifications count:', notifications.length);
+  /*console.log('NotificationManager render - notifications count:', notifications.length);
   console.log('Current notifications:', notifications);
-  console.log('NotificationManager is rendering with notifications:', notifications);
+  console.log('NotificationManager is rendering with notifications:', notifications);*/
 
   const handleDismiss = (id: string) => {
-    console.log('Dismissing notification:', id);
+    /*console.log('Dismissing notification:', id);*/
     removeNotification(id);
   };
 
   const handleAction = (notificationId: string) => {
     // Handle notification action if needed
-    console.log('Notification action triggered:', notificationId);
+    /*console.log('Notification action triggered:', notificationId);*/
   };
 
   return (
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 99999, overflow: 'hidden' }}>
       {/* Real notifications */}
       {notifications.map((notification, index) => {
-        console.log('Rendering notification:', notification.id);
+        /*console.log('Rendering notification:', notification.id);*/  
         return (
           <div key={notification.id} className="pointer-events-auto" style={{ 
             position: 'absolute',

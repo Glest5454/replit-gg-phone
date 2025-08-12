@@ -13,7 +13,9 @@ export type Screen =
   | 'spotify'
   | 'clock'
   | 'yellowpages'
-  | 'contacts';
+  | 'contacts'
+  | 'messages'
+  | 'mail';
 
 export interface PhoneState {
   currentScreen: Screen;

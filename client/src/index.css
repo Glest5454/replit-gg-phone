@@ -366,12 +366,18 @@
   --tw-ring-color: rgba(0, 0, 0, 0.2);
 }
 
-/* Dock specific styles */
+.phone-screen.phone-light-mode .dock-app {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Dock specific styles 
 .phone-screen.phone-light-mode .dock-app {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
+}*/
 
 .phone-screen.phone-dark-mode .dock-app {
   background: rgba(255, 255, 255, 0.1);
