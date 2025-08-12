@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export type Screen = 
   | 'lock'
@@ -33,21 +33,26 @@ export interface Notification {
 }
 
 export const usePhone = () => {
-  const [phoneState, setPhoneState] = useState<PhoneState>({
-    currentScreen: 'lock',
-    isLocked: true,
-    pin: '',
-    notifications: [
-      {
-        id: '1',
-        app: 'Messages',
-        title: 'Messages',
-        message: 'Hey, are you online?',
-        time: '2m',
-        icon: 'message'
-      }
-    ],
-    theme: 'dark'
+  const [phoneState, setPhoneState] = useState<PhoneState>(() => {
+    // Check if lock screen is enabled
+    const isLockEnabled = localStorage.getItem('phone-lock-enabled') === 'true';
+    
+    return {
+      currentScreen: isLockEnabled ? 'lock' : 'home',
+      isLocked: isLockEnabled,
+      pin: '',
+      notifications: [
+        {
+          id: '1',
+          app: 'Messages',
+          title: 'Messages',
+          message: 'Hey, are you online?',
+          time: '2m',
+          icon: 'message'
+        }
+      ],
+      theme: 'dark'
+    };
   });
 
   const navigateToScreen = useCallback((screen: Screen) => {
@@ -88,8 +93,9 @@ export const usePhone = () => {
       
       const newPin = prev.pin + digit;
       
-      // Auto-unlock with correct PIN (demo: 1234)
-      if (newPin.length === 4 && newPin === '1234') {
+      // Check against custom PIN or default
+      const customPin = localStorage.getItem('phone-custom-pin') || '1234';
+      if (newPin.length === 4 && newPin === customPin) {
         setTimeout(() => {
           unlock();
         }, 200);

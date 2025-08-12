@@ -38,7 +38,8 @@ export const LockScreen = ({ pin, notifications, onPinInput, onPinDelete }: Lock
   }, []);
 
   useEffect(() => {
-    if (pin.length === 4 && pin !== '1234') {
+    const customPin = localStorage.getItem('phone-custom-pin') || '1234';
+    if (pin.length === 4 && pin !== customPin) {
       setShowShake(true);
       setTimeout(() => {
         setShowShake(false);
@@ -75,19 +76,19 @@ export const LockScreen = ({ pin, notifications, onPinInput, onPinDelete }: Lock
         </div>
         
         {/* Notifications Preview */}
-        <div className="absolute top-48 left-6 right-6 space-y-3">
-          {notifications.slice(0, 3).map((notification) => (
+        <div className="absolute top-44 left-6 right-6 space-y-2 max-h-32 overflow-hidden">
+          {notifications.slice(0, 2).map((notification) => (
             <div 
               key={notification.id}
-              className="bg-surface-dark/90 backdrop-blur-md rounded-samsung-sm p-4 border border-white/10"
+              className="bg-surface-dark/80 backdrop-blur-md rounded-samsung-sm p-3 border border-white/10"
               data-testid={`notification-${notification.id}`}
             >
               <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-samsung-blue rounded-lg flex items-center justify-center">
+                <div className="w-6 h-6 bg-samsung-blue rounded-lg flex items-center justify-center">
                   <div className="text-white text-xs">📱</div>
                 </div>
                 <div className="flex-1">
-                  <div className="text-white font-medium text-sm">{notification.title}</div>
+                  <div className="text-white font-medium text-xs">{notification.title}</div>
                   <div className="text-white/70 text-xs">{notification.message}</div>
                 </div>
                 <div className="text-white/50 text-xs">{notification.time}</div>
@@ -97,13 +98,13 @@ export const LockScreen = ({ pin, notifications, onPinInput, onPinDelete }: Lock
         </div>
         
         {/* Unlock Interface */}
-        <div className="absolute bottom-32 left-6 right-6">
+        <div className="absolute bottom-20 left-6 right-6">
           <div className="text-center text-white mb-6">
             <div className="text-sm opacity-80">Enter PIN to unlock</div>
           </div>
           
           {/* PIN Dots */}
-          <div className={`flex justify-center space-x-4 mb-8 ${showShake ? 'shake' : ''}`}>
+          <div className={`flex justify-center space-x-3 mb-6 ${showShake ? 'shake' : ''}`}>
             {[0, 1, 2, 3].map((index) => (
               <div
                 key={index}
@@ -118,7 +119,7 @@ export const LockScreen = ({ pin, notifications, onPinInput, onPinDelete }: Lock
           </div>
           
           {/* Number Pad */}
-          <div className="grid grid-cols-3 gap-6 max-w-64 mx-auto">
+          <div className="grid grid-cols-3 gap-4 max-w-48 mx-auto">
             {numberPad.flat().map((key, index) => {
               if (key === '') {
                 return <div key={index} />;
@@ -128,7 +129,7 @@ export const LockScreen = ({ pin, notifications, onPinInput, onPinDelete }: Lock
                 return (
                   <button
                     key={index}
-                    className="oneui-button w-16 h-16 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center"
+                    className="oneui-button w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center"
                     onClick={onPinDelete}
                     data-testid="pin-delete"
                   >
@@ -140,7 +141,7 @@ export const LockScreen = ({ pin, notifications, onPinInput, onPinDelete }: Lock
               return (
                 <button
                   key={index}
-                  className="oneui-button w-16 h-16 rounded-full bg-white/10 backdrop-blur-md text-white text-xl font-light flex items-center justify-center"
+                  className="oneui-button w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white text-lg font-light flex items-center justify-center"
                   onClick={() => onPinInput(key)}
                   data-testid={`pin-${key}`}
                 >

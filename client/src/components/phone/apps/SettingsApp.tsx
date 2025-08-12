@@ -14,6 +14,10 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
   const [showBrightnessSlider, setShowBrightnessSlider] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [showWallpaperSelector, setShowWallpaperSelector] = useState(false);
+  const [isLockEnabled, setIsLockEnabled] = useState(false);
+  const [customPin, setCustomPin] = useState('');
+  const [showPasswordSettings, setShowPasswordSettings] = useState(false);
+  const [newPin, setNewPin] = useState('');
 
   const languages = [
     { code: 'en', name: 'English', label: 'English' },
@@ -38,10 +42,14 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
     const savedBrightness = localStorage.getItem('phone-brightness');
     const savedLanguage = localStorage.getItem('phone-language');
     const savedWallpaper = localStorage.getItem('phone-wallpaper');
+    const savedLockEnabled = localStorage.getItem('phone-lock-enabled');
+    const savedCustomPin = localStorage.getItem('phone-custom-pin');
     
     if (savedBrightness) setBrightness(parseInt(savedBrightness));
     if (savedLanguage) setLanguage(savedLanguage);
     if (savedWallpaper) setWallpaper(savedWallpaper);
+    if (savedLockEnabled) setIsLockEnabled(savedLockEnabled === 'true');
+    if (savedCustomPin) setCustomPin(savedCustomPin);
   }, []);
 
   const handleBrightnessChange = (value: number) => {
@@ -92,6 +100,30 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
         phoneScreen.classList.add('phone-dark-mode');
       }
     }
+  };
+
+  const handleLockToggle = () => {
+    setIsLockEnabled(!isLockEnabled);
+    localStorage.setItem('phone-lock-enabled', (!isLockEnabled).toString());
+  };
+
+  const handleSetCustomPin = () => {
+    if (newPin.length === 4 && /^\d{4}$/.test(newPin)) {
+      setCustomPin(newPin);
+      localStorage.setItem('phone-custom-pin', newPin);
+      setNewPin('');
+      setShowPasswordSettings(false);
+    }
+  };
+
+  const handlePinInput = (digit: string) => {
+    if (newPin.length < 4) {
+      setNewPin(newPin + digit);
+    }
+  };
+
+  const handlePinDelete = () => {
+    setNewPin(newPin.slice(0, -1));
   };
   return (
     <div className="absolute inset-0 bg-oneui-dark flex flex-col">
@@ -249,6 +281,116 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Security & Privacy Settings */}
+          <div className="mb-6">
+            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">Security & Privacy</h4>
+            
+            <button 
+              className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
+              onClick={handleLockToggle}
+              data-testid="lock-screen-toggle"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-5 h-5 rounded-sm bg-red-500 flex items-center justify-center">
+                  <span className="text-white text-xs">🔒</span>
+                </div>
+                <span className="text-white">Screen Lock</span>
+              </div>
+              <div className={`w-12 h-6 rounded-full p-1 relative transition-colors duration-200 ${
+                isLockEnabled ? 'bg-samsung-blue' : 'bg-white/20'
+              }`}>
+                <div className={`w-4 h-4 bg-white rounded-full absolute transition-all duration-200 ${
+                  isLockEnabled ? 'right-1' : 'left-1'
+                }`} />
+              </div>
+            </button>
+            
+            {isLockEnabled && (
+              <button 
+                className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/20 rounded-samsung-sm mb-3 ml-8"
+                onClick={() => setShowPasswordSettings(!showPasswordSettings)}
+                data-testid="password-settings"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-5 h-5 rounded-sm bg-green-500 flex items-center justify-center">
+                    <span className="text-white text-xs">🔑</span>
+                  </div>
+                  <span className="text-white">Change PIN</span>
+                </div>
+                <span className="text-white/60">{customPin ? '••••' : 'Set PIN'}</span>
+              </button>
+            )}
+            
+            {showPasswordSettings && (
+              <div className="p-4 bg-surface-dark/20 rounded-samsung-sm mb-3 ml-8">
+                <div className="text-center text-white mb-4">
+                  <div className="text-sm opacity-80">Enter new 4-digit PIN</div>
+                </div>
+                
+                {/* PIN Dots */}
+                <div className="flex justify-center space-x-3 mb-4">
+                  {[0, 1, 2, 3].map((index) => (
+                    <div
+                      key={index}
+                      className={`w-3 h-3 rounded-full border-2 transition-all duration-200 ${
+                        index < newPin.length 
+                          ? 'bg-samsung-blue border-samsung-blue' 
+                          : 'border-white/50'
+                      }`}
+                      data-testid={`new-pin-dot-${index}`}
+                    />
+                  ))}
+                </div>
+                
+                {/* Number Pad */}
+                <div className="grid grid-cols-3 gap-2 max-w-32 mx-auto mb-4">
+                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'delete'].map((key, index) => {
+                    if (key === '') {
+                      return <div key={index} />;
+                    }
+                    
+                    if (key === 'delete') {
+                      return (
+                        <button
+                          key={index}
+                          className="oneui-button w-8 h-8 rounded-full bg-white/10 text-white text-xs flex items-center justify-center"
+                          onClick={handlePinDelete}
+                          data-testid="new-pin-delete"
+                        >
+                          ⌫
+                        </button>
+                      );
+                    }
+                    
+                    return (
+                      <button
+                        key={index}
+                        className="oneui-button w-8 h-8 rounded-full bg-white/10 text-white text-sm flex items-center justify-center"
+                        onClick={() => handlePinInput(key)}
+                        data-testid={`new-pin-${key}`}
+                      >
+                        {key}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  className={`oneui-button w-full p-3 rounded-samsung-sm transition-all ${
+                    newPin.length === 4 
+                      ? 'bg-samsung-blue text-white' 
+                      : 'bg-white/10 text-white/50'
+                  }`}
+                  onClick={handleSetCustomPin}
+                  disabled={newPin.length !== 4}
+                  data-testid="save-pin"
+                >
+                  Save PIN
+                </button>
               </div>
             )}
           </div>
