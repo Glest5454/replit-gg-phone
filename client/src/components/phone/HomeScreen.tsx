@@ -79,7 +79,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
             <button
               key={app.id}
               onClick={() => onAppOpen(app.screen as Screen)}
-              className="flex flex-col items-center space-y-2 group"
+              className="flex flex-col items-center space-y-2 group transition-transform duration-200 hover:scale-110"
             >
               <div className={`w-14 h-14 rounded-[18px] flex items-center justify-center shadow-lg ${
                 app.iconType === 'lucide' 
@@ -102,7 +102,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
           <div className="dock-app bg-black/60 backdrop-blur-xl rounded-[32px] px-6 py-4 border border-white/10">
             <div className="flex justify-between items-center">
               <button 
-                className="oneui-button flex flex-col items-center space-y-1"
+                className="oneui-button flex flex-col items-center space-y-1 transition-transform duration-200 hover:scale-110"
                 onClick={() => onAppOpen('contacts')}
                 data-testid="dock-contacts"
               >
@@ -113,7 +113,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
               </button>
               
               <button 
-                className="oneui-button flex flex-col items-center space-y-1"
+                className="oneui-button flex flex-col items-center space-y-1 transition-transform duration-200 hover:scale-110"
                 onClick={() => onAppOpen('banking')}
                 data-testid="dock-bank"
               >
@@ -124,7 +124,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
               </button>
               
               <button 
-                className="oneui-button flex flex-col items-center space-y-1"
+                className="oneui-button flex flex-col items-center space-y-1 transition-transform duration-200 hover:scale-110"
                 onClick={() => onAppOpen('camera')}
                 data-testid="dock-camera"
               >
@@ -135,7 +135,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
               </button>
               
               <button 
-                className="oneui-button flex flex-col items-center space-y-1"
+                className="oneui-button flex flex-col items-center space-y-1 transition-transform duration-200 hover:scale-110"
                 onClick={() => onAppOpen('settings')}
                 data-testid="dock-settings"
               >
