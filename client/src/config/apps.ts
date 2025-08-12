@@ -1,4 +1,4 @@
-  import { 
+import { 
   Users, 
   CreditCard, 
   Camera as CameraIcon,
@@ -9,9 +9,10 @@
   Clock,
   NotepadTextDashed,
   FileText,
-  MessageCircle,
   BookOpen,
-  Mail
+  MessageCircle,
+  MapPin,
+  Phone
 } from 'lucide-react';
 import contactsPng from '@apps/contacts.png';
 import settingsPng from '@apps/settings.png';
@@ -301,7 +302,7 @@ export const appsConfig: AppConfig[] = [
     order: 10,
     screen: 'yellowpages',
     description: 'Business directory and contacts',
-    version: '1.1.0',
+    version: '1.0.0',
     permissions: ['location'],
     settings: {
       hasSettings: true,
@@ -335,42 +336,73 @@ export const appsConfig: AppConfig[] = [
       types: ['info', 'success'],
     },
   },
-  // add Mail app
   {
-    id: 'mail',
-    name: 'Mail',
-    icon: Mail,
-    iconType: 'lucide',
-    color: 'from-blue-500 to-indigo-500',
-    category: 'utilities',
-    isActive: true,
-    isVisible: true,
-    order: 12,
-    screen: 'mail',
-    description: 'Manage your mail',
-  },
-  // add Messages app
-  {
-    id: 'messages',
-    name: 'Messages',
+    id: 'darkchat',
+    name: 'Dark Chat',
     icon: MessageCircle,
     iconType: 'lucide',
-    color: 'from-green-500 to-emerald-500',
+    color: 'from-gray-700 to-gray-900',
     category: 'social',
     isActive: true,
     isVisible: true,
-    order: 13,
-    screen: 'messages',
-    description: 'Send and receive text messages',
+    order: 12,
+    screen: 'darkchat',
+    description: 'Anonymous messaging and chat rooms',
     version: '1.0.0',
-    permissions: ['messages'],
+    permissions: ['social', 'location'],
     settings: {
       hasSettings: true,
-      settingsPath: '/messages/settings',
+      settingsPath: '/darkchat/settings',
     },
     notifications: {
       enabled: true,
       types: ['info', 'success'],
+    },
+  },
+  {
+    id: 'maps',
+    name: 'Maps',
+    icon: MapPin,
+    iconType: 'lucide',
+    color: 'from-blue-500 to-blue-700',
+    category: 'utilities',
+    isActive: true,
+    isVisible: true,
+    order: 13,
+    screen: 'maps',
+    description: 'Navigation and location services',
+    version: '1.0.0',
+    permissions: ['location', 'gps'],
+    settings: {
+      hasSettings: true,
+      settingsPath: '/maps/settings',
+    },
+    notifications: {
+      enabled: true,
+      types: ['info', 'success', 'warning'],
+    },
+  },
+  {
+    id: 'phone',
+    name: 'Phone',
+    icon: Phone,
+    iconType: 'lucide',
+    color: 'from-green-500 to-green-700',
+    category: 'utilities',
+    isActive: true,
+    isVisible: true,
+    order: 14,
+    screen: 'phone',
+    description: 'Make calls and manage call history',
+    version: '1.0.0',
+    permissions: ['phone', 'contacts'],
+    settings: {
+      hasSettings: true,
+      settingsPath: '/phone/settings',
+    },
+    notifications: {
+      enabled: true,
+      types: ['info', 'success', 'warning'],
     },
   },
 ];
@@ -399,8 +431,9 @@ export const getTranslatedApps = (language: string = 'en') => {
       'clock': 'Saat',
       'yellowpages': 'Sarı Sayfalar',
       'contacts': 'Kişiler',
-      'mail': 'E-posta',
-      'messages': 'Mesajlar',
+      'darkchat': 'Karanlık Sohbet',
+      'maps': 'Haritalar',
+      'phone': 'Telefon',
     },
     en: {
       'banking': 'Banking',
@@ -414,8 +447,9 @@ export const getTranslatedApps = (language: string = 'en') => {
       'clock': 'Clock',
       'yellowpages': 'Yellow Pages',
       'contacts': 'Contacts',
-      'mail': 'Mail',
-      'messages': 'Messages',
+      'darkchat': 'Dark Chat',
+      'maps': 'Maps',
+      'phone': 'Phone',
     }
   };
 

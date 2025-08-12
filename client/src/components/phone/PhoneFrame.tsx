@@ -18,6 +18,10 @@ import { ContactsApp } from './apps/ContactsApp';
 import { MessagesApp } from './apps/MessagesApp';
 import { NotificationManager } from './NotificationManager';
 import { MailApp } from './apps/MailApp';
+import { CallApp } from './apps/CallApp';
+import { MapsApp } from './apps/MapsApp';
+import { DarkChatApp } from './apps/DarkChatApp';
+
 
 export const PhoneFrame = () => {
   const { 
@@ -85,6 +89,12 @@ export const PhoneFrame = () => {
         return <MessagesApp onBack={goBack} />;
       case 'mail':
         return <MailApp onBack={goBack} />;
+      case 'maps':
+        return <MapsApp onBack={goBack} />;
+      case 'darkchat':
+        return <DarkChatApp onBack={goBack} />;
+      case 'phone':
+        return <CallApp onBack={goBack} />;
       default:
         return <HomeScreen onAppOpen={navigateToScreen} />;
     }

@@ -15,7 +15,10 @@ export type Screen =
   | 'yellowpages'
   | 'contacts'
   | 'messages'
-  | 'mail';
+  | 'mail'
+  | 'darkchat'
+  | 'maps'
+  | 'phone';   
 
 export interface PhoneState {
   currentScreen: Screen;
