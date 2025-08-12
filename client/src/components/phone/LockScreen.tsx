@@ -7,9 +7,10 @@ interface LockScreenProps {
   notifications: Notification[];
   onPinInput: (digit: string) => void;
   onPinDelete: () => void;
+  wallpaper: string;
 }
 
-export const LockScreen = ({ pin, notifications, onPinInput, onPinDelete }: LockScreenProps) => {
+export const LockScreen = ({ pin, notifications, onPinInput, onPinDelete, wallpaper }: LockScreenProps) => {
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
   const [showShake, setShowShake] = useState(false);
@@ -54,16 +55,45 @@ export const LockScreen = ({ pin, notifications, onPinInput, onPinDelete }: Lock
     ['', '0', 'delete']
   ];
 
+  // Function to get background style based on wallpaper
+  const getBackgroundStyle = () => {
+    if (wallpaper === 'default') {
+      return { 
+        backgroundImage: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=1200')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      };
+    }
+    
+    // Check if it's a URL (starts with http or https)
+    if (wallpaper.startsWith('http')) {
+      return { 
+        backgroundImage: `url(${wallpaper})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      };
+    }
+    
+    // For predefined wallpapers, use predefined styles
+    const wallpaperStyles: Record<string, string> = {
+      'sunset': 'linear-gradient(135deg, hsl(25 100% 50%) 0%, hsl(330 100% 50%) 50%, hsl(270 100% 60%) 100%)',
+      'ocean': 'linear-gradient(135deg, hsl(210 100% 50%) 0%, hsl(180 100% 50%) 50%, hsl(180 100% 40%) 100%)',
+      'forest': 'linear-gradient(135deg, hsl(120 100% 40%) 0%, hsl(160 100% 40%) 50%, hsl(180 100% 40%) 100%)',
+      'space': 'linear-gradient(135deg, hsl(270 100% 30%) 0%, hsl(220 100% 30%) 50%, hsl(0 0% 0%) 100%)',
+      'aurora': 'linear-gradient(135deg, hsl(120 100% 50%) 0%, hsl(210 100% 50%) 50%, hsl(270 100% 60%) 100%)'
+    };
+    
+    return { 
+      background: wallpaperStyles[wallpaper] || 'linear-gradient(135deg, hsl(220 15% 15%) 0%, hsl(220 20% 10%) 100%)'
+    };
+  };
+
   return (
     <div className="absolute inset-0 flex flex-col">
       {/* Background */}
       <div 
         className="flex-1 relative"
-        style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=1200')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
+        style={getBackgroundStyle()}
       >
         <div className="absolute inset-0 lock-screen-overlay bg-gradient-to-b from-transparent via-black/20 to-black/60" />
         

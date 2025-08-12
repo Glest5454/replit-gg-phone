@@ -52,6 +52,7 @@ export const PhoneFrame = () => {
             notifications={phoneState.notifications}
             onPinInput={addPinDigit}
             onPinDelete={deletePinDigit}
+            wallpaper={phoneState.wallpaper}
           />
         );
       case 'home':

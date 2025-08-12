@@ -263,6 +263,40 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
             
             {showWallpaperSelector && (
               <div className="p-2 bg-surface-dark/20 rounded-samsung-sm mb-3 ml-8">
+                {/* Custom URL Input */}
+                <div className="mb-3">
+                  <div className="text-white text-sm mb-2">Custom Image URL:</div>
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      placeholder="https://example.com/image.jpg"
+                      className="flex-1 bg-white/10 text-white text-sm px-3 py-2 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-samsung-blue"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          const input = e.target as HTMLInputElement;
+                          if (input.value.startsWith('http')) {
+                            handleWallpaperChange(input.value);
+                            input.value = '';
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      className="bg-samsung-blue text-white px-3 py-2 rounded-lg text-sm hover:bg-samsung-blue/90 transition-colors"
+                      onClick={(e) => {
+                        const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                        if (input.value.startsWith('http')) {
+                          handleWallpaperChange(input.value);
+                          input.value = '';
+                        }
+                      }}
+                    >
+                      Set
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Predefined Wallpapers */}
                 <div className="grid grid-cols-2 gap-3">
                   {wallpapers.map((wp) => (
                     <button

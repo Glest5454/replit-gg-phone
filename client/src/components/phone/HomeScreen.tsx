@@ -35,8 +35,43 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
   // Get apps with translated names based on current language
   const apps = getTranslatedApps(t('language', 'common') || 'en');
 
+  // Get wallpaper from localStorage or use default
+  const wallpaper = localStorage.getItem('phone-wallpaper') || 'default';
+
+  // Function to get background style based on wallpaper
+  const getBackgroundStyle = () => {
+    if (wallpaper === 'default') {
+      return { background: 'linear-gradient(135deg, hsl(220 15% 15%) 0%, hsl(220 20% 10%) 100%)' };
+    }
+    
+    // Check if it's a URL (starts with http or https)
+    if (wallpaper.startsWith('http')) {
+      return { 
+        backgroundImage: `url(${wallpaper})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      };
+    }
+    
+    // For predefined wallpapers, use CSS variables or predefined styles
+    const wallpaperStyles: Record<string, string> = {
+      'sunset': 'linear-gradient(135deg, hsl(25 100% 50%) 0%, hsl(330 100% 50%) 50%, hsl(270 100% 60%) 100%)',
+      'ocean': 'linear-gradient(135deg, hsl(210 100% 50%) 0%, hsl(180 100% 50%) 50%, hsl(180 100% 40%) 100%)',
+      'forest': 'linear-gradient(135deg, hsl(120 100% 40%) 0%, hsl(160 100% 40%) 50%, hsl(180 100% 40%) 100%)',
+      'space': 'linear-gradient(135deg, hsl(270 100% 30%) 0%, hsl(220 100% 30%) 50%, hsl(0 0% 0%) 100%)',
+      'aurora': 'linear-gradient(135deg, hsl(120 100% 50%) 0%, hsl(210 100% 50%) 50%, hsl(270 100% 60%) 100%)'
+    };
+    
+    return { 
+      background: wallpaperStyles[wallpaper] || 'linear-gradient(135deg, hsl(220 15% 15%) 0%, hsl(220 20% 10%) 100%)'
+    };
+  };
+
   return (
-    <div className="absolute inset-0 home-background flex flex-col">
+    <div 
+      className="absolute inset-0 flex flex-col"
+      style={getBackgroundStyle()}
+    >
       {/* App Grid */}
       <div className="pt-16 px-6 h-full overflow-y-auto">
         <div className="grid grid-cols-4 gap-6 mb-8">
