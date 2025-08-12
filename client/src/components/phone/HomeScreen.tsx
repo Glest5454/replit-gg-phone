@@ -70,7 +70,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
                   <div className={`w-14 h-14 rounded-samsung-sm flex items-center justify-center bg-gradient-to-br ${app.color} shadow-lg`}>
                     <IconComponent className="w-6 h-6 text-white" />
                   </div>
-                  <span className="text-white text-xs font-medium text-center">{app.name}</span>
+                  <span className="home-screen-text text-xs font-medium text-center">{app.name}</span>
                 </button>
               );
             })}
@@ -88,7 +88,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
                   <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg">
                     <Users className="w-6 h-6 text-white" />
                   </div>
-                  <span className="text-white text-[10px] font-medium">Contacts</span>
+                  <span className="home-screen-text text-[10px] font-medium">Contacts</span>
                 </button>
                 
                 <button 
@@ -99,7 +99,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
                   <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
                     <CreditCard className="w-6 h-6 text-white" />
                   </div>
-                  <span className="text-white text-[10px] font-medium">Bank</span>
+                  <span className="home-screen-text text-[10px] font-medium">Bank</span>
                 </button>
                 
                 <button 
@@ -110,7 +110,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
                   <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-gray-600 to-slate-700 shadow-lg">
                     <Camera className="w-6 h-6 text-white" />
                   </div>
-                  <span className="text-white text-[10px] font-medium">Camera</span>
+                  <span className="home-screen-text text-[10px] font-medium">Camera</span>
                 </button>
                 
                 <button 
@@ -121,7 +121,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
                   <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg">
                     <Settings className="w-6 h-6 text-white" />
                   </div>
-                  <span className="text-white text-[10px] font-medium">Settings</span>
+                  <span className="home-screen-text text-[10px] font-medium">Settings</span>
                 </button>
               </div>
             </div>

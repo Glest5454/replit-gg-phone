@@ -74,7 +74,7 @@ export const NotesApp = ({ onBack }: NotesAppProps) => {
 
   if (selectedNote) {
     return (
-      <div className="absolute inset-0 bg-oneui-dark flex flex-col">
+      <div className="absolute inset-0 notes-app flex flex-col">
         {/* Note Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <button 
@@ -144,7 +144,7 @@ export const NotesApp = ({ onBack }: NotesAppProps) => {
   }
 
   return (
-    <div className="absolute inset-0 bg-oneui-dark flex flex-col">
+    <div className="absolute inset-0 notes-app flex flex-col">
       {/* App Header */}
       <div className="flex items-center justify-between p-6 border-b border-white/10">
         <button 

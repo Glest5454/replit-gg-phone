@@ -23,11 +23,11 @@ export const StatusBar = () => {
   }, []);
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-50 px-6 py-2 h-10 flex justify-between items-center text-white bg-gradient-to-b from-black/50 to-transparent">
+    <div className="absolute top-0 left-0 right-0 z-50 px-6 py-2 h-10 flex justify-between items-center status-bar-text bg-gradient-to-b from-black/50 to-transparent">
       <div className="flex items-center space-x-1">
-        <span className="text-sm font-medium" data-testid="status-time">{currentTime}</span>
+        <span className="text-sm font-medium status-bar-text" data-testid="status-time">{currentTime}</span>
       </div>
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center space-x-1 status-bar-text">
         <Signal className="w-3 h-3" data-testid="status-signal" />
         <Wifi className="w-3 h-3" data-testid="status-wifi" />
         <div className="flex items-center">
@@ -37,7 +37,7 @@ export const StatusBar = () => {
               style={{ width: `${(batteryLevel / 100) * 16}px` }}
             />
           </div>
-          <span className="text-xs ml-1" data-testid="battery-level">{batteryLevel}%</span>
+          <span className="text-xs ml-1 status-bar-text" data-testid="battery-level">{batteryLevel}%</span>
         </div>
       </div>
     </div>

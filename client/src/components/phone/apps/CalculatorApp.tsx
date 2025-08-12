@@ -82,7 +82,7 @@ export const CalculatorApp = ({ onBack }: CalculatorAppProps) => {
   ];
 
   return (
-    <div className="absolute inset-0 bg-oneui-dark flex flex-col">
+    <div className="absolute inset-0 calculator-app flex flex-col">
       {/* App Header */}
       <div className="flex items-center justify-between p-6 border-b border-white/10 mt-2">
         <button 
