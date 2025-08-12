@@ -1,5 +1,6 @@
-import { ArrowLeft, Search, Moon, Sun, Volume2, Smartphone, MapPin, Shield, HardDrive, Info, ChevronRight, Globe } from 'lucide-react';
+import { ArrowLeft, Search, Moon, Sun, Volume2, Smartphone, MapPin, Shield, HardDrive, Info, ChevronRight, Globe, Check } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useLanguage, type Language } from '@/hooks/useLanguage';
 
 interface SettingsAppProps {
   onBack: () => void;
@@ -8,8 +9,8 @@ interface SettingsAppProps {
 }
 
 export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) => {
+  const { language, setLanguage: setAppLanguage, t } = useLanguage();
   const [brightness, setBrightness] = useState(75);
-  const [language, setLanguage] = useState('English');
   const [wallpaper, setWallpaper] = useState('default');
   const [showBrightnessSlider, setShowBrightnessSlider] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
@@ -20,13 +21,8 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
   const [newPin, setNewPin] = useState('');
 
   const languages = [
-    { code: 'en', name: 'English', label: 'English' },
-    { code: 'tr', name: 'Türkçe', label: 'Turkish' },
-    { code: 'es', name: 'Español', label: 'Spanish' },
-    { code: 'fr', name: 'Français', label: 'French' },
-    { code: 'de', name: 'Deutsch', label: 'German' },
-    { code: 'zh', name: '中文', label: 'Chinese' },
-    { code: 'ja', name: '日本語', label: 'Japanese' },
+    { code: 'english' as Language, name: 'English', label: 'English' },
+    { code: 'turkish' as Language, name: 'Türkçe', label: 'Turkish' },
   ];
 
   const wallpapers = [
@@ -40,13 +36,11 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
 
   useEffect(() => {
     const savedBrightness = localStorage.getItem('phone-brightness');
-    const savedLanguage = localStorage.getItem('phone-language');
     const savedWallpaper = localStorage.getItem('phone-wallpaper');
     const savedLockEnabled = localStorage.getItem('phone-lock-enabled');
     const savedCustomPin = localStorage.getItem('phone-custom-pin');
     
     if (savedBrightness) setBrightness(parseInt(savedBrightness));
-    if (savedLanguage) setLanguage(savedLanguage);
     if (savedWallpaper) setWallpaper(savedWallpaper);
     if (savedLockEnabled) setIsLockEnabled(savedLockEnabled === 'true');
     if (savedCustomPin) setCustomPin(savedCustomPin);
@@ -61,16 +55,9 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
     }
   };
 
-  const handleLanguageChange = (newLanguage: string) => {
-    setLanguage(newLanguage);
-    localStorage.setItem('phone-language', newLanguage);
+  const handleLanguageChange = (newLanguage: Language) => {
+    setAppLanguage(newLanguage);
     setShowLanguageSelector(false);
-    
-    // Apply language changes to the phone interface
-    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
-    if (phoneScreen) {
-      phoneScreen.setAttribute('data-language', newLanguage.toLowerCase());
-    }
   };
 
   const handleWallpaperChange = (newWallpaper: string) => {
@@ -136,7 +123,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
         >
           <ArrowLeft className="w-6 h-6 text-white" />
         </button>
-        <h1 className="text-white text-lg font-semibold">Settings</h1>
+        <h1 className="text-white text-lg font-semibold">{t('settings', 'common')}</h1>
         <button 
           className="oneui-button p-2"
           data-testid="settings-search"
@@ -166,7 +153,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
           
           {/* Display Settings */}
           <div className="mb-6">
-            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">Display</h4>
+            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">{t('display', 'settings')}</h4>
             
             <button 
               className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
@@ -175,7 +162,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
             >
               <div className="flex items-center space-x-3">
                 <Moon className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">Dark Mode</span>
+                <span className="text-white">{t('darkMode', 'settings')}</span>
               </div>
               <div className={`w-12 h-6 rounded-full p-1 relative transition-colors duration-200 ${
                 theme === 'dark' ? 'bg-samsung-blue' : 'bg-white/20'
@@ -193,7 +180,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
             >
               <div className="flex items-center space-x-3">
                 <Sun className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">Brightness</span>
+                <span className="text-white">{t('brightness', 'settings')}</span>
               </div>
               <span className="text-white/60">{brightness}%</span>
             </button>
@@ -223,9 +210,9 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
             >
               <div className="flex items-center space-x-3">
                 <Globe className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">Language</span>
+                <span className="text-white">{t('language', 'settings')}</span>
               </div>
-              <span className="text-white/60">{language}</span>
+              <span className="text-white/60">{languages.find(l => l.code === language)?.name || 'English'}</span>
             </button>
             
             {showLanguageSelector && (
@@ -234,14 +221,17 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
                   <button
                     key={lang.code}
                     className={`oneui-button w-full text-left p-3 rounded-lg mb-1 transition-colors ${
-                      language === lang.name 
+                      language === lang.code 
                         ? 'bg-samsung-blue text-white' 
                         : 'text-white/80 hover:bg-white/10'
                     }`}
-                    onClick={() => handleLanguageChange(lang.name)}
+                    onClick={() => handleLanguageChange(lang.code)}
                     data-testid={`language-${lang.code}`}
                   >
-                    {lang.name}
+                    <div className="flex items-center justify-between">
+                      <span>{lang.name}</span>
+                      {language === lang.code && <Check className="w-4 h-4 text-white" />}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -254,7 +244,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
             >
               <div className="flex items-center space-x-3">
                 <div className="w-5 h-5 rounded-sm bg-gradient-to-br from-blue-500 to-purple-600 border border-white/20"></div>
-                <span className="text-white">Wallpaper</span>
+                <span className="text-white">{t('wallpaper', 'settings')}</span>
               </div>
               <span className="text-white/60">{wallpapers.find(w => w.id === wallpaper)?.name || 'Default'}</span>
             </button>
@@ -287,7 +277,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
           
           {/* Security & Privacy Settings */}
           <div className="mb-6">
-            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">Security & Privacy</h4>
+            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">{t('securityPrivacy', 'settings')}</h4>
             
             <button 
               className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
@@ -298,7 +288,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
                 <div className="w-5 h-5 rounded-sm bg-red-500 flex items-center justify-center">
                   <span className="text-white text-xs">🔒</span>
                 </div>
-                <span className="text-white">Screen Lock</span>
+                <span className="text-white">{t('screenLock', 'settings')}</span>
               </div>
               <div className={`w-12 h-6 rounded-full p-1 relative transition-colors duration-200 ${
                 isLockEnabled ? 'bg-samsung-blue' : 'bg-white/20'
@@ -319,16 +309,16 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme }: SettingsAppProps) 
                   <div className="w-5 h-5 rounded-sm bg-green-500 flex items-center justify-center">
                     <span className="text-white text-xs">🔑</span>
                   </div>
-                  <span className="text-white">Change PIN</span>
+                  <span className="text-white">{t('changePIN', 'settings')}</span>
                 </div>
-                <span className="text-white/60">{customPin ? '••••' : 'Set PIN'}</span>
+                <span className="text-white/60">{customPin ? '••••' : t('setPIN', 'settings')}</span>
               </button>
             )}
             
             {showPasswordSettings && (
               <div className="p-4 bg-surface-dark/20 rounded-samsung-sm mb-3 ml-8">
                 <div className="text-center text-white mb-4">
-                  <div className="text-sm opacity-80">Enter new 4-digit PIN</div>
+                  <div className="text-sm opacity-80">{t('enterNewPIN', 'settings')}</div>
                 </div>
                 
                 {/* PIN Dots */}

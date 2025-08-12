@@ -18,6 +18,7 @@ import {
   Plane
 } from 'lucide-react';
 import type { Screen } from '@/hooks/usePhone';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface HomeScreenProps {
   onAppOpen: (screen: Screen) => void;
@@ -39,6 +40,23 @@ const apps = [
 ];
 
 export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
+  const { t } = useLanguage();
+
+  const translatedApps = [
+    { id: 'contacts', name: t('contacts', 'homeScreen'), icon: MessageCircle, color: 'from-purple-500 to-pink-500', screen: 'contacts' as Screen },
+    { id: 'phone', name: 'Phone', icon: Phone, color: 'from-green-500 to-emerald-500', screen: 'contacts' as Screen },
+    { id: 'camera', name: t('camera', 'homeScreen'), icon: Camera, color: 'from-gray-500 to-slate-500', screen: 'camera' as Screen },
+    { id: 'settings', name: t('settings', 'common'), icon: Settings, color: 'from-blue-500 to-purple-500', screen: 'settings' as Screen },
+    { id: 'banking', name: t('bank', 'homeScreen'), icon: CreditCard, color: 'from-pink-500 to-red-500', screen: 'banking' as Screen },
+    { id: 'twitter', name: t('twitter', 'homeScreen'), icon: Twitter, color: 'from-blue-400 to-blue-600', screen: 'twitter' as Screen },
+    { id: 'calculator', name: t('calculator', 'homeScreen'), icon: Calculator, color: 'from-cyan-400 to-blue-500', screen: 'calculator' as Screen },
+    { id: 'gallery', name: t('gallery', 'homeScreen'), icon: Images, color: 'from-yellow-400 to-orange-500', screen: 'gallery' as Screen },
+    { id: 'notes', name: t('notes', 'homeScreen'), icon: StickyNote, color: 'from-orange-300 to-yellow-500', screen: 'notes' as Screen },
+    { id: 'spotify', name: t('music', 'homeScreen'), icon: Music, color: 'from-green-500 to-green-600', screen: 'spotify' as Screen },
+    { id: 'clock', name: t('clock', 'homeScreen'), icon: Clock, color: 'from-indigo-500 to-purple-500', screen: 'clock' as Screen },
+    { id: 'yellowpages', name: 'Yellow Pages', icon: Book, color: 'from-yellow-400 to-teal-400', screen: 'yellowpages' as Screen },
+  ];
+
   return (
     <div className="absolute inset-0">
       {/* Background */}
@@ -58,7 +76,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
         {/* App Grid */}
         <div className="pt-16 px-6 h-full overflow-y-auto">
           <div className="grid grid-cols-4 gap-6 mb-8">
-            {apps.map((app) => {
+            {translatedApps.map((app) => {
               const IconComponent = app.icon;
               return (
                 <button
@@ -88,7 +106,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
                   <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg">
                     <Users className="w-6 h-6 text-white" />
                   </div>
-                  <span className="home-screen-text text-[10px] font-medium">Contacts</span>
+                  <span className="home-screen-text text-[10px] font-medium">{t('contacts', 'homeScreen')}</span>
                 </button>
                 
                 <button 
@@ -99,7 +117,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
                   <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
                     <CreditCard className="w-6 h-6 text-white" />
                   </div>
-                  <span className="home-screen-text text-[10px] font-medium">Bank</span>
+                  <span className="home-screen-text text-[10px] font-medium">{t('bank', 'homeScreen')}</span>
                 </button>
                 
                 <button 
@@ -110,7 +128,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
                   <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-gray-600 to-slate-700 shadow-lg">
                     <Camera className="w-6 h-6 text-white" />
                   </div>
-                  <span className="home-screen-text text-[10px] font-medium">Camera</span>
+                  <span className="home-screen-text text-[10px] font-medium">{t('camera', 'homeScreen')}</span>
                 </button>
                 
                 <button 
@@ -121,7 +139,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
                   <div className="w-12 h-12 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg">
                     <Settings className="w-6 h-6 text-white" />
                   </div>
-                  <span className="home-screen-text text-[10px] font-medium">Settings</span>
+                  <span className="home-screen-text text-[10px] font-medium">{t('settings', 'common')}</span>
                 </button>
               </div>
             </div>
