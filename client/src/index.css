@@ -209,6 +209,7 @@
   background: hsl(210 20% 97%);
 }
 
+/* Background Colors */
 .phone-screen.phone-dark-mode .bg-oneui-dark {
   background: hsl(220 10% 11%);
 }
@@ -217,20 +218,199 @@
   background: hsl(210 20% 97%);
 }
 
+.phone-screen.phone-dark-mode .bg-surface-dark\/30 {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.phone-screen.phone-light-mode .bg-surface-dark\/30 {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.phone-screen.phone-dark-mode .bg-surface-dark\/20 {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.phone-screen.phone-light-mode .bg-surface-dark\/20 {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.phone-screen.phone-dark-mode .bg-surface-dark\/90 {
+  background: rgba(20, 20, 20, 0.9);
+}
+
+.phone-screen.phone-light-mode .bg-surface-dark\/90 {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.phone-screen.phone-dark-mode .bg-surface-dark\/80 {
+  background: rgba(20, 20, 20, 0.8);
+}
+
+.phone-screen.phone-light-mode .bg-surface-dark\/80 {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.phone-screen.phone-dark-mode .bg-white\/10 {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.phone-screen.phone-light-mode .bg-white\/10 {
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.phone-screen.phone-dark-mode .bg-white\/20 {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.phone-screen.phone-light-mode .bg-white\/20 {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Text Colors */
 .phone-screen.phone-dark-mode .text-white {
   color: white;
 }
 
 .phone-screen.phone-light-mode .text-white {
-  color: hsl(220 10% 11%);
+  color: hsl(220 20% 20%);
 }
 
+.phone-screen.phone-dark-mode .text-white\/60 {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.phone-screen.phone-light-mode .text-white\/60 {
+  color: hsl(220 15% 45%);
+}
+
+.phone-screen.phone-dark-mode .text-white\/70 {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.phone-screen.phone-light-mode .text-white\/70 {
+  color: hsl(220 15% 40%);
+}
+
+.phone-screen.phone-dark-mode .text-white\/80 {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.phone-screen.phone-light-mode .text-white\/80 {
+  color: hsl(220 15% 35%);
+}
+
+.phone-screen.phone-dark-mode .text-white\/50 {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.phone-screen.phone-light-mode .text-white\/50 {
+  color: hsl(220 15% 50%);
+}
+
+/* Border Colors */
 .phone-screen.phone-dark-mode .border-white\/10 {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
 .phone-screen.phone-light-mode .border-white\/10 {
-  border-color: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.phone-screen.phone-dark-mode .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.phone-screen.phone-light-mode .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.phone-screen.phone-dark-mode .border-white\/30 {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.phone-screen.phone-light-mode .border-white\/30 {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Button Hover States */
+.phone-screen.phone-light-mode .oneui-button:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.phone-screen.phone-dark-mode .oneui-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Ring Colors for Light Mode */
+.phone-screen.phone-light-mode .ring-samsung-blue {
+  --tw-ring-color: hsl(210 100% 45%);
+}
+
+.phone-screen.phone-light-mode .ring-white\/30 {
+  --tw-ring-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Dock specific styles */
+.phone-screen.phone-light-mode .dock-app {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.phone-screen.phone-dark-mode .dock-app {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Lock Screen specific styles */
+.phone-screen.phone-light-mode .lock-screen-overlay {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.phone-screen.phone-dark-mode .lock-screen-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Settings App specific styles */
+.phone-screen.phone-light-mode .settings-background {
+  background: linear-gradient(135deg, hsl(210 25% 95%) 0%, hsl(215 25% 92%) 100%);
+}
+
+.phone-screen.phone-dark-mode .settings-background {
+  background: linear-gradient(135deg, hsl(220 15% 15%) 0%, hsl(220 20% 10%) 100%);
+}
+
+/* Notification specific styles */
+.phone-screen.phone-light-mode .notification-item {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: hsl(220 20% 20%);
+}
+
+.phone-screen.phone-dark-mode .notification-item {
+  background: rgba(20, 20, 20, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Light mode button styles */
+.phone-screen.phone-light-mode .bg-samsung-blue {
+  background: hsl(210 100% 50%);
+}
+
+.phone-screen.phone-dark-mode .bg-samsung-blue {
+  background: hsl(210 100% 55%);
+}
+
+/* Override for disabled states in light mode */
+.phone-screen.phone-light-mode .text-white\/50[disabled] {
+  color: hsl(220 15% 60%);
 }
 
 /* Language-specific content */

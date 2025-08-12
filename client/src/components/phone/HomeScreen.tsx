@@ -78,7 +78,7 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
           
           {/* Professional Dock - One UI Style */}
           <div className="absolute bottom-6 left-4 right-4">
-            <div className="bg-black/60 backdrop-blur-xl rounded-[32px] px-6 py-4 border border-white/10">
+            <div className="dock-app bg-black/60 backdrop-blur-xl rounded-[32px] px-6 py-4 border border-white/10">
               <div className="flex justify-between items-center">
                 <button 
                   className="oneui-button flex flex-col items-center space-y-1"

@@ -31,7 +31,7 @@ export const StatusBar = () => {
         <Signal className="w-3 h-3" data-testid="status-signal" />
         <Wifi className="w-3 h-3" data-testid="status-wifi" />
         <div className="flex items-center">
-          <div className="w-6 h-3 border border-white rounded-sm relative" data-testid="battery-indicator">
+          <div className="w-6 h-3 border border-white/80 rounded-sm relative" data-testid="battery-indicator">
             <div 
               className="h-1.5 bg-samsung-green rounded-sm absolute top-0.5 left-0.5 transition-all duration-200"
               style={{ width: `${(batteryLevel / 100) * 16}px` }}

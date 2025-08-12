@@ -65,7 +65,7 @@ export const LockScreen = ({ pin, notifications, onPinInput, onPinDelete }: Lock
           backgroundPosition: 'center'
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/60" />
+        <div className="absolute inset-0 lock-screen-overlay bg-gradient-to-b from-transparent via-black/20 to-black/60" />
         
         {/* Clock Widget */}
         <div className="absolute top-20 left-6 right-6">
@@ -80,7 +80,7 @@ export const LockScreen = ({ pin, notifications, onPinInput, onPinDelete }: Lock
           {notifications.slice(0, 2).map((notification) => (
             <div 
               key={notification.id}
-              className="bg-surface-dark/80 backdrop-blur-md rounded-samsung-sm p-3 border border-white/10"
+              className="notification-item backdrop-blur-md rounded-samsung-sm p-3"
               data-testid={`notification-${notification.id}`}
             >
               <div className="flex items-start space-x-3">
