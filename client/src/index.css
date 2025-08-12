@@ -509,3 +509,47 @@
 .phone-screen[data-language="turkish"] .wallpaper-label::after {
   content: "Arkaplan";
 }
+
+/* Camera filter effects */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+/* Camera focus animation */
+@keyframes focus-pulse {
+  0% { opacity: 0; transform: scale(1.2); }
+  50% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+
+.focus-indicator {
+  animation: focus-pulse 1s ease-in-out;
+}
+
+/* Camera filter preview styles */
+.filter-preview {
+  transition: all 0.3s ease;
+}
+
+.filter-preview:hover {
+  transform: scale(1.05);
+}
+
+/* Custom scrollbar for filter panels */
+.filter-panel::-webkit-scrollbar {
+  width: 2px;
+}
+
+.filter-panel::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.filter-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.filter-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
