@@ -51,13 +51,52 @@ export const MailApp = ({ onBack }: MailAppProps) => {
     subject: '',
     content: ''
   });
+    //add mock data email addres : test@test.com , password : 123456
+  const mockTestAccount = { //test@test.com , password : 123456
+    id: '1',
+    email: 'test@test.com',
+    password: '123456',
+    display_name: 'Test Account',
+    created_at: '2021-01-01'
+  };
 
+  useEffect(() => {
+    if (currentAccount) {
+      setCurrentAccount(mockTestAccount);
+    }
+  }, [currentAccount]); 
+  useEffect(() => {
+    if (currentAccount?.email === mockTestAccount.email) {
+      setEmails([
+        {
+          id: '101',
+          from_email: 'welcome@mail.com',
+          to_email: mockTestAccount.email,
+          subject: 'Welcome!',
+          content: 'This is your first mock email.',
+          is_read: false,
+          is_starred: false,
+          is_archived: false,
+          created_at: new Date().toISOString(),
+          sender: { ...mockTestAccount }
+        }
+      ]);
+    }
+  }, [currentAccount]);
   useEffect(() => {
     // Setup NUI callbacks
     const handleMailAccountCreated = (data: { account: MailAccount }) => {
       setCurrentAccount(data.account);
       setIsCreatingAccount(false);
       setNewAccountData({ email: '', password: '', displayName: '' });
+      // Load emails after account creation
+      mailAPI.getEmails();
+    };
+
+    const handleMailAccountLoggedIn = (data: { account: MailAccount }) => {
+      setCurrentAccount(data.account);
+      // Load emails after login
+      mailAPI.getEmails();
     };
 
     const handleEmailsLoaded = (data: { emails: Email[] }) => {
@@ -78,19 +117,25 @@ export const MailApp = ({ onBack }: MailAppProps) => {
       console.error('Mail error:', data.error);
     };
 
-    NUIManager.registerCallback('mailAccountCreated', handleMailAccountCreated);
-    NUIManager.registerCallback('emailsLoaded', handleEmailsLoaded);
-    NUIManager.registerCallback('emailSent', handleEmailSent);
-    NUIManager.registerCallback('newEmail', handleNewEmail);
-    NUIManager.registerCallback('mailError', handleMailError);
-
-    return () => {
-      NUIManager.removeCallback('mailAccountCreated', handleMailAccountCreated);
-      NUIManager.removeCallback('emailsLoaded', handleEmailsLoaded);
-      NUIManager.removeCallback('emailSent', handleEmailSent);
-      NUIManager.removeCallback('newEmail', handleNewEmail);
-      NUIManager.removeCallback('mailError', handleMailError);
+    // Listen for NUI message events
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.action === 'mailAccountCreated') {
+        handleMailAccountCreated(event.data);
+      } else if (event.data.action === 'mailAccountLoggedIn') {
+        handleMailAccountLoggedIn(event.data);
+      } else if (event.data.action === 'emailsLoaded') {
+        handleEmailsLoaded(event.data);
+      } else if (event.data.action === 'mailSent') {
+        handleEmailSent(event.data);
+      } else if (event.data.action === 'newEmail') {
+        handleNewEmail(event.data);
+      } else if (event.data.action === 'mailError') {
+        handleMailError(event.data);
+      }
     };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
 
   const handleCreateAccount = () => {
@@ -184,58 +229,55 @@ export const MailApp = ({ onBack }: MailAppProps) => {
             <div className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <Mail className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-white text-xl font-semibold mb-2">Create Email Account</h2>
-            <p className="text-white/60">Stay connected with the city</p>
+            <h2 className="text-white text-xl font-semibold mb-2">Create Mail Account</h2>
+            <p className="text-white/60">Set up your email account to start sending and receiving emails</p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-white text-sm font-medium mb-2">Email Address</label>
+              <label className="block text-white/80 text-sm font-medium mb-2">Email Address</label>
               <input
                 type="email"
+                placeholder="Enter your email"
+                className="w-full bg-white/10 text-white placeholder-white/50 px-4 py-3 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-red-400"
                 value={newAccountData.email}
-                onChange={(e) => setNewAccountData({...newAccountData, email: e.target.value})}
-                placeholder="your.email@example.com"
-                className="w-full p-3 bg-surface-dark text-white rounded-samsung-sm border border-white/10 focus:border-red-400 focus:outline-none"
+                onChange={(e) => setNewAccountData(prev => ({ ...prev, email: e.target.value }))}
               />
             </div>
-            
             <div>
-              <label className="block text-white text-sm font-medium mb-2">Password</label>
+              <label className="block text-white/80 text-sm font-medium mb-2">Password</label>
               <input
                 type="password"
+                placeholder="Enter your password"
+                className="w-full bg-white/10 text-white placeholder-white/50 px-4 py-3 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-red-400"
                 value={newAccountData.password}
-                onChange={(e) => setNewAccountData({...newAccountData, password: e.target.value})}
-                placeholder="Choose a secure password"
-                className="w-full p-3 bg-surface-dark text-white rounded-samsung-sm border border-white/10 focus:border-red-400 focus:outline-none"
+                onChange={(e) => setNewAccountData(prev => ({ ...prev, password: e.target.value }))}
               />
             </div>
-
             <div>
-              <label className="block text-white text-sm font-medium mb-2">Display Name</label>
+              <label className="block text-white/80 text-sm font-medium mb-2">Display Name</label>
               <input
                 type="text"
+                placeholder="Enter your display name"
+                className="w-full bg-white/10 text-white placeholder-white/50 px-4 py-3 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-red-400"
                 value={newAccountData.displayName}
-                onChange={(e) => setNewAccountData({...newAccountData, displayName: e.target.value})}
-                placeholder="Your name"
-                className="w-full p-3 bg-surface-dark text-white rounded-samsung-sm border border-white/10 focus:border-red-400 focus:outline-none"
+                onChange={(e) => setNewAccountData(prev => ({ ...prev, displayName: e.target.value }))}
               />
             </div>
-
-            <button 
-              onClick={handleCreateAccount}
-              disabled={!newAccountData.email.trim() || !newAccountData.password.trim() || !newAccountData.displayName.trim()}
-              className="w-full bg-red-500 text-white p-3 rounded-samsung-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Create Account
-            </button>
           </div>
+
+          <button
+            className="w-full bg-red-500 text-white py-3 rounded-lg font-medium hover:bg-red-600 transition-colors"
+            onClick={handleCreateAccount}
+          >
+            Create Account
+          </button>
         </div>
       </div>
     );
   }
 
-  // No Account Screen
+  // Login Screen
   if (!currentAccount) {
     return (
       <div className="absolute inset-0 bg-oneui-dark flex flex-col">
@@ -243,29 +285,62 @@ export const MailApp = ({ onBack }: MailAppProps) => {
           <button 
             className="oneui-button p-2 -ml-2" 
             onClick={onBack}
-            data-testid="mail-back"
           >
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
-          <div className="flex items-center space-x-2">
-            <Mail className="w-6 h-6 text-red-400" />
-            <h1 className="text-white text-lg font-semibold">Mail</h1>
-          </div>
-          <div className="w-6" />
+          <h1 className="text-white text-lg font-semibold">Mail Login</h1>
+          <div></div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-6">
+        <div className="flex-1 p-6 space-y-6">
           <div className="text-center">
-            <div className="w-24 h-24 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Mail className="w-12 h-12 text-white" />
+            <div className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-white text-2xl font-semibold mb-4">Welcome to Mail</h2>
-            <p className="text-white/60 text-lg mb-8">Stay connected with the city</p>
-            <button 
-              onClick={() => setIsCreatingAccount(true)}
-              className="bg-red-500 text-white px-8 py-3 rounded-samsung-sm font-medium"
+            <h2 className="text-white text-xl font-semibold mb-2">Welcome to Mail</h2>
+            <p className="text-white/60">Login to your existing account or create a new one</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-white/80 text-sm font-medium mb-2">Email Address</label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="w-full bg-white/10 text-white placeholder-white/50 px-4 py-3 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-red-400"
+                value={newAccountData.email}
+                onChange={(e) => setNewAccountData(prev => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-white/80 text-sm font-medium mb-2">Password</label>
+              <input
+                type="password"
+                placeholder="Enter your password"
+                className="w-full bg-white/10 text-white placeholder-white/50 px-4 py-3 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-red-400"
+                value={newAccountData.password}
+                onChange={(e) => setNewAccountData(prev => ({ ...prev, password: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              className="w-full bg-red-500 text-white py-3 rounded-lg font-medium hover:bg-red-600 transition-colors"
+              onClick={() => {
+                /*if (newAccountData.email.trim() && newAccountData.password.trim()) {
+                  mailAPI.login(newAccountData.email.trim(), newAccountData.password.trim());
+                }*/
+                setCurrentAccount(mockTestAccount);
+              }}
             >
-              Create Account
+              Login
+            </button>
+            <button
+              className="w-full bg-white/10 text-white py-3 rounded-lg font-medium hover:bg-white/20 transition-colors"
+              onClick={() => setIsCreatingAccount(true)}
+            >
+              Create New Account
             </button>
           </div>
         </div>

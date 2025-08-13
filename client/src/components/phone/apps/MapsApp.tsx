@@ -15,9 +15,10 @@ import {
   RotateCcw,
   Bookmark,
   Share,
-  ArrowLeft
+  ArrowLeft,
+  MoreVertical
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useNotificationContext } from "@/context/NotificationContext";
 
 interface Location {
   id: string;
@@ -60,7 +61,7 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
   const [routeInfo, setRouteInfo] = useState<Route | null>(null);
   const [activeTab, setActiveTab] = useState<"explore" | "search" | "saved">("explore");
   const [savedPlaces, setSavedPlaces] = useState<Location[]>([]);
-  const { toast } = useToast();
+  const { showInfo, showSuccess, showWarning, showError } = useNotificationContext();
 
   useEffect(() => {
     loadNearbyPlaces();
@@ -165,11 +166,7 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
     setActiveTab("search");
     
     if (results.length === 0) {
-      toast({
-        title: "No results found",
-        description: `No places found for "${searchQuery}"`,
-        variant: "destructive",
-      });
+      showWarning("No results found", `No places found for "${searchQuery}"`, "maps");
     }
   };
 
@@ -190,10 +187,7 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
       ],
     });
 
-    toast({
-      title: "Route calculated",
-      description: `Directions to ${destination.name}`,
-    });
+    showSuccess("Route calculated", `Directions to ${destination.name}`, "maps");
   };
 
   const toggleBookmark = (location: Location) => {
@@ -211,115 +205,110 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
       p.id === location.id ? { ...p, isBookmarked: !p.isBookmarked } : p
     ));
 
-    toast({
-      title: location.isBookmarked ? "Removed from saved" : "Saved",
-      description: location.isBookmarked 
-        ? `${location.name} removed from saved places`
-        : `${location.name} saved to your places`,
-    });
+    if (location.isBookmarked) {
+      showInfo("Removed from saved", `${location.name} removed from saved places`, "maps");
+    } else {
+      showSuccess("Saved", `${location.name} saved to your places`, "maps");
+    }
   };
 
   const shareLocation = (location: Location) => {
-    toast({
-      title: "Location shared",
-      description: `Shared ${location.name} location`,
-    });
+    showSuccess("Location shared", `Shared ${location.name} location`, "maps");
   };
 
   const callPlace = (phone?: string) => {
     if (phone) {
-      toast({
-        title: "Calling...",
-        description: `Calling ${phone}`,
-      });
+      showInfo("Calling...", `Calling ${phone}`, "maps");
     }
   };
 
   const renderLocationCard = (location: Location, showActions = true) => (
-    <Card key={location.id} className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 mb-3">
-      <div className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 dark:text-white">{location.name}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{location.address}</p>
-            <div className="flex items-center space-x-3 mt-2">
-              <Badge variant="secondary" className="text-xs">
-                {location.category}
-              </Badge>
-              {location.rating && (
-                <div className="flex items-center space-x-1">
-                  <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">{location.rating}</span>
-                </div>
-              )}
-              {location.distance && (
-                <span className="text-sm text-gray-600 dark:text-gray-400">{location.distance}</span>
-              )}
-            </div>
+    <div key={location.id} className="bg-surface-dark/30 rounded-samsung-sm p-3 mb-2">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <h3 className="font-semibold text-white text-sm">{location.name}</h3>
+          <p className="text-white/60 text-xs mt-1">{location.address}</p>
+          <div className="flex items-center space-x-2 mt-2">
+            <Badge variant="secondary" className="text-xs bg-samsung-blue/20 text-samsung-blue border-samsung-blue/30">
+              {location.category}
+            </Badge>
+            {location.rating && (
+              <div className="flex items-center space-x-1">
+                <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                <span className="text-xs text-white/60">{location.rating}</span>
+              </div>
+            )}
+            {location.distance && (
+              <span className="text-xs text-white/60">{location.distance}</span>
+            )}
           </div>
         </div>
-
-        {showActions && (
-          <div className="flex items-center space-x-2 mt-4">
-            <Button
-              onClick={() => getDirections(location)}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Navigation className="h-3 w-3 mr-1" />
-              Directions
-            </Button>
-            {location.phone && (
-              <Button
-                onClick={() => callPlace(location.phone)}
-                variant="outline"
-                size="sm"
-              >
-                <Phone className="h-3 w-3 mr-1" />
-                Call
-              </Button>
-            )}
-            <Button
-              onClick={() => toggleBookmark(location)}
-              variant="ghost"
-              size="sm"
-              className={location.isBookmarked ? "text-blue-600" : ""}
-            >
-              <Bookmark className={`h-3 w-3 ${location.isBookmarked ? "fill-current" : ""}`} />
-            </Button>
-            <Button
-              onClick={() => shareLocation(location)}
-              variant="ghost"
-              size="sm"
-            >
-              <Share className="h-3 w-3" />
-            </Button>
-          </div>
-        )}
       </div>
-    </Card>
+
+      {showActions && (
+        <div className="flex items-center space-x-1 mt-3">
+          <Button
+            onClick={() => getDirections(location)}
+            size="sm"
+            className="bg-samsung-blue hover:bg-samsung-blue/80 text-white border-0 rounded-samsung-sm text-xs px-2 py-1 h-7"
+          >
+            <Navigation className="h-3 w-3 mr-1" />
+            Directions
+          </Button>
+          {location.phone && (
+            <Button
+              onClick={() => callPlace(location.phone)}
+              variant="outline"
+              size="sm"
+              className="border-white/20 text-black hover:bg-white/10 rounded-samsung-sm text-xs px-2 py-1 h-7"
+            >
+              <Phone className="h-3 w-3 mr-1" />
+              Call
+            </Button>
+          )}
+          <Button
+            onClick={() => toggleBookmark(location)}
+            variant="ghost"
+            size="sm"
+            className={`text-white hover:bg-white/10 rounded-samsung-sm text-xs px-2 py-1 h-7 ${
+              location.isBookmarked ? "text-samsung-blue" : ""
+            }`}
+          >
+            <Bookmark className={`h-3 w-3 ${location.isBookmarked ? "fill-current" : ""}`} />
+          </Button>
+          <Button
+            onClick={() => shareLocation(location)}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/10 rounded-samsung-sm text-xs px-2 py-1 h-7"
+          >
+            <Share className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
+    </div>
   );
 
   if (showRoute && selectedLocation && routeInfo) {
     return (
-      <div className="h-full bg-white dark:bg-gray-900">
+      <div className="absolute inset-0 maps-app flex flex-col bg-gray-900">
         {/* Route Header */}
-        <div className="bg-blue-600 text-white p-4">
+        <div className="bg-samsung-blue text-white p-6 border-b border-white/10">
           <div className="flex items-center justify-between">
             <Button
               onClick={() => setShowRoute(false)}
               variant="ghost"
               size="sm"
-              className="text-white hover:bg-blue-700 p-2"
+              className="text-white hover:bg-samsung-blue/80 p-2 -ml-2"
             >
               <RotateCcw className="h-4 w-4" />
             </Button>
             <div className="text-center">
-              <h2 className="font-semibold">Route to {selectedLocation.name}</h2>
+              <h2 className="font-semibold text-lg">Route to {selectedLocation.name}</h2>
               <div className="flex items-center justify-center space-x-4 mt-1">
-                <span className="text-sm">{routeInfo.duration}</span>
-                <span className="text-sm">•</span>
-                <span className="text-sm">{routeInfo.distance}</span>
+                <span className="text-sm text-white/80">{routeInfo.duration}</span>
+                <span className="text-sm text-white/60">•</span>
+                <span className="text-sm text-white/80">{routeInfo.distance}</span>
               </div>
             </div>
             <div className="w-8" />
@@ -327,37 +316,41 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
         </div>
 
         {/* Map Placeholder */}
-        <div className="bg-green-100 dark:bg-green-900 h-48 flex items-center justify-center">
+        <div className="bg-green-900/20 h-48 flex items-center justify-center border-b border-white/10">
           <div className="text-center">
-            <Navigation2 className="h-12 w-12 text-green-600 dark:text-green-400 mx-auto mb-2" />
-            <p className="text-green-700 dark:text-green-300 font-medium">Navigation Active</p>
-            <p className="text-sm text-green-600 dark:text-green-400">Follow the route below</p>
+            <Navigation2 className="h-12 w-12 text-green-400 mx-auto mb-2" />
+            <p className="text-green-400 font-medium">Navigation Active</p>
+            <p className="text-sm text-green-400/80">Follow the route below</p>
           </div>
         </div>
 
         {/* Route Steps */}
-        <div className="p-4">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Route Steps</h3>
+        <div className="p-6 flex-1 overflow-y-auto">
+          <h3 className="font-semibold text-white mb-4">Route Steps</h3>
           <div className="space-y-3">
             {routeInfo.steps.map((step, index) => (
               <div key={index} className="flex items-start space-x-3">
-                <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
+                <div className="bg-samsung-blue text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
                   {index + 1}
                 </div>
-                <p className="text-gray-700 dark:text-gray-300 flex-1">{step}</p>
+                <p className="text-white/80 flex-1">{step}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-t border-white/10">
           <div className="flex space-x-3">
-            <Button className="flex-1 bg-green-600 hover:bg-green-700">
+            <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-samsung-sm">
               <Car className="h-4 w-4 mr-2" />
               Start Navigation
             </Button>
-            <Button variant="outline" onClick={() => shareLocation(selectedLocation)}>
+            <Button 
+              variant="outline" 
+              onClick={() => shareLocation(selectedLocation)}
+              className="border-white/20 text-white hover:bg-white/10 rounded-samsung-sm"
+            >
               <Share className="h-4 w-4" />
             </Button>
           </div>
@@ -367,26 +360,35 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
   }
 
   return (
-    <div className="h-full bg-white dark:bg-gray-900">
-      {/* Header */}
-      <div className="bg-blue-600 text-white p-4">
+    <div className="absolute inset-0 maps-app flex flex-col bg-gray-900">
+      {/* App Header */}
+      <div className="flex items-center justify-between p-6 border-b border-white/10 mt-2">
         <button 
           className="oneui-button p-2 -ml-2" 
           onClick={onBack}
-          data-testid="contacts-back"
+          data-testid="maps-back"
         >
           <ArrowLeft className="w-6 h-6 text-white" />
         </button>
-        <h1 className="text-xl font-bold">Maps</h1>
-        <div className="flex items-center space-x-2 mt-3">
+        <h1 className="text-white text-lg font-semibold">Maps</h1>
+        <button 
+          className="oneui-button p-2"
+          data-testid="maps-menu"
+        >
+          <MoreVertical className="w-5 h-5 text-white" />
+        </button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="p-4 border-b border-white/10">
+        <div className="flex items-center space-x-2">
           <div className="flex-1 relative">
-         
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search places..."
-              className="bg-white text-gray-900 pl-10 border-0"
+              className="bg-surface-dark/50 text-black placeholder-white/60 pl-10 border-white/10 focus:border-samsung-blue rounded-samsung-sm"
               onKeyPress={(e) => e.key === "Enter" && handleSearch()}
             />
           </div>
@@ -394,7 +396,7 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
             onClick={handleSearch}
             variant="secondary"
             size="sm"
-            className="bg-blue-700 hover:bg-blue-800 text-white border-0"
+            className="bg-samsung-blue hover:bg-samsung-blue/80 text-white border-0 rounded-samsung-sm"
           >
             Search
           </Button>
@@ -402,46 +404,46 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
       </div>
 
       {/* Current Location */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-samsung-blue/20 p-4 border-b border-white/10">
         <div className="flex items-center space-x-3">
-          <div className="bg-blue-600 rounded-full p-2">
+          <div className="bg-samsung-blue rounded-full p-2">
             <MapPin className="h-4 w-4 text-white" />
           </div>
           <div>
-            <p className="font-medium text-gray-900 dark:text-white">{currentLocation.name}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{currentLocation.address}</p>
+            <p className="font-medium text-white">{currentLocation.name}</p>
+            <p className="text-sm text-white/60">{currentLocation.address}</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700">
+      <div className="flex border-b border-white/10">
         <button
           onClick={() => setActiveTab("explore")}
-          className={`flex-1 py-3 px-4 text-center font-medium ${
+          className={`flex-1 py-3 px-4 text-center font-medium transition-colors duration-200 ${
             activeTab === "explore"
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-gray-600 dark:text-gray-400"
+              ? "text-samsung-blue border-b-2 border-samsung-blue"
+              : "text-white/70"
           }`}
         >
           Explore
         </button>
         <button
           onClick={() => setActiveTab("search")}
-          className={`flex-1 py-3 px-4 text-center font-medium ${
+          className={`flex-1 py-3 px-4 text-center font-medium transition-colors duration-200 ${
             activeTab === "search"
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-gray-600 dark:text-gray-400"
+              ? "text-samsung-blue border-b-2 border-samsung-blue"
+              : "text-white/70"
           }`}
         >
           Search
         </button>
         <button
           onClick={() => setActiveTab("saved")}
-          className={`flex-1 py-3 px-4 text-center font-medium ${
+          className={`flex-1 py-3 px-4 text-center font-medium transition-colors duration-200 ${
             activeTab === "saved"
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-gray-600 dark:text-gray-400"
+              ? "text-samsung-blue border-b-2 border-samsung-blue"
+              : "text-white/70"
           }`}
         >
           Saved
@@ -449,20 +451,20 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
       </div>
 
       {/* Content */}
-      <div className="p-4 h-full overflow-y-auto">
+      <div className="px-4 py-2 flex-1 overflow-y-auto scrollbar-hide">
         {activeTab === "explore" && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Nearby Places</h2>
+            <h2 className="text-base font-semibold text-white mb-3">Nearby Places</h2>
             {nearbyPlaces.map(place => renderLocationCard(place))}
           </div>
         )}
 
         {activeTab === "search" && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-base font-semibold text-white mb-3">
               Search Results
               {searchQuery && (
-                <span className="text-sm font-normal text-gray-600 dark:text-gray-400">
+                <span className="text-sm font-normal text-white/60">
                   {" "}for "{searchQuery}"
                 </span>
               )}
@@ -470,14 +472,14 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
             {searchResults.length > 0 ? (
               searchResults.map(place => renderLocationCard(place))
             ) : searchQuery ? (
-              <div className="text-center py-8">
-                <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">No results found for "{searchQuery}"</p>
+              <div className="text-center py-6">
+                <Search className="h-10 w-10 text-white/40 mx-auto mb-3" />
+                <p className="text-white/60">No results found for "{searchQuery}"</p>
               </div>
             ) : (
-              <div className="text-center py-8">
-                <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">Search for places, addresses, or points of interest</p>
+              <div className="text-center py-6">
+                <Search className="h-10 w-10 text-white/40 mx-auto mb-3" />
+                <p className="text-white/60">Search for places, addresses, or points of interest</p>
               </div>
             )}
           </div>
@@ -485,14 +487,14 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
 
         {activeTab === "saved" && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Saved Places</h2>
+            <h2 className="text-base font-semibold text-white mb-3">Saved Places</h2>
             {savedPlaces.length > 0 ? (
               savedPlaces.map(place => renderLocationCard(place))
             ) : (
-              <div className="text-center py-8">
-                <Bookmark className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">No saved places yet</p>
-                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              <div className="text-center py-6">
+                <Bookmark className="h-10 w-10 text-white/40 mx-auto mb-3" />
+                <p className="text-white/60">No saved places yet</p>
+                <p className="text-sm text-white/40 mt-2">
                   Save places you visit frequently for quick access
                 </p>
               </div>

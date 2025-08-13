@@ -9,15 +9,27 @@ function OpenPhone()
     if not phoneOpen then
         phoneOpen = true
         SetNuiFocus(true, true)
+        
+        -- Get QBCore player data including phone number
+        local playerData = QBCore.Functions.GetPlayerData()
+        local phoneNumber = playerData.charinfo and playerData.charinfo.phone or "Unknown"
+        local playerName = playerData.charinfo and (playerData.charinfo.firstname .. " " .. playerData.charinfo.lastname) or "Unknown"
+        
         SendNUIMessage({
             action = 'openPhone',
-            playerData = QBCore.Functions.GetPlayerData()
+            playerData = {
+                ...playerData,
+                phoneNumber = phoneNumber,
+                playerName = playerName
+            }
         })
         
         -- Load initial data
         TriggerServerEvent('gg-phone:server:getNotes')
         TriggerServerEvent('gg-phone:server:getContacts')
         TriggerServerEvent('gg-phone:server:getTransactions')
+        TriggerServerEvent('gg-phone:server:getPhotos')
+        TriggerServerEvent('gg-phone:server:getPhotos')
     end
 end
 
@@ -98,7 +110,7 @@ end)
 
 -- Messages Callbacks
 RegisterNUICallback('sendMessage', function(data, cb)
-    TriggerServerEvent('gg-phone:server:sendMessage', data.targetNumber, data.message)
+    TriggerServerEvent('gg-phone:server:sendMessage', data.targetNumber, data.message, data.messageType, data.metadata)
     cb('ok')
 end)
 
@@ -166,6 +178,16 @@ end)
 
 RegisterNUICallback('sendMail', function(data, cb)
     TriggerServerEvent('gg-phone:server:sendMail', data.receiverEmail, data.subject, data.content)
+    cb('ok')
+end)
+
+RegisterNUICallback('loginMailAccount', function(data, cb)
+    TriggerServerEvent('gg-phone:server:loginMailAccount', data.email, data.password)
+    cb('ok')
+end)
+
+RegisterNUICallback('getEmails', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getEmails')
     cb('ok')
 end)
 
@@ -431,5 +453,41 @@ AddEventHandler('gg-phone:client:transactionsLoaded', function(transactions)
     SendNUIMessage({
         action = 'transactionsLoaded',
         transactions = transactions
+    })
+end)
+
+-- Camera Callbacks
+RegisterNUICallback('takePhoto', function(data, cb)
+    TriggerServerEvent('gg-phone:server:takePhoto', data.filter, data.effects, data.cssFilter)
+    cb('ok')
+end)
+
+RegisterNUICallback('getPhotos', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getPhotos')
+    cb('ok')
+end)
+
+-- Camera Event Handlers
+RegisterNetEvent('gg-phone:client:photoTaken')
+AddEventHandler('gg-phone:client:photoTaken', function(photo)
+    SendNUIMessage({
+        action = 'photoTaken',
+        photo = photo
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:photosLoaded')
+AddEventHandler('gg-phone:client:photosLoaded', function(photos)
+    SendNUIMessage({
+        action = 'photosLoaded',
+        photos = photos
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:cameraError')
+AddEventHandler('gg-phone:client:cameraError', function(error)
+    SendNUIMessage({
+        action = 'cameraError',
+        error = error
     })
 end)

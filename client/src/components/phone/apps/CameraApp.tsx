@@ -1,5 +1,7 @@
 import { ArrowLeft, Camera, SwitchCamera, Zap, Timer, Settings, Palette, Sparkles, Sun, Moon, Droplets, Snowflake, Heart, Star } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNotifications } from '@/utils/notifications';
+import { cameraAPI } from '@/utils/nui';
 
 interface CameraAppProps {
   onBack: () => void;
@@ -54,6 +56,26 @@ export const CameraApp = ({ onBack }: CameraAppProps) => {
   const [showFilters, setShowFilters] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
   const [filterCategory, setFilterCategory] = useState<'basic' | 'artistic' | 'vintage' | 'beauty'>('basic');
+  const { showSuccess, showError } = useNotifications();
+
+  // Listen for NUI messages from Lua
+  useEffect(() => {
+    const handleNUIMessage = (event: MessageEvent) => {
+      if (event.data && event.data.action) {
+        switch (event.data.action) {
+          case 'photoTaken':
+            showSuccess('Fotoğraf Çekildi!', 'Fotoğraf başarıyla kaydedildi', 'camera');
+            break;
+          case 'cameraError':
+            showError('Kamera Hatası', event.data.error, 'camera');
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('message', handleNUIMessage);
+    return () => window.removeEventListener('message', handleNUIMessage);
+  }, [showSuccess, showError]);
 
   const toggleEffect = (effectId: string) => {
     setActiveEffects(prev => prev.map(effect => 
@@ -64,16 +86,15 @@ export const CameraApp = ({ onBack }: CameraAppProps) => {
   };
 
   const handleCapture = () => {
-    // This would trigger the FiveM screenshot functionality with applied filters
+    // Get active effects
     const activeEffectNames = activeEffects.filter(e => e.active).map(e => e.name);
     console.log('Capturing photo with filter:', selectedFilter.name, 'and effects:', activeEffectNames);
     
-    // In a real FiveM implementation, this would pass filter and effect data to the server
-    // TriggerServerEvent('phone:camera:capture', {
-    //   filter: selectedFilter.id,
-    //   effects: activeEffectNames,
-    //   cssFilter: selectedFilter.cssFilter
-    // });
+    // Show loading notification
+    showSuccess('Fotoğraf Çekiliyor...', 'Lütfen bekleyin', 'camera');
+    
+    // Trigger photo capture via NUI
+    cameraAPI.takePhoto(selectedFilter.id, activeEffectNames, selectedFilter.cssFilter);
   };
 
   const filteredFilters = cameraFilters.filter(filter => filter.category === filterCategory);

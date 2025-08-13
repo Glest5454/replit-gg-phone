@@ -30,14 +30,19 @@ CREATE TABLE IF NOT EXISTS `phone_contacts` (
 -- Phone Messages Table
 CREATE TABLE IF NOT EXISTS `phone_messages` (
   `id` varchar(36) NOT NULL DEFAULT (UUID()),
-  `sender_id` varchar(50) NOT NULL,
-  `receiver_id` varchar(50) NOT NULL,
-  `message` text NOT NULL,
-  `read` tinyint(1) DEFAULT 0,
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `sender_id` varchar(50) NOT NULL, -- Citizen ID of sender
+  `receiver_id` varchar(50) NOT NULL, -- Citizen ID of receiver
+  `message` text NOT NULL, -- Message content
+  `message_type` varchar(20) DEFAULT 'text', -- text, emoji, gif, photo, location
+  `metadata` json DEFAULT NULL, -- JSON for additional data (emoji, gif URL, photo URL, location)
+  `is_read` tinyint(1) DEFAULT 0,
+  `is_deleted` tinyint(1) DEFAULT 0,
+  `timestamp` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `sender_id` (`sender_id`),
-  KEY `receiver_id` (`receiver_id`)
+  KEY `receiver_id` (`receiver_id`),
+  KEY `timestamp` (`timestamp`),
+  KEY `message_type` (`message_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Phone Transactions Table

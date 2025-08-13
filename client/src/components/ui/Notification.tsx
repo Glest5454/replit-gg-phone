@@ -54,10 +54,11 @@ export const Notification = ({ notification, onDismiss, onAction }: Notification
     <div
       className={`relative z-[99999] w-72 max-w-sm transition-all duration-300 ease-out ${
         isVisible ? 'animate-oneui-slide-up' : 'animate-oneui-slide-down'
+        //'animate-oneui-slide-up'
       }`}
     >
       <div
-        className={`relative bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl p-2 shadow-2xl ${getTypeStyles(notification.type)}`}
+        className={`relative bg-black/90  border border-white/20 rounded-xl p-2 shadow-2xl ${getTypeStyles(notification.type)}`}
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
       >

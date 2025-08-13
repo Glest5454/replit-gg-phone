@@ -106,8 +106,8 @@ declare global {
   
   // Messages Functions
 export const messagesAPI = {
-  send: (targetNumber: string, message: string) => {
-    NUIManager.post('sendMessage', { targetNumber, message });
+  send: (targetNumber: string, message: string, messageType?: string, metadata?: any) => {
+    NUIManager.post('sendMessage', { targetNumber, message, messageType, metadata });
   },
   
   getMessages: (targetNumber: string) => {
@@ -164,8 +164,16 @@ export const messagesAPI = {
       NUIManager.post('createMailAccount', { email, password, displayName });
     },
     
+    login: (email: string, password: string) => {
+      NUIManager.post('loginMailAccount', { email, password });
+    },
+    
     send: (receiverEmail: string, subject: string, content: string) => {
       NUIManager.post('sendMail', { receiverEmail, subject, content });
+    },
+    
+    getEmails: () => {
+      NUIManager.post('getEmails', {});
     }
   };
   
@@ -175,3 +183,14 @@ export const messagesAPI = {
       NUIManager.post('closePhone', {});
     }
   };
+
+// Camera Functions
+export const cameraAPI = {
+  takePhoto: (filter: string, effects: string[], cssFilter: string) => {
+    NUIManager.post('takePhoto', { filter, effects, cssFilter });
+  },
+  
+  getPhotos: () => {
+    NUIManager.post('getPhotos', {});
+  }
+};

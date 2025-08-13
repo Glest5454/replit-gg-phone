@@ -18,6 +18,7 @@ export type Screen =
   | 'mail'
   | 'darkchat'
   | 'maps'
+  | 'browser'
   | 'phone';   
 
 export interface PhoneState {

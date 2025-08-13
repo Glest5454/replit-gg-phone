@@ -9,11 +9,15 @@ interface SettingsAppProps {
   theme: 'light' | 'dark';
   setWallpaper: (wallpaper: string) => void;
   setBrightness: (brightness: number) => void;
+  playerData?: {
+    phoneNumber?: string;
+    playerName?: string;
+  };
 }
 
-export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBrightness }: SettingsAppProps) => {
+export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBrightness, playerData }: SettingsAppProps) => {
   const { language, setLanguage: setAppLanguage, t } = useLanguage();
-  const { showInfo, showSuccess, showWarning, showError, showMessageNotification, showCallNotification } = useNotifications();
+  const { showInfo, showSuccess, showWarning, showError, showMessageNotification, showCallNotification, showTwitterNotification } = useNotifications();
   const [brightness, setBrightnessLocal] = useState(75);
   const [wallpaper, setWallpaperLocal] = useState('default');
   const [showBrightnessSlider, setShowBrightnessSlider] = useState(false);
@@ -100,12 +104,17 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
   // Test notification functions
   const testNotifications = () => {
     showInfo('Test Info', 'This is an info notification', 'system', { duration: 3000 }); // 3 saniye
-   /* setTimeout(() => showSuccess('Test Success', 'Operation completed successfully', 'banking', { duration: 4000 }), 1000); // 4 saniye
-    setTimeout(() => showWarning('Test Warning', 'Please check your settings', 'settings', { duration: 5000 }), 2000); // 5 saniye
-    setTimeout(() => showError('Test Error', 'Something went wrong', 'system', { duration: 6000 }), 3000); // 6 saniye
-    setTimeout(() => showMessageNotification('John Doe', 'Hey, are you online?', { duration: 7000 }), 4000); // 7 saniye
-    setTimeout(() => showCallNotification('Jane Smith', { duration: 8000 }), 5000); // 8 saniye*/
+    showSuccess('Test Success', 'Operation completed successfully', 'banking', { duration: 4000 }); // 4 saniye
+    showWarning('Test Warning', 'Please check your settings', 'settings', { duration: 5000 }); // 5 saniye
+    showError('Test Error', 'Something went wrong', 'system', { duration: 6000 }); // 6 saniye
+    showMessageNotification('John Doe', 'Hey, are you online?', { duration: 7000 }); // 7 saniye
+    showCallNotification('Jane Smith', { duration: 8000 }); // 8 saniye
   };
+    // Test notification functions
+    const testNotifications2= () => {
+      showInfo('Test Info', 'This is an info notification', 'system', { duration:3000 }); // 3 saniye
+      
+    };
 
   return (
     <div className="absolute inset-0 settings-background flex flex-col">
@@ -134,67 +143,73 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-samsung-blue rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold text-xl">JD</span>
+              <span className="text-white font-semibold text-xl">
+                {playerData?.playerName ? playerData.playerName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'JD'}
+              </span>
             </div>
             <div>
-              <h3 className="text-white font-semibold text-lg">John Doe</h3>
-              <p className="text-white/60">+1 (555) 123-4567</p>
+              <h3 className="text-white font-semibold text-lg">
+                {playerData?.playerName || 'John Doe'}
+              </h3>
+              <p className="text-white/60">
+                {playerData?.phoneNumber || '+1 (555) 123-4567'}
+              </p>
             </div>
           </div>
         </div>
         
         {/* Settings Groups */}
-        <div className="px-6 py-4">
+        <div className="px-4 py-3">
           
           {/* Notification Testing Section */}
-          <div className="mb-6">
-            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">Notification Testing</h4>
+          <div className="mb-4">
+            <h4 className="text-white/60 text-sm font-medium mb-2 uppercase tracking-wide">Notification Testing</h4>
             
             <button 
-              className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
-              onClick={testNotifications}
+              className="oneui-button w-full flex items-center justify-between p-3 bg-surface-dark/30 rounded-samsung-sm mb-2"
+              onClick={testNotifications2}
               data-testid="test-notifications"
             >
               <div className="flex items-center space-x-3">
-                <Bell className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">Test All Notifications</span>
+                <Bell className="w-4 h-4 text-samsung-blue" />
+                <span className="text-white text-sm">Test All Notifications</span>
               </div>
-              <span className="text-white/60">Tap to test</span>
+              <span className="text-white/60 text-xs">Tap to test</span>
             </button>
           </div>
           
           {/* Display Settings */}
-          <div className="mb-6">
-            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">{t('display', 'settings')}</h4>
+          <div className="mb-4">
+            <h4 className="text-white/60 text-sm font-medium mb-2 uppercase tracking-wide">{t('display', 'settings')}</h4>
             
             <button 
-              className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
+              className="oneui-button w-full flex items-center justify-between p-3 bg-surface-dark/30 rounded-samsung-sm mb-2"
               onClick={handleThemeToggle}
               data-testid="toggle-theme"
             >
               <div className="flex items-center space-x-3">
-                <Moon className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">{t('darkMode', 'settings')}</span>
+                <Moon className="w-4 h-4 text-samsung-blue" />
+                <span className="text-white text-sm">{t('darkMode', 'settings')}</span>
               </div>
-              <div className={`w-12 h-6 rounded-full p-1 relative transition-colors duration-200 ${
+              <div className={`w-10 h-5 rounded-full p-1 relative transition-colors duration-200 ${
                 theme === 'dark' ? 'bg-samsung-blue' : 'bg-white/20'
               }`}>
-                <div className={`w-4 h-4 bg-white rounded-full absolute transition-all duration-200 ${
+                <div className={`w-3 h-3 bg-white rounded-full absolute transition-all duration-200 ${
                   theme === 'dark' ? 'right-1' : 'left-1'
                 }`} />
               </div>
             </button>
             
             <button 
-              className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
+              className="oneui-button w-full flex items-center justify-between p-3 bg-surface-dark/30 rounded-samsung-sm mb-2"
               onClick={() => setShowBrightnessSlider(!showBrightnessSlider)}
               data-testid="brightness-settings"
             >
               <div className="flex items-center space-x-3">
-                <Sun className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">{t('brightness', 'settings')}</span>
+                <Sun className="w-4 h-4 text-samsung-blue" />
+                <span className="text-white text-sm">{t('brightness', 'settings')}</span>
               </div>
-              <span className="text-white/60">{brightness}%</span>
+              <span className="text-white/60 text-xs">{brightness}%</span>
             </button>
             
             {showBrightnessSlider && (

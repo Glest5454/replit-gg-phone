@@ -33,7 +33,8 @@ const translations: Translations = {
     open: { english: 'Open', turkish: 'Aç' },
     yes: { english: 'Yes', turkish: 'Evet' },
     no: { english: 'No', turkish: 'Hayır' },
-    ok: { english: 'OK', turkish: 'Tamam' }
+    ok: { english: 'OK', turkish: 'Tamam' },
+    language: { english: 'Language', turkish: 'Dil' }
   },
   homeScreen: {
     contacts: { english: 'Contacts', turkish: 'Rehber' },

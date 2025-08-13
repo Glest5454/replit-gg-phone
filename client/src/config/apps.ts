@@ -12,7 +12,8 @@ import {
   BookOpen,
   MessageCircle,
   MapPin,
-  Phone
+  Phone,
+  Globe
 } from 'lucide-react';
 import contactsPng from '@apps/contacts.png';
 import settingsPng from '@apps/settings.png';
@@ -21,6 +22,7 @@ import bankingPng from '@apps/mail.png';
 import cameraPng from '@apps/camera.png';
 import birdyPng from '@apps/birdy.png';
 import whatsappPng from '@apps/whatsapp.png';
+import mailPng from '@apps/mail.png';
 
 export interface AppConfig {
   id: string;
@@ -88,8 +90,8 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'banking',
     name: 'Banking',
-    icon: bankingPng,
-    iconType: 'png',
+    icon: CreditCard,
+    iconType: 'lucide',
     color: 'from-green-500 to-emerald-500',
     category: 'utilities',
     isActive: true,
@@ -324,9 +326,9 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     order: 11,
     screen: 'contacts',
-    description: 'Manage your contacts',
+    description: 'Manage contacts, make calls, and view call history',
     version: '1.0.0',
-    permissions: ['contacts'],
+    permissions: ['contacts', 'phone'],
     settings: {
       hasSettings: true,
       settingsPath: '/contacts/settings',
@@ -383,28 +385,41 @@ export const appsConfig: AppConfig[] = [
     },
   },
   {
-    id: 'phone',
-    name: 'Phone',
-    icon: Phone,
-    iconType: 'lucide',
-    color: 'from-green-500 to-green-700',
+    id: 'mail',
+    name: 'Mail',
+    icon: mailPng,
+    iconType: 'png',
     category: 'utilities',
     isActive: true,
     isVisible: true,
     order: 14,
-    screen: 'phone',
-    description: 'Make calls and manage call history',
+    screen: 'mail',
+    description: 'Manage your email',
+  },
+  {
+    id: 'browser',
+    name: 'Browser',
+    icon: Globe,
+    iconType: 'lucide',
+    color: 'from-blue-500 to-indigo-600',
+    category: 'utilities',
+    isActive: true,
+    isVisible: true,
+    order: 15,
+    screen: 'browser',
+    description: 'Web browsing and search',
     version: '1.0.0',
-    permissions: ['phone', 'contacts'],
+    permissions: ['internet'],
     settings: {
       hasSettings: true,
-      settingsPath: '/phone/settings',
+      settingsPath: '/browser/settings',
     },
     notifications: {
       enabled: true,
-      types: ['info', 'success', 'warning'],
+      types: ['info', 'success'],
     },
   },
+
 ];
 
 // Helper functions
@@ -433,7 +448,8 @@ export const getTranslatedApps = (language: string = 'en') => {
       'contacts': 'Kişiler',
       'darkchat': 'Karanlık Sohbet',
       'maps': 'Haritalar',
-      'phone': 'Telefon',
+      'mail': 'E-Posta',
+      'browser': 'Tarayıcı',
     },
     en: {
       'banking': 'Banking',
@@ -449,7 +465,8 @@ export const getTranslatedApps = (language: string = 'en') => {
       'contacts': 'Contacts',
       'darkchat': 'Dark Chat',
       'maps': 'Maps',
-      'phone': 'Phone',
+      'mail': 'Mail',
+      'browser': 'Browser',
     }
   };
 

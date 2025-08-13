@@ -192,7 +192,7 @@ end)
 
 -- Messages Events
 RegisterServerEvent('gg-phone:server:sendMessage')
-AddEventHandler('gg-phone:server:sendMessage', function(targetNumber, message)
+AddEventHandler('gg-phone:server:sendMessage', function(targetNumber, message, messageType, metadata)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
     if not Player then return end
@@ -206,22 +206,32 @@ AddEventHandler('gg-phone:server:sendMessage', function(targetNumber, message)
     if targetPlayer then
         local targetCitizenId = targetPlayer.PlayerData.citizenid
         
-        MySQL.insert('INSERT INTO phone_messages (sender_id, receiver_id, message, timestamp) VALUES (?, ?, ?, NOW())', {
-            citizenId, targetCitizenId, message
+        -- Prepare metadata JSON
+        local metadataJson = nil
+        if metadata then
+            metadataJson = json.encode(metadata)
+        end
+        
+        MySQL.insert('INSERT INTO phone_messages (sender_id, receiver_id, message, message_type, metadata, timestamp) VALUES (?, ?, ?, ?, ?, NOW())', {
+            citizenId, targetCitizenId, message, messageType or 'text', metadataJson
         }, function(insertId)
             if insertId then
                 -- Notify sender
                 TriggerClientEvent('gg-phone:client:messageSent', src, {
                     id = insertId,
                     targetNumber = targetNumber,
-                    message = message
+                    message = message,
+                    messageType = messageType,
+                    metadata = metadata
                 })
                 
                 -- Notify receiver
                 TriggerClientEvent('gg-phone:client:messageReceived', targetPlayer.PlayerData.source, {
                     id = insertId,
                     senderNumber = senderNumber,
-                    message = message
+                    message = message,
+                    messageType = messageType,
+                    metadata = metadata
                 })
             end
         end)
@@ -248,7 +258,14 @@ AddEventHandler('gg-phone:server:getMessages', function(targetNumber)
         -- Get messages between these two players
         MySQL.query([[
             SELECT 
-                pm.*,
+                pm.id,
+                pm.sender_id,
+                pm.receiver_id,
+                pm.message,
+                pm.message_type,
+                pm.metadata,
+                pm.timestamp,
+                pm.is_read,
                 CASE 
                     WHEN pm.sender_id = ? THEN 'outgoing'
                     ELSE 'incoming'
@@ -261,6 +278,13 @@ AddEventHandler('gg-phone:server:getMessages', function(targetNumber)
         ]], {
             citizenId, citizenId, targetCitizenId, targetCitizenId, citizenId
         }, function(result)
+            -- Parse metadata JSON for each message
+            for i, message in ipairs(result) do
+                if message.metadata then
+                    message.metadata = json.decode(message.metadata)
+                end
+            end
+            
             TriggerClientEvent('gg-phone:client:messagesLoaded', src, {
                 targetNumber = targetNumber,
                 messages = result
@@ -283,12 +307,15 @@ AddEventHandler('gg-phone:server:getAllMessages', function()
     -- Get all conversations with last message
     MySQL.query([[
         SELECT 
+            c.id,
             c.name,
             c.phone_number,
             c.avatar,
             c.favorite,
             c.last_contact,
             pm.message as last_message,
+            pm.message_type as last_message_type,
+            pm.metadata as last_message_metadata,
             pm.timestamp as last_message_time,
             COUNT(CASE WHEN pm.is_read = 0 AND pm.receiver_id = ? THEN 1 END) as unread_count
         FROM phone_contacts c
@@ -302,6 +329,13 @@ AddEventHandler('gg-phone:server:getAllMessages', function()
     ]], {
         citizenId, citizenId, citizenId, citizenId
     }, function(result)
+        -- Parse metadata JSON for each conversation
+        for i, conv in ipairs(result) do
+            if conv.last_message_metadata then
+                conv.last_message_metadata = json.decode(conv.last_message_metadata)
+            end
+        end
+        
         TriggerClientEvent('gg-phone:client:allMessagesLoaded', src, result)
     end)
 end)
@@ -642,6 +676,103 @@ AddEventHandler('gg-phone:server:sendMail', function(receiverEmail, subject, con
                         content = content
                     })
                 end
+            end)
+        else
+            TriggerClientEvent('gg-phone:client:mailError', src, 'No mail account found')
+        end
+    end)
+end)
+
+-- Mail Login
+RegisterServerEvent('gg-phone:server:loginMailAccount')
+AddEventHandler('gg-phone:server:loginMailAccount', function(email, password)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.query('SELECT * FROM mail_accounts WHERE email = ? AND password = ? AND user_id = ?', {email, password, citizenId}, function(result)
+        if #result > 0 then
+            TriggerClientEvent('gg-phone:client:mailAccountLoggedIn', src, result[1])
+        else
+            TriggerClientEvent('gg-phone:client:mailError', src, 'Invalid email or password')
+        end
+    end)
+end)
+
+-- Get Emails for current account
+RegisterServerEvent('gg-phone:server:getEmails')
+AddEventHandler('gg-phone:server:getEmails', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.query('SELECT ma.id, ma.email, ma.display_name FROM mail_accounts ma WHERE ma.user_id = ?', {citizenId}, function(accounts)
+        if #accounts > 0 then
+            local accountId = accounts[1].id
+            
+            -- Get received emails
+            MySQL.query([[
+                SELECT 
+                    pm.id,
+                    pm.sender_id,
+                    pm.receiver_email,
+                    pm.subject,
+                    pm.content,
+                    pm.read,
+                    pm.starred,
+                    pm.created_at,
+                    ma.email as sender_email,
+                    ma.display_name as sender_name
+                FROM phone_mails pm
+                JOIN mail_accounts ma ON pm.sender_id = ma.id
+                WHERE pm.receiver_email = ?
+                ORDER BY pm.created_at DESC
+                LIMIT 100
+            ]], {accounts[1].email}, function(receivedEmails)
+                
+                -- Get sent emails
+                MySQL.query([[
+                    SELECT 
+                        pm.id,
+                        pm.sender_id,
+                        pm.receiver_email,
+                        pm.subject,
+                        pm.content,
+                        pm.read,
+                        pm.starred,
+                        pm.created_at,
+                        'sent' as direction
+                    FROM phone_mails pm
+                    WHERE pm.sender_id = ?
+                    ORDER BY pm.created_at DESC
+                    LIMIT 100
+                ]], {accountId}, function(sentEmails)
+                    
+                    -- Combine and format emails
+                    local allEmails = {}
+                    
+                    -- Add received emails
+                    for i, email in ipairs(receivedEmails) do
+                        email.direction = 'received'
+                        table.insert(allEmails, email)
+                    end
+                    
+                    -- Add sent emails
+                    for i, email in ipairs(sentEmails) do
+                        table.insert(allEmails, email)
+                    end
+                    
+                    -- Sort by creation date
+                    table.sort(allEmails, function(a, b)
+                        return a.created_at > b.created_at
+                    end)
+                    
+                    TriggerClientEvent('gg-phone:client:emailsLoaded', src, allEmails)
+                end)
             end)
         else
             TriggerClientEvent('gg-phone:client:mailError', src, 'No mail account found')

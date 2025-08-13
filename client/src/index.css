@@ -385,6 +385,7 @@
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
+/*Dock*/
 /* Lock Screen specific styles */
 .phone-screen.phone-light-mode .lock-screen-overlay {
   background: rgba(255, 255, 255, 0.3);
@@ -443,6 +444,9 @@
 .phone-screen.phone-light-mode .home-screen-text {
   color: white !important;
 }
+.phone-screen.phone-dark-mode .home-screen-text { /*dark mod da text rengi*/
+  color: white !important;
+}
 
 .phone-screen.phone-light-mode .app-text {
   color: white !important;
@@ -481,6 +485,14 @@
 }
 
 .phone-screen.phone-dark-mode .contacts-app {
+  background: linear-gradient(135deg, hsl(220 15% 15%) 0%, hsl(220 20% 10%) 100%);
+}
+/* Maps App Light Mode */
+.phone-screen.phone-light-mode .maps-app {
+  background: linear-gradient(135deg, hsl(210 25% 95%) 0%, hsl(215 25% 92%) 100%);
+}
+
+.phone-screen.phone-dark-mode .maps-app {
   background: linear-gradient(135deg, hsl(220 15% 15%) 0%, hsl(220 20% 10%) 100%);
 }
 
@@ -581,3 +593,11 @@
   background: linear-gradient(135deg, hsl(220 15% 15%) 0%, hsl(220 20% 10%) 100%);
 }
 
+/* Scrollbar gizleme */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE ve Edge */
+  scrollbar-width: none;     /* Firefox */
+}
