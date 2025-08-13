@@ -18,6 +18,7 @@ server_scripts {
     'server.lua'
 }
 
+
 ui_page 'html/dist/index.html'
 
 files {

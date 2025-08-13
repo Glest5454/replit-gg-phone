@@ -21,6 +21,7 @@ import { MailApp } from './apps/MailApp';
 import { MapsApp } from './apps/MapsApp';
 import { DarkChatApp } from './apps/DarkChatApp';
 import { BrowserApp } from './apps/BrowserApp';
+import { AppsApp } from './apps/AppsApp';
 import { HomeIndicator } from './HomeIndicator';
 import { useTaskManager } from '@/context/TaskManagerContext';
 import { Grid3X3, X, Trash2 } from 'lucide-react';
@@ -197,6 +198,10 @@ export const PhoneFrame = () => {
         return <DarkChatApp onBack={goBack} />;
       case 'browser':
         return <BrowserApp onBack={goBack} />;
+      case 'apps':
+        return <AppsApp />;
+      case 'test':
+        return <div className="flex items-center justify-center h-full text-white">Test App</div>;
       default:
         return <HomeScreen onAppOpen={navigateToScreen} />;
     }

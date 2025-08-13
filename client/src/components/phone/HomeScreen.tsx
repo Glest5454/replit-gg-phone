@@ -1,7 +1,7 @@
 import type { Screen } from '@/hooks/usePhone';
 import { usePhone } from '@/hooks/usePhone';
 import { useLanguage } from '@/hooks/useLanguage';
-import { getTranslatedApps, getTranslatedDockApps } from '@/config/apps';
+import { getTranslatedApps, getTranslatedDockApps, getAppsWithInstallStatus } from '@/config/apps';
 import { useTaskManager } from '@/context/TaskManagerContext';
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 
@@ -17,8 +17,30 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
   const { phoneState } = usePhone();
   const { addToRecent } = useTaskManager();
   
-  // Get apps with translated names based on current language
-  const apps = getTranslatedApps(language === 'english' ? 'en' : 'tr');
+  // Get apps with translated names and installation status
+  const allApps = useMemo(() => getAppsWithInstallStatus(), []);
+  const apps = useMemo(() => {
+    const translatedApps = getTranslatedApps(language === 'english' ? 'en' : 'tr');
+    // Only show installed apps in home screen
+    return translatedApps.filter(app => allApps.find((a: any) => a.id === app.id)?.isInstalled);
+  }, [language, allApps]);
+
+  // Listen for app state changes from Apps app
+  useEffect(() => {
+    const handleAppStateChange = () => {
+      // Force re-render by updating a dependency
+      // This will trigger the useMemo to recalculate apps
+      setCurrentPage(prev => prev);
+    };
+
+    window.addEventListener('phone:appStateChanged', handleAppStateChange);
+    return () => window.removeEventListener('phone:appStateChanged', handleAppStateChange);
+  }, []);
+
+  // Force re-render when allApps changes
+  useEffect(() => {
+    // This will trigger the apps useMemo to recalculate
+  }, [allApps]);
   
   // Get dock apps with translated names based on current language
   const dockApps = getTranslatedDockApps(language === 'english' ? 'en' : 'tr');
