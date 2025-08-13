@@ -1,9 +1,10 @@
 import type { Screen } from '@/hooks/usePhone';
 import { usePhone } from '@/hooks/usePhone';
 import { useLanguage } from '@/hooks/useLanguage';
-import { getTranslatedApps, getTranslatedDockApps, getAppsWithInstallStatus } from '@/config/apps';
+import { getTranslatedApps, getTranslatedDockApps, getAppsWithInstallStatus, getAppManager } from '@/config/apps';
 import { useTaskManager } from '@/context/TaskManagerContext';
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { Edit3, X, Check } from 'lucide-react';
 
 interface HomeScreenProps {
   onAppOpen: (screen: Screen) => void;
@@ -17,13 +18,17 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
   const { phoneState } = usePhone();
   const { addToRecent } = useTaskManager();
   
+  // Force re-render when apps change
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
   // Get apps with translated names and installation status
   const allApps = useMemo(() => getAppsWithInstallStatus(), []);
   const apps = useMemo(() => {
     const translatedApps = getTranslatedApps(language === 'english' ? 'en' : 'tr');
-    // Only show installed apps in home screen
-    return translatedApps.filter(app => allApps.find((a: any) => a.id === app.id)?.isInstalled);
-  }, [language, allApps]);
+    // Only show installed apps in home screen and sort by order
+    const installedApps = translatedApps.filter(app => allApps.find((a: any) => a.id === app.id)?.isInstalled);
+    return installedApps.sort((a, b) => a.order - b.order);
+  }, [language, allApps, refreshTrigger]);
 
   // Listen for app state changes from Apps app
   useEffect(() => {
@@ -50,6 +55,11 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [currentX, setCurrentX] = useState(0);
+
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [draggedApp, setDraggedApp] = useState<string | null>(null);
+  const [dragOverApp, setDragOverApp] = useState<string | null>(null);
   
   // Calculate pages (4x4 grid = 16 apps per page)
   const appsPerPage = 16;
@@ -164,6 +174,84 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
     }
   }, []);
 
+  // Edit mode toggle
+  const toggleEditMode = useCallback(() => {
+    setIsEditMode(prev => !prev);
+    if (navigator.vibrate) {
+      navigator.vibrate(30);
+    }
+  }, []);
+
+  // Exit edit mode
+  const exitEditMode = useCallback(() => {
+    setIsEditMode(false);
+    setDraggedApp(null);
+    setDragOverApp(null);
+    if (navigator.vibrate) {
+      navigator.vibrate(30);
+    }
+  }, []);
+
+  // Drag & Drop handlers
+  const handleDragStart = useCallback((e: React.DragEvent, appId: string) => {
+    if (!isEditMode) return;
+    setDraggedApp(appId);
+    e.dataTransfer.effectAllowed = 'move';
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+  }, [isEditMode]);
+
+  const handleDragOver = useCallback((e: React.DragEvent, appId: string) => {
+    if (!isEditMode || !draggedApp || draggedApp === appId) return;
+    e.preventDefault();
+    setDragOverApp(appId);
+  }, [isEditMode, draggedApp]);
+
+    // ... existing code ...
+
+const handleDrop = useCallback((e: React.DragEvent, targetAppId: string) => {
+  if (!isEditMode || !draggedApp || draggedApp === targetAppId) return;
+  e.preventDefault();
+  
+  console.log(`[DragDrop] Dropping ${draggedApp} onto ${targetAppId}`);
+  
+  const appManager = getAppManager();
+  const draggedAppData = apps.find(app => app.id === draggedApp);
+  const targetAppData = apps.find(app => app.id === targetAppId);
+  
+  if (draggedAppData && targetAppData) {
+    console.log(`[DragDrop] Before swap: ${draggedApp}=${draggedAppData.order}, ${targetAppId}=${targetAppData.order}`);
+    
+    // Simple position swap (0, 1, 2, 3...)
+    const tempPosition = draggedAppData.order;
+    appManager.updateAppPosition(draggedApp, targetAppData.order);
+    appManager.updateAppPosition(targetAppId, tempPosition);
+    
+    // Save to localStorage
+    appManager.saveGridOrder();
+    
+    console.log(`[DragDrop] After swap: ${draggedApp}=${targetAppData.order}, ${targetAppId}=${tempPosition}`);
+    
+    // Force re-render by updating refresh trigger
+    setRefreshTrigger(prev => prev + 1);
+    
+    if (navigator.vibrate) {
+      navigator.vibrate(100);
+    }
+  }
+  
+  setDraggedApp(null);
+  setDragOverApp(null);
+}, [isEditMode, draggedApp, apps]);
+
+// ... existing code ...
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedApp(null);
+    setDragOverApp(null);
+  }, []);
+
   // Get wallpaper from localStorage or use default
   const wallpaper = localStorage.getItem('phone-wallpaper') || 'default';
 
@@ -237,8 +325,36 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
       className="absolute inset-0 flex flex-col"
       style={getBackgroundStyle}
     >
+      {/* Edit Mode Header */}
+      {isEditMode && (
+        <div className="absolute top-0 left-0 right-0 z-20 bg-black/80 backdrop-blur-xl border-b border-white/20 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <Edit3 className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-white font-medium">Edit Apps</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={exitEditMode}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <button
+                onClick={exitEditMode}
+                className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* App Grid */}
-      <div className="pt-16 px-6 h-full overflow-y-auto">
+      <div className={`pt-16 px-6 h-full overflow-y-auto ${isEditMode ? 'pt-24' : ''}`}>
         <div 
           ref={appGridRef}
           className="relative"
@@ -250,27 +366,72 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          {/* App Grid Container */}
-          <div className="grid grid-cols-4 gap-6 mb-8">
-            {getCurrentPageApps.map((app) => (
-              <button
-                key={app.id}
-                onClick={() => handleAppOpen(app.screen as Screen)}
-                className="flex flex-col items-center space-y-2 group transition-transform duration-200 hover:scale-110"
-              >
-                <div className={`w-14 h-14 rounded-[18px] flex items-center justify-center shadow-lg ${
-                  app.iconType === 'lucide' 
-                    ? `bg-gradient-to-br ${app.color} ` 
-                    : ''
-                }`}>
-                  {app.iconType === 'png' ? (
-                    <img src={app.icon as string} alt={app.name} className="w-14 h-14 object-contain" />
-                  ) : (
-                    <app.icon className="w-10 h-10 text-white" /> 
-                  )}
-                </div>
-                <span className="home-screen-text text-xs font-medium text-center text-white">{app.translatedName}</span>
-              </button>
+                     {/* App Grid Container */}
+           <div className="grid grid-cols-4 gap-6 mb-8">
+             {getCurrentPageApps.map((app) => (
+               <div
+                 key={app.id}
+                 draggable={isEditMode}
+                 onDragStart={(e) => handleDragStart(e, app.id)}
+                 onDragOver={(e) => handleDragOver(e, app.id)}
+                 onDrop={(e) => handleDrop(e, app.id)}
+                 onDragEnd={handleDragEnd}
+                 className={`flex flex-col items-center space-y-2 group transition-all duration-200 ${
+                   isEditMode ? 'cursor-move' : 'cursor-pointer'
+                 } ${
+                   draggedApp === app.id ? 'opacity-50 scale-95' : ''
+                 } ${
+                   dragOverApp === app.id ? 'ring-2 ring-blue-400 scale-110' : ''
+                 }`}
+               >
+                                  <button
+                   onClick={() => !isEditMode && handleAppOpen(app.screen as Screen)}
+                   onMouseDown={(e) => {
+                     if (!isEditMode) {
+                       const timer = setTimeout(() => {
+                         if (e.button === 0) { // Left click only
+                           toggleEditMode();
+                         }
+                       }, 500); // 500ms long press
+                       
+                       const handleMouseUp = () => {
+                         clearTimeout(timer);
+                         document.removeEventListener('mouseup', handleMouseUp);
+                       };
+                       
+                       document.addEventListener('mouseup', handleMouseUp);
+                     }
+                   }}
+                   onTouchStart={(e) => {
+                     if (!isEditMode) {
+                       const timer = setTimeout(() => {
+                         toggleEditMode();
+                       }, 500); // 500ms long press
+                       
+                       const handleTouchEnd = () => {
+                         clearTimeout(timer);
+                         document.removeEventListener('touchend', handleTouchEnd);
+                       };
+                       
+                       document.addEventListener('touchend', handleTouchEnd);
+                     }
+                   }}
+                   className="flex flex-col items-center space-y-2 group transition-transform duration-200 hover:scale-110"
+                 >
+                   <div className={`w-14 h-14 rounded-[18px] flex items-center justify-center shadow-lg ${
+                     app.iconType === 'lucide' 
+                       ? `bg-gradient-to-br ${app.color} ` 
+                       : ''
+                   }`}>
+                     {app.iconType === 'png' ? (
+                       <img src={app.icon as string} alt={app.name} className="w-14 h-14 object-contain" />
+                     ) : (
+                       <app.icon className="w-10 h-10 text-white" /> 
+                     )}
+                   </div>
+                   <span className="home-screen-text text-xs font-medium text-center text-white">{app.translatedName}</span>
+                 </button>
+               </div>
             ))}
           </div>
         </div>

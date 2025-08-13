@@ -48,7 +48,7 @@ export interface AppConfig {
   isInstalled: boolean; // Whether this app is currently installed
    // URL to download the app (for external apps)
   appSize?: string; // Size of the app (e.g., "15.2 MB")
-  order: number;
+  order: number; // Grid position order (can be changed by user)
   description?: string;
   version?: string;
   developer?: string; // Developer/company name
@@ -641,6 +641,7 @@ export class AppManager {
   private constructor() {
     this.userId = this.getUserId();
     this.loadAppStates();
+    this.loadGridOrder();
   }
 
   public static getInstance(): AppManager {
@@ -831,6 +832,89 @@ export class AppManager {
     return { total, installed, essential };
   }
 
+  // Update app grid order
+  public updateAppOrder(appId: string, newOrder: number): boolean {
+    try {
+      const app = appsConfig.find(a => a.id === appId);
+      if (app) {
+        app.order = newOrder;
+        console.log(`[AppManager] Updated ${appId} order to ${newOrder}`);
+        // Force appsConfig to update
+        this.saveGridOrder();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating app order:', error);
+      return false;
+    }
+  }
+
+  // Get current grid order for installed apps
+  public getGridOrder(): { appId: string; order: number }[] {
+    const installedApps = Array.from(this.installedApps);
+    return appsConfig
+      .filter(app => installedApps.includes(app.id))
+      .map(app => ({ appId: app.id, order: app.order }))
+      .sort((a, b) => a.order - b.order);
+  }
+  // Load grid positions from localStorage (single key)
+  public loadGridOrder(): void {
+    try {
+      const stored = localStorage.getItem('phone-grid-positions');
+      if (stored) {
+        const gridPositions = JSON.parse(stored);
+        console.log('[AppManager] Loading saved grid positions:', gridPositions);
+        
+        // Apply saved positions to appsConfig
+        gridPositions.forEach(({ appId, position }: { appId: string; position: number }) => {
+          const app = appsConfig.find(a => a.id === appId);
+          if (app) {
+            app.order = position;
+            console.log(`[AppManager] Applied position ${position} to ${appId}`);
+          }
+        });
+      } else {
+        // Only initialize if no saved positions exist
+        console.log('[AppManager] No saved grid positions found, initializing defaults');
+        this.initializeDefaultPositions();
+      }
+    } catch (error) {
+      console.error('Error loading grid positions:', error);
+      // Only initialize on error if no saved positions exist
+      if (!localStorage.getItem('phone-grid-positions')) {
+        this.initializeDefaultPositions();
+      }
+    }
+  }
+   // Initialize default grid positions (only when needed)
+   private initializeDefaultPositions(): void {
+    const installedApps = Array.from(this.installedApps);
+    console.log('[AppManager] Initializing default positions for:', installedApps);
+    
+    // Don't override existing order values
+    installedApps.forEach((appId, index) => {
+      const app = appsConfig.find(a => a.id === appId);
+      if (app && app.order === undefined) {
+        app.order = index;
+        console.log(`[AppManager] Set default position ${index} for ${appId}`);
+      }
+    });
+    
+    this.saveGridOrder();
+  }
+     // Save grid positions to localStorage (single key)
+    public saveGridOrder(): void {
+      try {
+        const gridPositions = this.getGridPositions();
+        // Use a single, consistent key for grid positions
+        localStorage.setItem('phone-grid-positions', JSON.stringify(gridPositions));
+        console.log('[AppManager] Grid positions saved:', gridPositions);
+      } catch (error) {
+        console.error('Error saving grid positions:', error);
+      }
+    }
+
   // Show notification (can be customized)
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     // You can integrate this with your notification system
@@ -871,6 +955,31 @@ export class AppManager {
       return false;
     }
   }
+    // Update app grid position (0-based index)
+  public updateAppPosition(appId: string, newPosition: number): boolean {
+    try {
+      const app = appsConfig.find(a => a.id === appId);
+      if (app) {
+        app.order = newPosition;
+        console.log(`[AppManager] Updated ${appId} position to ${newPosition}`);
+        this.saveGridOrder();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating app position:', error);
+      return false;
+    }
+  }
+  // Get current grid positions for installed apps
+  public getGridPositions(): { appId: string; position: number }[] {
+    const installedApps = Array.from(this.installedApps);
+    return appsConfig
+      .filter(app => installedApps.includes(app.id))
+      .map((app, index) => ({ appId: app.id, position: index }))
+      .sort((a, b) => a.position - b.position);
+  }
+
 }
 
 // App Manager Helper Functions
