@@ -139,12 +139,15 @@ export const PhoneFrame = () => {
   // Function to render app color based on app config
   const renderAppColor = (appId: string) => {
     const appConfig = getAppById(appId);
-    if (!appConfig || !appConfig.color) return 'bg-samsung-blue';
+    if (!appConfig || !appConfig.color) return '';
     
-    if (appConfig.color.includes('from-') && appConfig.color.includes('to-')) {
+
+    if (appConfig.iconType === 'lucide' && appConfig.color.includes('from-') && appConfig.color.includes('to-')) {
       return `bg-gradient-to-br ${appConfig.color}`;
     }
-    
+    else if (appConfig.iconType === 'png') {
+      return 'bg-black/20';
+    }
     return appConfig.color;
   };
 
@@ -313,7 +316,7 @@ export const PhoneFrame = () => {
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <Trash2 className="w-4 h-4" />
-                    <span className="font-medium text-sm">Hepsini Temizle</span>
+                    <span className="font-medium text-sm">Clear All</span>
                   </div>
                 </button>
               )}

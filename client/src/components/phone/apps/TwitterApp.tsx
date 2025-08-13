@@ -220,32 +220,33 @@ export const TwitterApp = ({ onBack }: TwitterAppProps) => {
               <p className="text-white/60">Sign in to your account</p>
             </div>
             
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Username or email"
-                className="w-full bg-surface-dark/50 text-white placeholder-white/50 px-4 py-4 rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
-                value={loginForm.username}
-                onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                className="w-full bg-surface-dark/50 text-white placeholder-white/50 px-4 py-4 rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
-                value={loginForm.password}
-                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-              />
-              <button
-                className="w-full bg-samsung-blue text-white py-4 rounded-2xl font-semibold hover:bg-samsung-blue/80 transition-colors"
-                onClick={handleLogin}
-              >
-                Sign in
-              </button>
-            </div>
+            <div className="space-y-6 w-full max-w-sm mx-auto">
+            <input
+              type="text"
+              placeholder="Phone, email, or username"
+              className="w-full bg-transparent border border-gray-500 text-white placeholder-gray-400 text-lg px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
+              value={loginForm.username}
+              onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
+            />
             
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full bg-transparent border border-gray-500 text-white placeholder-gray-400 text-lg px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
+              value={loginForm.password}
+              onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+            />
+            
+            <button
+              className="w-full bg-blue-500 text-white text-lg font-bold py-3 rounded-full hover:bg-blue-600/80 transition-colors"
+              onClick={handleLogin}
+            >
+              Sign in
+            </button>
+          </div>
             <div className="text-center">
               <button
-                className="text-samsung-blue hover:text-samsung-blue/80 transition-colors"
+                className="text-blue-500 hover:text-blue-600/80 transition-colors "
                 onClick={() => setCurrentView('register')}
               >
                 Don't have an account? Sign up
@@ -258,76 +259,82 @@ export const TwitterApp = ({ onBack }: TwitterAppProps) => {
   }
 
   // Register View
-  if (currentView === 'register') {
-    return (
-      <div className="absolute inset-0 bg-surface-dark flex flex-col">
-        <div className="flex flex-col items-center justify-center h-full px-6">
-          <div className="w-full max-w-sm space-y-8">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-samsung-blue rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-white text-3xl font-bold">X</span>
-              </div>
-              <h1 className="text-3xl font-bold text-white mb-2">Join Twitter</h1>
-              <p className="text-white/60">Create your account</p>
+if (currentView === 'register') {
+  return (
+    <div className="absolute inset-0 bg-surface-dark flex flex-col">
+      <div className="flex flex-col items-center justify-center h-full px-6">
+        <div className="w-full max-w-sm space-y-8">
+          
+          {/* Logo + Title */}
+          <div className="text-center">
+            <div className="w-16 h-16 bg-samsung-blue rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-white text-2xl font-bold">X</span>
             </div>
+            <h1 className="text-3xl font-bold text-white mb-1">Join Twitter</h1>
+            <p className="text-white/60">Create your account</p>
+          </div>
+          
+          {/* Form */}
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Username"
+              className="w-full bg-transparent border border-gray-500 text-white placeholder-gray-400 text-lg px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
+              value={registerForm.username}
+              onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              className="w-full bg-transparent border border-gray-500 text-white placeholder-gray-400 text-lg px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
+              value={registerForm.email}
+              onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Display Name"
+              className="w-full bg-transparent border border-gray-500 text-white placeholder-gray-400 text-lg px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
+              value={registerForm.displayName}
+              onChange={(e) => setRegisterForm({ ...registerForm, displayName: e.target.value })}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full bg-transparent border border-gray-500 text-white placeholder-gray-400 text-lg px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
+              value={registerForm.password}
+              onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+            />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              className="w-full bg-transparent border border-gray-500 text-white placeholder-gray-400 text-lg px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+            />
             
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Username"
-                className="w-full bg-surface-dark/50 text-white placeholder-white/50 px-4 py-4 rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
-                value={registerForm.username}
-                onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                className="w-full bg-surface-dark/50 text-white placeholder-white/50 px-4 py-4 rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
-                value={registerForm.email}
-                onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Display Name"
-                className="w-full bg-surface-dark/50 text-white placeholder-white/50 px-4 py-4 rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
-                value={registerForm.displayName}
-                onChange={(e) => setRegisterForm({ ...registerForm, displayName: e.target.value })}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                className="w-full bg-surface-dark/50 text-white placeholder-white/50 px-4 py-4 rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
-                value={registerForm.password}
-                onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-              />
-              <input
-                type="password"
-                placeholder="Confirm Password"
-                className="w-full bg-surface-dark/50 text-white placeholder-white/50 px-4 py-4 rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-samsung-blue focus:border-transparent"
-                value={passwordForm.confirmPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-              />
-              <button
-                className="w-full bg-samsung-blue text-white py-4 rounded-2xl font-semibold hover:bg-samsung-blue/80 transition-colors"
-                onClick={handleRegister}
-              >
-                Create Account
-              </button>
-            </div>
-            
-            <div className="text-center">
-              <button
-                className="text-samsung-blue hover:text-samsung-blue/80 transition-colors"
-                onClick={() => setCurrentView('login')}
-              >
-                Already have an account? Sign in
-              </button>
-            </div>
+            <button
+              className="w-full bg-blue-500 text-white text-lg font-bold py-3 rounded-full hover:bg-blue-600/80 transition-colors"
+              onClick={handleRegister}
+            >
+              Create Account
+            </button>
+          </div>
+          
+          {/* Switch to login */}
+          <div className="text-center">
+            <button
+              className="text-blue-500 hover:text-blue-600/80 transition-colors text-sm"
+              onClick={() => setCurrentView('login')}
+            >
+              Already have an account? Sign in
+            </button>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
+
 
   // Profile View
   if (currentView === 'profile') {
@@ -389,14 +396,14 @@ export const TwitterApp = ({ onBack }: TwitterAppProps) => {
           <div className="p-4 space-y-3">
             <Button
               onClick={() => setShowProfileEditor(true)}
-              className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl py-3"
+              className="w-full hover:text-300 hover:bg-blue-500/60 text-white border border-white/20 rounded-2xl py-3"
             >
               Edit Profile
             </Button>
             <Button
               onClick={() => setShowPasswordChange(true)}
               variant="ghost"
-              className="w-full text-white/60 hover:text-white hover:bg-white/10 rounded-2xl py-3"
+              className="w-full hover:text-300 hover:bg-white/10 text-white border border-white/20 rounded-2xl py-3"
             >
               Change Password
             </Button>
@@ -536,14 +543,14 @@ export const TwitterApp = ({ onBack }: TwitterAppProps) => {
   return (
     <div className="absolute inset-0 bg-surface-dark flex flex-col">
       {/* App Header */}
-      <div className="bg-surface-dark/50 p-4 border-b border-white/10 mt-2">
+      <div className="bg-surface-dark/50 p-4 border-b border-white/10 mt-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
             <Button
               onClick={onBack}
               variant="ghost"
               size="sm"
-              className="text-white/60 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-2"
+              className="bg-white/10 hover:bg-black/20 text-white/60 hover:text-white/80 rounded-full p-2"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -583,7 +590,7 @@ export const TwitterApp = ({ onBack }: TwitterAppProps) => {
             
             <div className="space-y-4">
               <textarea 
-                className="w-full bg-surface-dark/50 text-white placeholder-white/60 resize-none border border-white/20 outline-none p-4 rounded-2xl focus:border-samsung-blue"
+                className="w-full bg-surface-dark/50 placeholder-gray-400 text-black placeholder-white/60 resize-none border border-white/20 outline-none p-4 rounded-2xl focus:border-samsung-blue"
                 placeholder="What's happening?"
                 rows={4}
                 value={tweetContent}
@@ -592,21 +599,21 @@ export const TwitterApp = ({ onBack }: TwitterAppProps) => {
               
               <div className="flex justify-between items-center">
                 <div className="flex space-x-4 text-samsung-blue">
-                  <Button variant="ghost" size="sm" className="p-2 hover:bg-white/10 rounded-full">
+                  <Button variant="ghost" size="sm" className="p-1 hover:bg-white/10 rounded-full">
                     <Image className="w-5 h-5" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="p-2 hover:bg-white/10 rounded-full">
+                  <Button variant="ghost" size="sm" className="p-1 hover:bg-white/10 rounded-full">
                     <FileText className="w-5 h-5" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="p-2 hover:bg-white/10 rounded-full">
+                  <Button variant="ghost" size="sm" className="p-1 hover:bg-white/10 rounded-full">
                     <BarChart3 className="w-5 h-5" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="p-2 hover:bg-white/10 rounded-full">
+                  <Button variant="ghost" size="sm" className="p-1 hover:bg-white/10 rounded-full">
                     <MapPin className="w-5 h-5" />
                   </Button>
                 </div>
                 <Button 
-                  className="bg-samsung-blue hover:bg-samsung-blue/80 text-white px-6 py-2 rounded-full font-medium disabled:opacity-50"
+                  className="bg-samsung-blue hover:bg-samsung-blue/80 text-white px-4 py-2 rounded-full font-medium disabled:opacity-50"
                   disabled={!tweetContent.trim()}
                   onClick={handlePostTweet}
                 >
@@ -619,7 +626,7 @@ export const TwitterApp = ({ onBack }: TwitterAppProps) => {
       )}
       
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
         {currentTab === 'home' && (
           <div>
             {tweets.map((tweet) => (
@@ -627,25 +634,25 @@ export const TwitterApp = ({ onBack }: TwitterAppProps) => {
                 key={tweet.id}
                 className="p-4 border-b border-white/10 hover:bg-surface-dark/30 transition-colors"
               >
-                <div className="flex space-x-3">
-                  <div className="w-12 h-12 bg-samsung-blue rounded-full flex items-center justify-center">
+                <div className="flex space-x-2">
+                  <div className="w-10 h-10 bg-samsung-blue rounded-full flex items-center justify-center">
                     <span className="text-white font-semibold text-sm">{tweet.avatar}</span>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
+                  <div className="flex-1 ">
+                    <div className="flex items-center space-x-1 mb-2 ml-2">
                       <span className="text-white font-semibold">{tweet.author}</span>
-                      <span className="text-samsung-blue">@{tweet.username}</span>
+                      <span className="text-samsung-blue text-xs">@{tweet.username}</span>
                       {tweet.verified && (
-                        <div className="w-4 h-4 bg-samsung-blue rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-samsung-blue rounded-full flex items-center justify-center">
                           <span className="text-white text-xs">✓</span>
                         </div>
                       )}
-                      <span className="text-white/50 text-sm">·</span>
-                      <span className="text-white/50 text-sm">{tweet.time}</span>
+                      <span className="text-white/50 text-xs">·</span>
+                      <span className="text-white/50 text-xs">{tweet.time}</span>
                     </div>
-                    <p className="text-white mb-3 leading-relaxed">{tweet.content}</p>
+                    <p className="text-white mb-2 leading-relaxed text-sm font-large ml-2">{tweet.content}</p>
                     {tweet.imageUrl && (
-                      <div className="rounded-2xl overflow-hidden mb-3">
+                      <div className="rounded-2xl overflow-hidden mb-2">
                         <img 
                           src={tweet.imageUrl} 
                           alt="Tweet image" 
@@ -785,8 +792,8 @@ export const TwitterApp = ({ onBack }: TwitterAppProps) => {
       </Button>
 
       {/* Bottom Navigation Bar */}
-      <div className="bg-surface-dark/90 backdrop-blur-xl border-t border-white/10">
-        <div className="flex items-center justify-around py-3">
+      <div className="border-t border-white/10">
+        <div className="flex items-center justify-around py-4">
           <Button
             variant="ghost"
             size="sm"

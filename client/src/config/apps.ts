@@ -1,7 +1,7 @@
 import { 
   Users, 
   CreditCard, 
-  Camera as CameraIcon,
+  Camera,
   Settings,
   Calculator,
   Images,
@@ -18,11 +18,20 @@ import {
 import contactsPng from '@apps/contacts.png';
 import settingsPng from '@apps/settings.png';
 import notesPng from '@apps/notes.png';
-import bankingPng from '@apps/mail.png';
+import bankingPng from '@apps/wallet.png';
 import cameraPng from '@apps/camera.png';
-import birdyPng from '@apps/birdy.png';
+import galleryPng from '@apps/gallery.png';
+import twitterPng from '@apps/twitter.png';
+//import twitterPng from '@apps/x.png';
 import whatsappPng from '@apps/whatsapp.png';
 import mailPng from '@apps/mail.png';
+import calculatorPng from '@apps/calculator.png'; 
+import spotifyPng from '@apps/spotify.png';
+import clockPng from '@apps/clock.png';
+import darkchatPng from '@apps/darkchat.png';
+import mapsPng from '@apps/maps.png';
+import browserPng from '@apps/browser.png';
+import messagesPng from '@apps/messages.png';
 
 export interface AppConfig {
   id: string;
@@ -33,6 +42,7 @@ export interface AppConfig {
   category: 'social' | 'utilities' | 'media' | 'productivity' | 'system' | 'custom';
   isActive: boolean;
   isVisible: boolean;
+  isDockApp?: boolean; // Whether this app should appear in the dock
   order: number;
   description?: string;
   version?: string;
@@ -54,6 +64,8 @@ export interface AppConfig {
   };
 }
 
+
+
 // App Template for easy creation
 export const createAppTemplate = (overrides: Partial<AppConfig>): AppConfig => ({
   id: '',
@@ -64,6 +76,7 @@ export const createAppTemplate = (overrides: Partial<AppConfig>): AppConfig => (
   category: 'custom',
   isActive: true,
   isVisible: true,
+  isDockApp: false,
   order: 999,
   description: '',
   version: '1.0.0',
@@ -90,8 +103,8 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'banking',
     name: 'Banking',
-    icon: CreditCard,
-    iconType: 'lucide',
+    icon: bankingPng,
+    iconType: 'png',
     color: 'from-green-500 to-emerald-500',
     category: 'utilities',
     isActive: true,
@@ -113,16 +126,22 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'twitter',
     name: 'Twitter',
-    icon: birdyPng,
+    icon: twitterPng,
     iconType: 'png',
     color: 'from-blue-400 to-blue-600',
     category: 'social',
     isActive: true,
     isVisible: true,
+    isEssential: false,
+    isInstalled: true,
     order: 2,
     screen: 'twitter',
     description: 'Stay connected with social media',
     version: '1.0.0',
+    developer: 'Twitter Inc.',
+    rating: 4.2,
+    downloads: 50000,
+    appSize: '45.8 MB',
     permissions: ['social'],
     settings: {
       hasSettings: true,
@@ -136,12 +155,13 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'settings',
     name: 'Settings',
-    icon: Settings,
-    iconType: 'lucide',
+    icon: settingsPng,
+    iconType: 'png',
     color: 'from-gray-500 to-gray-700',
     category: 'system',
     isActive: true,
     isVisible: true,
+    isDockApp: true,
     order: 3,
     screen: 'settings',
     description: 'Phone settings and configuration',
@@ -158,8 +178,8 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'calculator',
     name: 'Calculator',
-    icon: Calculator,
-    iconType: 'lucide',
+    icon: calculatorPng,
+    iconType: 'png',
     color: 'from-orange-500 to-red-500',
     category: 'utilities',
     isActive: true,
@@ -180,21 +200,18 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'camera',
     name: 'Camera',
-    icon: CameraIcon,
-    iconType: 'lucide',
+    icon: cameraPng,
+    iconType: 'png',
     color: 'from-purple-500 to-pink-500',
     category: 'media',
     isActive: true,
     isVisible: true,
+    isDockApp: true,
     order: 5,
     screen: 'camera',
     description: 'Take photos and videos',
     version: '1.0.0',
     permissions: ['camera', 'storage'],
-    settings: {
-      hasSettings: true,
-      settingsPath: '/camera/settings',
-    },
     notifications: {
       enabled: true,
       types: ['info', 'success'],
@@ -203,7 +220,7 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'gallery',
     name: 'Gallery',
-    icon: cameraPng,
+    icon: galleryPng,
     iconType: 'png',
     color: 'from-pink-500 to-rose-500',
     category: 'media',
@@ -226,8 +243,8 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'notes',
     name: 'Notes',
-    icon: NotepadTextDashed,
-    iconType: 'lucide',
+    icon: notesPng,
+    iconType: 'png',
     color: 'from-yellow-500 to-orange-500',
     category: 'productivity',
     isActive: true,
@@ -249,8 +266,8 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'spotify',
     name: 'Spotify',
-    icon: Music,
-    iconType: 'lucide',
+    icon: spotifyPng,
+    iconType: 'png',
     color: 'from-green-500 to-green-700',
     category: 'media',
     isActive: true,
@@ -272,8 +289,8 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'clock',
     name: 'Clock',
-    icon: Clock,
-    iconType: 'lucide',
+    icon: clockPng,
+    iconType: 'png',
     color: 'from-blue-500 to-indigo-500',
     category: 'utilities',
     isActive: true,
@@ -318,12 +335,13 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'contacts',
     name: 'Contacts',
-    icon: Users,
-    iconType: 'lucide',
+    icon: contactsPng,
+    iconType: 'png',
     color: 'from-indigo-500 to-purple-500',
     category: 'utilities',
     isActive: true,
     isVisible: true,
+    isDockApp: true,
     order: 11,
     screen: 'contacts',
     description: 'Manage contacts, make calls, and view call history',
@@ -341,8 +359,8 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'darkchat',
     name: 'Dark Chat',
-    icon: MessageCircle,
-    iconType: 'lucide',
+    icon: darkchatPng,
+    iconType: 'png',
     color: 'from-gray-700 to-gray-900',
     category: 'social',
     isActive: true,
@@ -364,8 +382,8 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'maps',
     name: 'Maps',
-    icon: MapPin,
-    iconType: 'lucide',
+    icon: mapsPng,
+    iconType: 'png',
     color: 'from-blue-500 to-blue-700',
     category: 'utilities',
     isActive: true,
@@ -399,8 +417,8 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'browser',
     name: 'Browser',
-    icon: Globe,
-    iconType: 'lucide',
+    icon: browserPng,
+    iconType: 'png',
     color: 'from-blue-500 to-indigo-600',
     category: 'utilities',
     isActive: true,
@@ -419,8 +437,49 @@ export const appsConfig: AppConfig[] = [
       types: ['info', 'success'],
     },
   },
+  {
+    id: 'messages',
+    name: 'Messages',
+    icon: messagesPng,
+    iconType: 'png',
+    color: 'from-green-500 to-emerald-500',
+    category: 'social',
+    isActive: true,
+    isVisible: true,
+    isDockApp: true,
+    order: 16,
+    screen: 'messages',
+    description: 'Send and receive messages',
+    version: '1.0.0',
+    permissions: ['social'],
+    settings: {
+      hasSettings: true,
+      settingsPath: '/messages/settings',
+    },
+    notifications: {
+      enabled: true,
+      types: ['info', 'success'],
+    },
+  },
+
+  //test
+  {
+    id: 'test',
+    name: 'Test',
+    icon: browserPng,
+    iconType: 'png',
+    color: 'from-blue-500 to-indigo-600',
+    category: 'utilities',
+    isActive: true,
+    isVisible: true,
+    order: 17,
+    screen: 'test',
+    description: 'Test app',
+  },
 
 ];
+
+
 
 // Helper functions
 export const getVisibleApps = () => appsConfig.filter(app => app.isVisible && app.isActive);
@@ -450,6 +509,8 @@ export const getTranslatedApps = (language: string = 'en') => {
       'maps': 'Haritalar',
       'mail': 'E-Posta',
       'browser': 'Tarayıcı',
+      'messages': 'Mesajlar',
+
     },
     en: {
       'banking': 'Banking',
@@ -509,4 +570,33 @@ export const toggleAppActive = (id: string) => {
   if (app) {
     app.isActive = !app.isActive;
   }
+};
+
+// Dock App Helper Functions
+export const getDockApps = () => appsConfig.filter(app => app.isDockApp && app.isVisible && app.isActive);
+
+// Get dock apps with translated names
+export const getTranslatedDockApps = (language: string = 'en') => {
+  const dockApps = getDockApps();
+  
+  // Language translations for dock app names
+  const dockTranslations: Record<string, Record<string, string>> = {
+    tr: {
+      'messages': 'Mesajlar',
+      'contacts': 'Kişiler',
+      'camera': 'Kamera',
+      'settings': 'Ayarlar',
+    },
+    en: {
+      'messages': 'Messages',
+      'contacts': 'Contacts',
+      'camera': 'Camera',
+      'settings': 'Settings',
+    }
+  };
+
+  return dockApps.map(app => ({
+    ...app,
+    translatedName: dockTranslations[language]?.[app.id] || app.name
+  }));
 };
