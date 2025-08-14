@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import "leaflet/dist/leaflet.css";
 import { 
   MapPin, 
   Navigation, 
@@ -109,6 +110,8 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
   const [favoriteName, setFavoriteName] = useState("");
   const [favoriteCategory, setFavoriteCategory] = useState("personal");
   const [playerLocation, setPlayerLocation] = useState<PlayerLocation | null>(null);
+  const [showMapView, setShowMapView] = useState(false);
+  const [mapViewType, setMapViewType] = useState<"atlas" | "satellite" | "grid">("atlas");
   
   const { showInfo, showSuccess, showWarning, showError } = useNotificationContext();
 
@@ -119,6 +122,169 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
     loadNearbyPlayers();
     loadPlayerLocation();
   }, []);
+  // add player location mock data and use it for map view
+  useEffect(() => {
+    if (showMapView && playerLocation) {
+      // Initialize Leaflet map when map view is shown
+      const initMap = async () => {
+        try {
+          const L = await import('leaflet');
+          
+          // Remove existing map if any
+          const existingMap = document.getElementById('gta-map');
+          if (existingMap) {
+            existingMap.innerHTML = '';
+          }
+
+          // Create map container
+          const mapContainer = document.getElementById('gta-map');
+          if (!mapContainer) return;
+
+          // Initialize map with GTA V coordinates
+          const map = L.map('gta-map', {
+            center: [playerLocation.y, playerLocation.x],
+            zoom: 3,
+            minZoom: 0,
+            maxZoom: 5,
+            zoomControl: true,
+            attributionControl: false,
+            dragging: true,
+            touchZoom: true,
+            scrollWheelZoom: true, // Enable mouse wheel zooming
+            doubleClickZoom: false,
+            boxZoom: false,
+            keyboard: false,
+            crs: L.CRS.Simple, // önemli
+          });
+
+          // Add tile layer based on map view type
+          let tileUrl = '';
+          let attribution = '';
+          switch (mapViewType) {
+            case 'satellite':
+              // 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+              tileUrl = 'https://assets.loaf-scripts.com/map-tiles/gtav/main/render/{z}/{x}/{y}.jpg';
+              attribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+              break;
+            case 'grid':
+              // 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+              tileUrl = 'https://assets.loaf-scripts.com/map-tiles/gtav/main/game/{z}/{x}/{y}.jpg';
+              attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+              break;
+            default: // atlas
+              tileUrl = 'https://assets.loaf-scripts.com/map-tiles/gtav/main/print/{z}/{x}/{y}.jpg';
+              attribution = 'Map tiles';
+              break;
+          }
+
+          L.tileLayer(tileUrl, {
+              tileSize: 256,
+              updateWhenIdle: true,
+              updateWhenZooming: false,
+              minZoom: 0,
+              maxZoom: 5,
+              noWrap: true,
+              attribution: attribution
+          }).addTo(map);
+
+          // Add player location marker
+          const playerIcon = L.divIcon({
+            className: 'player-marker',
+            html: '<div class="w-4 h-4 bg-samsung-blue rounded-full border-2 border-white"></div>',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+          });
+
+          L.marker([playerLocation.y, playerLocation.x], { icon: playerIcon })
+            .addTo(map)
+            .bindPopup('Your Location')
+            .openPopup();
+
+          // Add nearby places markers
+          nearbyPlaces.forEach(place => {
+            // Choose marker color based on category
+            let markerColor = 'bg-orange-500'; // default
+            switch (place.category.toLowerCase()) {
+              case 'hospital':
+                markerColor = 'bg-red-500';
+                break;
+              case 'police station':
+                markerColor = 'bg-blue-500';
+                break;
+              case 'fire station':
+                markerColor = 'bg-red-600';
+                break;
+              case 'bank':
+                markerColor = 'bg-green-500';
+                break;
+              case 'airport':
+                markerColor = 'bg-purple-500';
+                break;
+              case 'gas station':
+                markerColor = 'bg-yellow-500';
+                break;
+              case 'store':
+                markerColor = 'bg-indigo-500';
+                break;
+              case 'entertainment':
+                markerColor = 'bg-pink-500';
+                break;
+              case 'recreation':
+                markerColor = 'bg-teal-500';
+                break;
+              case 'landmark':
+                markerColor = 'bg-amber-500';
+                break;
+              case 'service':
+                markerColor = 'bg-cyan-500';
+                break;
+              case 'emergency':
+                markerColor = 'bg-red-700';
+                break;
+              default:
+                markerColor = 'bg-orange-500';
+            }
+
+            const placeIcon = L.divIcon({
+              className: 'place-marker',
+              html: `<div class="w-3 h-3 ${markerColor} rounded-full border border-white shadow-lg"></div>`,
+              iconSize: [12, 12],
+              iconAnchor: [6, 6]
+            });
+
+            L.marker([place.lng, place.lat], { icon: placeIcon })
+              .addTo(map)
+              .bindPopup(`
+                <div class="text-center">
+                  <h3 class="font-bold text-sm mb-1">${place.name}</h3>
+                  <p class="text-xs text-gray-600 mb-2">${place.address}</p>
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="bg-gray-200 px-2 py-1 rounded">${place.category}</span>
+                    <span class="text-gray-500">${place.distance}</span>
+                  </div>
+                </div>
+              `);
+          });
+
+          // Store map instance for cleanup
+          (window as any).gtaMap = map;
+
+        } catch (error) {
+          console.error('Failed to initialize map:', error);
+        }
+      };
+
+      initMap();
+
+      // Cleanup function
+      return () => {
+        if ((window as any).gtaMap) {
+          (window as any).gtaMap.remove();
+          (window as any).gtaMap = null;
+        }
+      };
+    }
+  }, [showMapView, playerLocation, mapViewType, nearbyPlaces]);
 
   const loadPlayerLocation = () => {
     // Listen for player location data from FiveM
@@ -140,11 +306,37 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
     };
 
     window.addEventListener('message', handleMessage);
+    
+    // Add mock data for development/testing
+    if (!('alt' in window)) {
+      // Mock player location for development
+      const mockLocation: PlayerLocation = {
+        x: 60.2437,
+        y: -140.0522,
+        z: 0,
+        heading: 0,
+        street: "Mock Street",
+        crossing: "Mock Crossing",
+        zone: "Los Santos"
+      };
+      setPlayerLocation(mockLocation);
+      
+      // Update current location with mock data
+      setCurrentLocation({
+        id: "current",
+        name: "Your Location",
+        address: `${mockLocation.street}, ${mockLocation.zone}`,
+        category: "current",
+        lat: mockLocation.x,
+        lng: mockLocation.y,
+      });
+    }
+    
     return () => window.removeEventListener('message', handleMessage);
   };
 
   const loadNearbyPlaces = () => {
-    // Mock nearby places - in real app this would be API call
+    // GTA V realistic locations
     setNearbyPlaces([
       {
         id: "1",
@@ -153,8 +345,8 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
         category: "Hospital",
         rating: 4.2,
         distance: "0.8 km",
-        lat: 34.0542,
-        lng: -118.2457,
+        lat: 60.2437,
+        lng: -140.0522, // orta nokta
         phone: "(555) 123-4567",
       },
       {
@@ -164,8 +356,8 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
         category: "Police Station",
         rating: 3.8,
         distance: "1.2 km",
-        lat: 34.0502,
-        lng: -118.2417,
+        lat: 62.2417, // biraz doğuda
+        lng: -141.0502, // biraz güneydoğuda
         phone: "(555) 911-0000",
       },
       {
@@ -175,8 +367,8 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
         category: "Entertainment",
         rating: 4.7,
         distance: "2.1 km",
-        lat: 34.0622,
-        lng: -118.2537,
+        lat: 59.2537, // biraz batıda
+        lng: -138.0622, // kuzeybatıda
         phone: "(555) 777-8888",
       },
       {
@@ -186,21 +378,34 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
         category: "Airport",
         rating: 4.1,
         distance: "5.2 km",
-        lat: 34.0322,
-        lng: -118.2737,
+        lat: 55.2737, // daha batıda
+        lng: -145.0322, // güneybatıda
         phone: "(555) 555-1234",
       },
       {
         id: "5",
-        name: "Maze Bank Tower",
-        address: "Pillbox Hill, Los Santos",
-        category: "Office Building",
-        rating: 4.5,
-        distance: "0.5 km",
-        lat: 34.0562,
-        lng: -118.2477,
+        name: "Los Santos Customs",
+        address: "La Mesa, Los Santos",
+        category: "Service",
+        rating: 4.3,
+        distance: "2.8 km",
+        lat: 61.2237, // doğuda
+        lng: -142.0422, // güneydoğuda
+        phone: "(555) 333-4444",
       },
-    ]);
+      {
+        id: "6",
+        name: "Los Santos Bank",
+        address: "Downtown Los Santos",
+        category: "Bank",
+        rating: 4.0,
+        distance: "2.3 km",
+        lat: 59.2437, // batıda
+        lng: -141.0422, // güneybatıda
+        phone: "(555) 222-3333",
+      }
+    ]
+    );
   };
 
   const loadSavedPlaces = () => {
@@ -401,6 +606,199 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
     showSuccess("Deleted", "Favorite location removed", "maps");
   };
 
+  const startNavigation = (location: Location) => {
+    // Send navigation request to FiveM client
+    if ('alt' in window) {
+      fetch(`https://gg-phone/startNavigation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          coordinates: {
+            x: location.lat,
+            y: location.lng,
+            z: 0
+          }
+        })
+      });
+    }
+    
+    // Return to Maps main page
+    setShowRoute(false);
+    setSelectedLocation(null);
+    setRouteInfo(null);
+    
+    showSuccess("Navigation Started", `Waypoint set for ${location.name}`, "maps");
+  };
+
+  const handleMapViewTypeChange = (newType: "atlas" | "satellite" | "grid") => {
+    setMapViewType(newType);
+    // Force map refresh by reinitializing
+    setShowMapView(false);
+    setTimeout(() => setShowMapView(true), 100);
+    // Force map refresh by reinitializing
+    if ((window as any).gtaMap) {
+      (window as any).gtaMap.remove();
+      (window as any).gtaMap = null;
+    }
+    // Trigger map reinitialization
+    setTimeout(() => {
+      if (showMapView && playerLocation) {
+        const initMap = async () => {
+          try {
+            const L = await import('leaflet');
+            
+            // Remove existing map if any
+            const existingMap = document.getElementById('gta-map');
+            if (existingMap) {
+              existingMap.innerHTML = '';
+            }
+
+            // Create map container
+            const mapContainer = document.getElementById('gta-map');
+            if (!mapContainer) return;
+
+            // Initialize map with GTA V coordinates
+            const map = L.map('gta-map', {
+              center: [playerLocation.y, playerLocation.x],
+              zoom: 11,
+              zoomControl: false,
+              attributionControl: false,
+              dragging: true,
+              touchZoom: true,
+              scrollWheelZoom: true, // Enable mouse wheel zooming
+              doubleClickZoom: false,
+              boxZoom: false,
+              keyboard: false,
+              crs: L.CRS.Simple, // önemli
+            });
+
+            // Add tile layer based on new map view type
+            let tileUrl = '';
+            let attribution = '';
+            switch (newType) {
+              case 'satellite':
+                // tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+                tileUrl = 'https://assets.loaf-scripts.com/map-tiles/gtav/main/render/{z}/{x}/{y}.jpg';
+                attribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+                break;
+              case 'grid':
+                // tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+                tileUrl = 'https://assets.loaf-scripts.com/map-tiles/gtav/main/game/{z}/{x}/{y}.jpg';
+                attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+                break;
+              default: // atlas - GTA V specific tiles
+                tileUrl = 'https://assets.loaf-scripts.com/map-tiles/gtav/main/print/0/0/0.jpg';
+                attribution = 'Map tiles © Loaf Scripts';
+                break;
+            }
+
+            L.tileLayer(tileUrl, {
+              tileSize: 256,
+              updateWhenIdle: true,
+              updateWhenZooming: false,
+              minZoom: 0,
+              maxZoom: 5,
+              noWrap: true,
+              attribution: attribution
+            }).addTo(map);
+
+            // Add player location marker
+            const playerIcon = L.divIcon({
+              className: 'player-marker',
+              html: '<div class="w-4 h-4 bg-samsung-blue rounded-full border-2 border-white"></div>',
+              iconSize: [16, 16],
+              iconAnchor: [8, 8]
+            });
+
+            L.marker([playerLocation.y, playerLocation.x], { icon: playerIcon })
+              .addTo(map)
+              .bindPopup('Your Location')
+              .openPopup();
+
+            // Add nearby places markers
+            nearbyPlaces.forEach(place => {
+              // Choose marker color based on category
+              let markerColor = 'bg-orange-500'; // default
+              switch (place.category.toLowerCase()) {
+                case 'hospital':
+                  markerColor = 'bg-red-500';
+                  break;
+                case 'police station':
+                  markerColor = 'bg-blue-500';
+                  break;
+                case 'fire station':
+                  markerColor = 'bg-red-600';
+                  break;
+                case 'bank':
+                  markerColor = 'bg-green-500';
+                  break;
+                case 'airport':
+                  markerColor = 'bg-purple-500';
+                  break;
+                case 'gas station':
+                  markerColor = 'bg-yellow-500';
+                  break;
+                case 'store':
+                  markerColor = 'bg-indigo-500';
+                  break;
+                case 'entertainment':
+                  markerColor = 'bg-pink-500';
+                  break;
+                case 'recreation':
+                  markerColor = 'bg-teal-500';
+                  break;
+                case 'landmark':
+                  markerColor = 'bg-amber-500';
+                  break;
+                case 'service':
+                  markerColor = 'bg-cyan-500';
+                  break;
+                case 'emergency':
+                  markerColor = 'bg-red-700';
+                  break;
+                default:
+                  markerColor = 'bg-orange-500';
+              }
+
+              const placeIcon = L.divIcon({
+                className: 'place-marker',
+                html: `<div class="w-3 h-3 ${markerColor} rounded-full border border-white shadow-lg"></div>`,
+                iconSize: [12, 12],
+                iconAnchor: [6, 6]
+              });
+
+              L.marker([place.lng, place.lat], { icon: placeIcon })
+                .addTo(map)
+                .bindPopup(`
+                  <div class="text-center">
+                    <h3 class="font-bold text-sm mb-1">${place.name}</h3>
+                    <p class="text-xs text-gray-600 mb-2">${place.address}</p>
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="bg-gray-200 px-2 py-1 rounded">${place.category}</span>
+                      <span class="text-gray-500">${place.distance}</span>
+                    </div>
+                  </div>
+                `);
+            });
+
+            // Store map instance for cleanup
+            (window as any).gtaMap = map;
+            
+            // Invalidate map size to ensure proper rendering
+            setTimeout(() => {
+              map.invalidateSize();
+            }, 100);
+
+          } catch (error) {
+            console.error('Failed to refresh map:', error);
+          }
+        };
+
+        initMap();
+      }
+    }, 50);
+  };
+
   const callPlace = (phone?: string) => {
     if (phone) {
       showInfo("Calling...", `Calling ${phone}`, "maps");
@@ -560,6 +958,106 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
     </div>
   );
 
+  if (showMapView) {
+    return (
+      <div className="absolute inset-0 maps-app flex flex-col bg-gray-900">
+        {/* Map Header */}
+        <div className="bg-samsung-blue text-white p-6 border-b border-white/10">
+          <div className="flex items-center justify-between">
+            <Button
+              onClick={() => setShowMapView(false)}
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-samsung-blue/80 p-2 -ml-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="text-center">
+              <h2 className="font-semibold text-lg">GTA V Map</h2>
+              <div className="flex items-center justify-center space-x-2 mt-1">
+                <Button
+                  onClick={() => handleMapViewTypeChange("atlas")}
+                  size="sm"
+                  className={`text-xs px-2 py-1 h-6 ${
+                    mapViewType === "atlas" 
+                      ? "bg-white text-samsung-blue" 
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
+                  Atlas
+                </Button>
+                <Button
+                  onClick={() => handleMapViewTypeChange("satellite")}
+                  size="sm"
+                  className={`text-xs px-2 py-1 h-6 ${
+                    mapViewType === "satellite" 
+                      ? "bg-white text-samsung-blue" 
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
+                  Satellite
+                </Button>
+                <Button
+                  onClick={() => handleMapViewTypeChange("grid")}
+                  size="sm"
+                  className={`text-xs px-2 py-1 h-6 ${
+                    mapViewType === "grid" 
+                      ? "bg-white text-samsung-blue" 
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
+                  Grid
+                </Button>
+              </div>
+            </div>
+            <div className="w-8" />
+          </div>
+        </div>
+
+        {/* Map Container */}
+        <div className="flex-1 relative">
+          <div id="gta-map" className="w-full h-full bg-gray-800 flex items-center justify-center">
+            <div className="text-center text-white/60">
+              <MapPin className="h-12 w-12 mx-auto mb-2" />
+              <p>Map loading...</p>
+              <p className="text-sm">View: {mapViewType}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Map Controls */}
+        <div className="p-4 border-t border-white/10 bg-gray-800">
+          <div className="flex items-center justify-between">
+            <div className="text-white/80 text-sm">
+              {playerLocation && (
+                <span>Your location: {playerLocation.street}, {playerLocation.zone}</span>
+              )}
+            </div>
+            <Button
+              onClick={() => {
+                if (playerLocation) {
+                  startNavigation({
+                    id: "current",
+                    name: "Your Location",
+                    address: `${playerLocation.street}, ${playerLocation.zone}`,
+                    category: "current",
+                    lat: playerLocation.x,
+                    lng: playerLocation.y
+                  });
+                }
+              }}
+              size="sm"
+              className="bg-samsung-blue hover:bg-samsung-blue/80 text-white border-0 rounded-samsung-sm text-xs px-2 py-1 h-7"
+            >
+              <Navigation className="h-3 w-4 mr-1" />
+              Set Waypoint
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (showRoute && selectedLocation && routeInfo) {
     return (
       <div className="absolute inset-0 maps-app flex flex-col bg-gray-900">
@@ -613,7 +1111,10 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
         {/* Quick Actions */}
         <div className="p-6 border-t border-white/10">
           <div className="flex space-x-3">
-            <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-samsung-sm">
+            <Button 
+              onClick={() => startNavigation(selectedLocation)}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-samsung-sm"
+            >
               <Car className="h-4 w-4 mr-2" />
               Start Navigation
             </Button>
@@ -690,14 +1191,25 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
               </p>
             )}
           </div>
-          <Button
-            onClick={() => shareLocation(currentLocation)}
-            variant="ghost"
-            size="sm"
-            className="text-white hover:bg-white/10 rounded-samsung-sm text-xs px-2 py-1 h-7"
-          >
-            <Share className="h-3 w-3" />
-          </Button>
+          <div className="flex space-x-1">
+            <Button
+              onClick={() => setShowMapView(true)}
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/10 rounded-samsung-sm text-xs px-2 py-1 h-7"
+            >
+              <MapPin className="h-3 w-3" />
+              Map
+            </Button>
+            <Button
+              onClick={() => shareLocation(currentLocation)}
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/10 rounded-samsung-sm text-xs px-2 py-1 h-7"
+            >
+              <Share className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -761,7 +1273,17 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
       <div className="px-4 py-2 flex-1 overflow-y-auto scrollbar-hide">
         {activeTab === "explore" && (
           <div>
-            <h2 className="text-base font-semibold text-white mb-3">Nearby Places</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-semibold text-white">Nearby Places</h2>
+              <Button
+                onClick={() => setShowMapView(true)}
+                size="sm"
+                className="bg-samsung-blue hover:bg-samsung-blue/80 text-white border-0 rounded-samsung-sm text-xs px-2 py-1 h-7"
+              >
+                <MapPin className="h-3 w-3 mr-1" />
+                View Map
+              </Button>
+            </div>
             {nearbyPlaces.map(place => renderLocationCard(place))}
           </div>
         )}

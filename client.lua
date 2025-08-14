@@ -422,6 +422,18 @@ RegisterNUICallback('deleteFavoriteLocation', function(data, cb)
     cb('ok')
 end)
 
+RegisterNUICallback('startNavigation', function(data, cb)
+    -- Set waypoint on GTA 5 map using native
+    local coords = data.coordinates
+    if coords and coords.x and coords.y then
+        SetNewWaypoint(coords.x, coords.y)
+        QBCore.Functions.Notify('Navigation started! Waypoint set on map.', 'success')
+    else
+        QBCore.Functions.Notify('Invalid coordinates for navigation', 'error')
+    end
+    cb('ok')
+end)
+
 -- Server Event Handlers
 RegisterNetEvent('gg-phone:client:transactionSuccess')
 AddEventHandler('gg-phone:client:transactionSuccess', function(transaction)
