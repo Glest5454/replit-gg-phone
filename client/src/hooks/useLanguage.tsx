@@ -68,7 +68,17 @@ const translations: Translations = {
     setPIN: { english: 'Set PIN', turkish: 'PIN Belirle' },
     enterNewPIN: { english: 'Enter new 4-digit PIN', turkish: 'Yeni 4 haneli PIN girin' },
     about: { english: 'About Phone', turkish: 'Telefon Hakkında' },
-    version: { english: 'Version', turkish: 'Sürüm' }
+    version: { english: 'Version', turkish: 'Sürüm' },
+    ringtone: { english: 'Ringtone', turkish:'Ses' },
+    default: { english: 'Default', turkish: 'Varsayılan' },
+    vibration: { english: 'Vibration', turkish: 'Titreşim' },
+    locationServices: { english: 'Location', turkish: 'Konum' },
+    appPermissions: { english: 'App Permissions', turkish: 'Uygulama İzinleri' },
+    storage: { english: 'Storage', turkish: 'Depolama' },
+    aboutPhone: { english: 'About Phone', turkish: 'Telefon Hakkında' },
+    sound: { english: 'Sound', turkish: 'Ses' },
+    privacy: { english: 'Privacy', turkish: 'Gizlilik' },
+    device: { english: 'Device', turkish: 'Cihaz' },
   },
   banking: {
     balance: { english: 'Balance', turkish: 'Bakiye' },

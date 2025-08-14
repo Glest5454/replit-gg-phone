@@ -22,24 +22,32 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Get apps with translated names and installation status
-  const allApps = useMemo(() => getAppsWithInstallStatus(), []);
+  const allApps = useMemo(() => {
+    const apps = getAppsWithInstallStatus();
+    //console.log('HomeScreen: allApps recalculated, installed count:', apps.filter((a: any) => a.isInstalled).length);
+    return apps;
+  }, [refreshTrigger]);
+  
   const apps = useMemo(() => {
     const translatedApps = getTranslatedApps(language === 'english' ? 'en' : 'tr');
     // Only show installed apps in home screen and sort by order
     const installedApps = translatedApps.filter(app => allApps.find((a: any) => a.id === app.id)?.isInstalled);
-    return installedApps.sort((a, b) => a.order - b.order);
+    const sortedApps = installedApps.sort((a, b) => a.order - b.order);
+    //console.log('HomeScreen: apps recalculated, showing apps:', sortedApps.map(a => ({ id: a.id, name: a.name, isInstalled: true })));
+    return sortedApps;
   }, [language, allApps, refreshTrigger]);
 
   // Listen for app state changes from Apps app
   useEffect(() => {
-    const handleAppStateChange = () => {
-      // Force re-render by updating a dependency
+    const handleAppStateChange = (event: CustomEvent) => {
+      console.log('HomeScreen received app state change event:', event.detail);
+      // Force re-render by updating refresh trigger
       // This will trigger the useMemo to recalculate apps
-      setCurrentPage(prev => prev);
+      setRefreshTrigger(prev => prev + 1);
     };
 
-    window.addEventListener('phone:appStateChanged', handleAppStateChange);
-    return () => window.removeEventListener('phone:appStateChanged', handleAppStateChange);
+    window.addEventListener('phone:appStateChanged', handleAppStateChange as EventListener);
+    return () => window.removeEventListener('phone:appStateChanged', handleAppStateChange as EventListener);
   }, []);
 
   // Force re-render when allApps changes
@@ -228,11 +236,20 @@ const handleDrop = useCallback((e: React.DragEvent, targetAppId: string) => {
     appManager.updateAppPosition(draggedApp, targetAppData.order);
     appManager.updateAppPosition(targetAppId, tempPosition);
     
-    // Save to localStorage
-    appManager.saveGridOrder();
-    
+    let getTargetItem = JSON.parse(localStorage.getItem('phone-grid-positions') || '[]');
+    let swapApp = getTargetItem.find((item: any) => item.appId === draggedApp);
+    swapApp.position = targetAppData.order;
+    let swapApp2 = getTargetItem.find((item: any) => item.appId === targetAppId);
+    swapApp2.position = tempPosition;
+    //save swapApp to getTargetItem
+    //
+
+    localStorage.setItem('phone-grid-positions', JSON.stringify(getTargetItem));
+    console.log(getTargetItem)
     console.log(`[DragDrop] After swap: ${draggedApp}=${targetAppData.order}, ${targetAppId}=${tempPosition}`);
     
+     // Save to localStorage
+     appManager.saveGridOrder();
     // Force re-render by updating refresh trigger
     setRefreshTrigger(prev => prev + 1);
     

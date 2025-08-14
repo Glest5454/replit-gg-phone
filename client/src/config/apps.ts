@@ -668,12 +668,15 @@ export class AppManager {
   // Load app states from localStorage
   private loadAppStates(): void {
     try {
+      console.log(`[AppManager] Loading app states for user: ${this.userId}`);
       const stored = localStorage.getItem(`phone-app-states-${this.userId}`);
       if (stored) {
         const data = JSON.parse(stored);
         this.installedApps = new Set(data.installedApps || []);
         this.appStates = new Map(Object.entries(data.appStates || {}));
+        console.log(`[AppManager] Loaded ${this.installedApps.size} installed apps from localStorage`);
       } else {
+        console.log('[AppManager] No stored app states found, initializing essential apps');
         // Initialize with essential apps for new users
         this.initializeEssentialApps();
       }
@@ -687,6 +690,8 @@ export class AppManager {
 
   // Initialize essential apps for new users
   private initializeEssentialApps(): void {
+    console.log('[AppManager] Initializing essential apps for new user');
+    
     // Dynamically get essential apps from appsConfig
     const essentialApps = appsConfig
       .filter(app => app.isEssential)
@@ -696,6 +701,9 @@ export class AppManager {
     const preInstalledApps = appsConfig
       .filter(app => app.isInstalled === true)
       .map(app => app.id);
+    
+    console.log('[AppManager] Essential apps:', essentialApps);
+    console.log('[AppManager] Pre-installed apps:', preInstalledApps);
     
     const now = new Date().toISOString();
     
@@ -721,15 +729,11 @@ export class AppManager {
       }
     });
     
+    console.log(`[AppManager] Initialized ${this.installedApps.size} apps total`);
     this.saveAppStates();
     
-    // Force clear any existing localStorage to ensure fresh start
-    try {
-      localStorage.removeItem(`phone-app-states-${this.userId}`);
-      localStorage.removeItem('phone-user-id');
-    } catch (error) {
-      console.log('Clearing localStorage for fresh start...');
-    }
+    // Note: Removed the localStorage clearing that was preventing app persistence
+    // Apps will now properly persist between sessions
   }
 
   // Save app states to localStorage
@@ -741,6 +745,7 @@ export class AppManager {
         lastUpdated: new Date().toISOString()
       };
       localStorage.setItem(`phone-app-states-${this.userId}`, JSON.stringify(data));
+      console.log(`[AppManager] Saved ${this.installedApps.size} app states to localStorage for user ${this.userId}`);
     } catch (error) {
       console.error('Error saving app states:', error);
     }
@@ -767,6 +772,7 @@ export class AppManager {
   // Install an app
   public async installApp(appId: string): Promise<boolean> {
     try {
+      console.log(`[AppManager] Installing app: ${appId}`);
       const now = new Date().toISOString();
       this.installedApps.add(appId);
       this.appStates.set(appId, {
@@ -775,6 +781,7 @@ export class AppManager {
         lastUsed: now
       });
       
+      console.log(`[AppManager] App ${appId} installed, total installed: ${this.installedApps.size}`);
       this.saveAppStates();
       
       // Show success notification
@@ -791,8 +798,11 @@ export class AppManager {
   // Uninstall an app
   public async uninstallApp(appId: string): Promise<boolean> {
     try {
+      console.log(`[AppManager] Uninstalling app: ${appId}`);
       this.installedApps.delete(appId);
       this.appStates.delete(appId);
+      
+      console.log(`[AppManager] App ${appId} uninstalled, total installed: ${this.installedApps.size}`);
       this.saveAppStates();
       
       // Show success notification
@@ -838,7 +848,7 @@ export class AppManager {
       const app = appsConfig.find(a => a.id === appId);
       if (app) {
         app.order = newOrder;
-        console.log(`[AppManager] Updated ${appId} order to ${newOrder}`);
+        //console.log(`[AppManager] Updated ${appId} order to ${newOrder}`);
         // Force appsConfig to update
         this.saveGridOrder();
         return true;
@@ -864,14 +874,14 @@ export class AppManager {
       const stored = localStorage.getItem('phone-grid-positions');
       if (stored) {
         const gridPositions = JSON.parse(stored);
-        console.log('[AppManager] Loading saved grid positions:', gridPositions);
+        //console.log('[AppManager] Loading saved grid positions:', gridPositions);
         
         // Apply saved positions to appsConfig
         gridPositions.forEach(({ appId, position }: { appId: string; position: number }) => {
           const app = appsConfig.find(a => a.id === appId);
           if (app) {
             app.order = position;
-            console.log(`[AppManager] Applied position ${position} to ${appId}`);
+            //console.log(`[AppManager] Applied position ${position} to ${appId}`);
           }
         });
       } else {
@@ -909,9 +919,9 @@ export class AppManager {
         const gridPositions = this.getGridPositions();
         // Use a single, consistent key for grid positions
         localStorage.setItem('phone-grid-positions', JSON.stringify(gridPositions));
-        console.log('[AppManager] Grid positions saved:', gridPositions);
+        //console.log('[AppManager] Grid positions saved:', gridPositions);
       } catch (error) {
-        console.error('Error saving grid positions:', error);
+        //console.error('Error saving grid positions:', error);
       }
     }
 
@@ -962,6 +972,7 @@ export class AppManager {
       if (app) {
         app.order = newPosition;
         console.log(`[AppManager] Updated ${appId} position to ${newPosition}`);
+        console.log(localStorage.getItem('phone-grid-positions'))
         this.saveGridOrder();
         return true;
       }
@@ -988,7 +999,7 @@ export const getAppManager = () => AppManager.getInstance();
 // Get apps with installation status
 export const getAppsWithInstallStatus = () => {
   const appManager = getAppManager();
-  return appsConfig.map(app => {
+  const result = appsConfig.map(app => {
     let isInstalled = false;
     
     if (app.isEssential) {
@@ -1009,6 +1020,11 @@ export const getAppsWithInstallStatus = () => {
       lastUsed: appManager.getAppLastUsed(app.id)
     };
   });
+  
+  const installedCount = result.filter(app => app.isInstalled).length;
+ // console.log(`[getAppsWithInstallStatus] Returning ${result.length} apps, ${installedCount} installed`);
+  
+  return result;
 };
 
 // Helper functions

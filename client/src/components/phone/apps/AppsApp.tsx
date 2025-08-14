@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Download, Trash2, Star, Users, Package, ArrowLeft, Filter, Grid3X3, List } from 'lucide-react';
+import { Search, Download, Trash2, Star, Users, Package, ArrowLeft, Filter, Grid3X3, List, Bug } from 'lucide-react';
 import { appsConfig, AppConfig, getAppsWithInstallStatus, getAppManager } from '@/config/apps';
 import { useLanguage } from '@/hooks/useLanguage';
 
@@ -10,6 +10,7 @@ export const AppsApp = () => {
   const [sortBy, setSortBy] = useState<'name' | 'rating' | 'downloads' | 'size'>('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
+
   const [apps, setApps] = useState<AppConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -94,10 +95,17 @@ export const AppsApp = () => {
           setApps(updatedApps);
           
           // Notify HomeScreen to refresh app list
-          window.dispatchEvent(new CustomEvent('phone:appStateChanged', {
+          const event = new CustomEvent('phone:appStateChanged', {
             detail: { action: 'uninstalled', appId: app.id }
-          }));
-          console.log('App uninstalled successfully, UI updated');
+          });
+          window.dispatchEvent(event);
+          console.log('App uninstalled successfully, UI updated. Event dispatched:', event);
+          
+          // Also force a localStorage sync check
+          setTimeout(() => {
+            const appManager = getAppManager();
+            console.log('Current installed apps after uninstall:', appManager.getInstalledApps());
+          }, 100);
         } else {
           console.error('Failed to uninstall app:', app.id);
         }
@@ -116,10 +124,17 @@ export const AppsApp = () => {
         setApps(updatedApps);
         
         // Notify HomeScreen to refresh app list
-        window.dispatchEvent(new CustomEvent('phone:appStateChanged', {
+        const event = new CustomEvent('phone:appStateChanged', {
           detail: { action: 'installed', appId: app.id }
-        }));
-        console.log('App installed successfully, UI updated');
+        });
+        window.dispatchEvent(event);
+        console.log('App installed successfully, UI updated. Event dispatched:', event);
+        
+        // Also force a localStorage sync check
+        setTimeout(() => {
+          const appManager = getAppManager();
+          console.log('Current installed apps after install:', appManager.getInstalledApps());
+        }, 100);
       } else {
         console.error('Failed to install app:', app.id);
       }
@@ -194,6 +209,8 @@ export const AppsApp = () => {
               <List className="w-4 h-4" />
             </button>
           </div>
+          
+         
         </div>
 
         {/* Search Bar */}
@@ -207,6 +224,7 @@ export const AppsApp = () => {
             className="w-full pl-10 pr-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
           />
         </div>
+       
       </div>
 
       {/* Category Filter */}
@@ -234,7 +252,7 @@ export const AppsApp = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <span className="text-sm text-gray-400">{t('sortBy', 'apps')}:</span>
-            <select
+            <select 
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"

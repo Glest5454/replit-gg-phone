@@ -36,7 +36,8 @@ export const PhoneFrame = () => {
     deletePinDigit, 
     toggleTheme,
     setWallpaper,
-    setBrightness
+    setBrightness,
+    refreshLockScreenState
   } = usePhone();
   
   const { 
@@ -171,7 +172,7 @@ export const PhoneFrame = () => {
       case 'twitter':
         return <TwitterApp onBack={goBack} />;
       case 'settings':
-        return <SettingsApp onBack={goBack} onToggleTheme={toggleTheme} theme={phoneState.theme} setWallpaper={setWallpaper} setBrightness={setBrightness} playerData={playerData} />;
+        return <SettingsApp onBack={goBack} onToggleTheme={toggleTheme} theme={phoneState.theme} setWallpaper={setWallpaper} setBrightness={setBrightness} playerData={playerData} refreshLockScreenState={refreshLockScreenState} />;
       case 'calculator':
         return <CalculatorApp onBack={goBack} />;
       case 'camera':

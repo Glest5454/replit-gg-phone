@@ -46,13 +46,17 @@ export const usePhone = () => {
   const [phoneState, setPhoneState] = useState<PhoneState>(() => {
     // Load all saved settings from localStorage
     const isLockEnabled = localStorage.getItem('phone-lock-enabled') === 'true';
+    const savedCustomPin = localStorage.getItem('phone-custom-pin');
     const savedTheme = localStorage.getItem('phone-theme') as 'light' | 'dark' | null;
     const savedWallpaper = localStorage.getItem('phone-wallpaper') || 'default';
     const savedBrightness = localStorage.getItem('phone-brightness');
     
+    // Only activate lock screen if both lock is enabled AND a PIN is saved
+    const shouldShowLockScreen = isLockEnabled && savedCustomPin && savedCustomPin.length === 4;
+    
     return {
-      currentScreen: isLockEnabled ? 'lock' : 'home',
-      isLocked: isLockEnabled,
+      currentScreen: shouldShowLockScreen ? 'lock' : 'home',
+      isLocked: Boolean(shouldShowLockScreen),
       pin: '',
       notifications: [
         {
@@ -94,12 +98,29 @@ export const usePhone = () => {
   }, []);
 
   const lock = useCallback(() => {
+    // Only lock if both conditions are met: lock enabled AND PIN is saved
+    const isLockEnabled = localStorage.getItem('phone-lock-enabled') === 'true';
+    const savedCustomPin = localStorage.getItem('phone-custom-pin');
+    const shouldShowLockScreen = isLockEnabled && savedCustomPin && savedCustomPin.length === 4;
+    
+    if (!shouldShowLockScreen) {
+      // If conditions aren't met, just go to home screen
+      setPhoneState(prev => ({
+        ...prev,
+        isLocked: false,
+        currentScreen: 'home',
+        pin: ''
+      }));
+      return false; // Return false to indicate lock failed
+    }
+    
     setPhoneState(prev => ({
       ...prev,
       isLocked: true,
       currentScreen: 'lock',
       pin: ''
     }));
+    return true; // Return true to indicate lock succeeded
   }, []);
 
   const addPinDigit = useCallback((digit: string) => {
@@ -164,6 +185,53 @@ export const usePhone = () => {
     });
   }, []);
 
+  // Function to check if lock screen should be active
+  const shouldShowLockScreen = useCallback(() => {
+    const isLockEnabled = localStorage.getItem('phone-lock-enabled') === 'true';
+    const savedCustomPin = localStorage.getItem('phone-custom-pin');
+    return isLockEnabled && savedCustomPin && savedCustomPin.length === 4;
+  }, []);
+
+  // Function to refresh lock screen state based on current settings
+  const refreshLockScreenState = useCallback(() => {
+    const shouldShow = shouldShowLockScreen();
+    
+    setPhoneState(prev => {
+      // If we should show lock screen but we're not locked, lock the phone
+      if (shouldShow && !prev.isLocked) {
+        return {
+          ...prev,
+          isLocked: true,
+          currentScreen: 'lock',
+          pin: ''
+        };
+      }
+      // If we shouldn't show lock screen but we are locked, unlock the phone
+      else if (!shouldShow && prev.isLocked) {
+        return {
+          ...prev,
+          isLocked: false,
+          currentScreen: 'home',
+          pin: ''
+        };
+      }
+      // Otherwise, keep current state
+      return prev;
+    });
+  }, [shouldShowLockScreen]);
+
+  // Monitor localStorage changes for lock settings
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'phone-lock-enabled' || e.key === 'phone-custom-pin') {
+        refreshLockScreenState();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [refreshLockScreenState]);
+
   return {
     phoneState,
     navigateToScreen,
@@ -174,6 +242,8 @@ export const usePhone = () => {
     deletePinDigit,
     toggleTheme,
     setWallpaper,
-    setBrightness
+    setBrightness,
+    shouldShowLockScreen,
+    refreshLockScreenState
   };
 };

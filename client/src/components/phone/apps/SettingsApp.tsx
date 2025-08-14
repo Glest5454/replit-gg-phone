@@ -13,9 +13,10 @@ interface SettingsAppProps {
     phoneNumber?: string;
     playerName?: string;
   };
+  refreshLockScreenState?: () => void;
 }
 
-export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBrightness, playerData }: SettingsAppProps) => {
+export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBrightness, playerData, refreshLockScreenState }: SettingsAppProps) => {
   const { language, setLanguage: setAppLanguage, t } = useLanguage();
   const { showInfo, showSuccess, showWarning, showError, showMessageNotification, showCallNotification, showTwitterNotification } = useNotifications();
   const [brightness, setBrightnessLocal] = useState(75);
@@ -78,8 +79,20 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
   };
 
   const handleLockToggle = () => {
-    setIsLockEnabled(!isLockEnabled);
-    localStorage.setItem('phone-lock-enabled', (!isLockEnabled).toString());
+    const newLockState = !isLockEnabled;
+    setIsLockEnabled(newLockState);
+    localStorage.setItem('phone-lock-enabled', newLockState.toString());
+    
+    // If disabling lock, also clear the PIN to ensure lock screen is deactivated
+    if (!newLockState) {
+      setCustomPin('');
+      localStorage.removeItem('phone-custom-pin');
+    }
+    
+    // Refresh lock screen state after changing the setting
+    if (refreshLockScreenState) {
+      refreshLockScreenState();
+    }
   };
 
   const handleSetCustomPin = () => {
@@ -88,6 +101,46 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
       localStorage.setItem('phone-custom-pin', newPin);
       setNewPin('');
       setShowPasswordSettings(false);
+      
+      // Show success message
+      showSuccess('PIN Saved', 'Your PIN has been saved successfully. The lock screen is now active.', 'settings');
+      
+      // Refresh lock screen state after setting the PIN
+      if (refreshLockScreenState) {
+        refreshLockScreenState();
+      }
+    } else {
+      showError('Invalid PIN', 'PIN must be exactly 4 digits (0-9).', 'settings');
+    }
+  };
+
+  const handleClearPin = () => {
+    // Show confirmation dialog
+    if (window.confirm('Are you sure you want to clear your PIN? This will disable the lock screen.')) {
+      setCustomPin('');
+      localStorage.removeItem('phone-custom-pin');
+      
+      // Show success message
+      showSuccess('PIN Cleared', 'Your PIN has been cleared. The lock screen is now disabled.', 'settings');
+      
+      // Refresh lock screen state after clearing the PIN
+      if (refreshLockScreenState) {
+        refreshLockScreenState();
+      }
+    }
+  };
+
+  const handleTestLock = () => {
+    if (isLockEnabled && customPin) {
+      // Try to lock the phone
+      if (refreshLockScreenState) {
+        refreshLockScreenState();
+      }
+      showSuccess('Lock Test', 'Phone locked successfully!', 'settings');
+    } else if (isLockEnabled && !customPin) {
+      showWarning('Lock Test', 'Screen lock is enabled but no PIN is set. Please set a PIN first.', 'settings');
+    } else {
+      showInfo('Lock Test', 'Screen lock is disabled. Enable it and set a PIN to test locking.', 'settings');
     }
   };
 
@@ -137,7 +190,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
       </div>
       
       {/* Settings List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
         
         {/* Profile Section */}
         <div className="p-6 border-b border-white/10">
@@ -183,7 +236,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
             <h4 className="text-white/60 text-sm font-medium mb-2 uppercase tracking-wide">{t('display', 'settings')}</h4>
             
             <button 
-              className="oneui-button w-full flex items-center justify-between p-3 bg-surface-dark/30 rounded-samsung-sm mb-2"
+              className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-2"
               onClick={handleThemeToggle}
               data-testid="toggle-theme"
             >
@@ -201,12 +254,12 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
             </button>
             
             <button 
-              className="oneui-button w-full flex items-center justify-between p-3 bg-surface-dark/30 rounded-samsung-sm mb-2"
+              className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-2"
               onClick={() => setShowBrightnessSlider(!showBrightnessSlider)}
               data-testid="brightness-settings"
             >
               <div className="flex items-center space-x-3">
-                <Sun className="w-4 h-4 text-samsung-blue" />
+                <Sun className="w-5 h-5 text-samsung-blue" />
                 <span className="text-white text-sm">{t('brightness', 'settings')}</span>
               </div>
               <span className="text-white/60 text-xs">{brightness}%</span>
@@ -360,26 +413,56 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
               </div>
             </button>
             
+            {/* Status indicator */}
+            <div className="mb-2">
+              <div className={`text-xs px-3 py-2 rounded-lg ${
+                isLockEnabled && customPin 
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                  : isLockEnabled 
+                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                    : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+              }`}>
+                {isLockEnabled && customPin 
+                  ? '🔒 Lock screen active - Phone is locked'
+                  : isLockEnabled 
+                    ? '⚠️ Screen lock enabled but no PIN set - Phone will not lock'
+                    : '🔓 Screen lock disabled - Phone is unlocked'
+                }
+              </div>
+              
+             
+            </div>
+            
             {isLockEnabled && (
               <button 
-                className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/20 rounded-samsung-sm mb-3 ml-8"
+                className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/20 rounded-samsung-sm mb-2"
                 onClick={() => setShowPasswordSettings(!showPasswordSettings)}
                 data-testid="password-settings"
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
                   <div className="w-5 h-5 rounded-sm bg-green-500 flex items-center justify-center">
                     <span className="text-white text-xs">🔑</span>
                   </div>
-                  <span className="text-white">{t('changePIN', 'settings')}</span>
+                  <span className="text-white">{customPin ? t('changePIN', 'settings') : t('setPIN', 'settings')}</span>
                 </div>
                 <span className="text-white/60">{customPin ? '••••' : t('setPIN', 'settings')}</span>
               </button>
             )}
             
+
+            {isLockEnabled && (
+              <>
             {showPasswordSettings && (
-              <div className="p-4 bg-surface-dark/20 rounded-samsung-sm mb-3 ml-8">
+              <div className="p-4 bg-surface-dark/20 rounded-samsung-sm mb-2">
                 <div className="text-center text-white mb-4">
-                  <div className="text-sm opacity-80">{t('enterNewPIN', 'settings')}</div>
+                  <div className="text-sm opacity-80">
+                    {customPin ? t('enterNewPIN', 'settings') : t('enterNewPIN', 'settings')}
+                  </div>
+                  {customPin && (
+                    <div className="text-xs opacity-60 mt-1">
+                      Current PIN: ••••
+                    </div>
+                  )}
                 </div>
                 
                 {/* PIN Dots */}
@@ -440,15 +523,26 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
                   disabled={newPin.length !== 4}
                   data-testid="save-pin"
                 >
-                  Save PIN
+                  {customPin ? 'Update PIN' : 'Save PIN'}
                 </button>
+                {customPin && (
+                  <button
+                    className="oneui-button w-full p-3 rounded-samsung-sm transition-all bg-red-500 text-white mt-2"
+                    onClick={handleClearPin}
+                    data-testid="clear-pin"
+                  >
+                    Clear PIN
+                  </button>
+                )}
               </div>
+            )}
+            </>
             )}
           </div>
           
           {/* Sound Settings */}
           <div className="mb-6">
-            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">Sound</h4>
+            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">{t('sound', 'settings')}</h4>
             
             <button 
               className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
@@ -456,9 +550,9 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
             >
               <div className="flex items-center space-x-3">
                 <Volume2 className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">Ringtone</span>
+                <span className="text-white">{t('ringtone', 'settings')}</span>
               </div>
-              <span className="text-white/60">Default</span>
+              <span className="text-white/60">{t('default', 'settings')}</span>
             </button>
             
             <button 
@@ -467,7 +561,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
             >
               <div className="flex items-center space-x-3">
                 <Smartphone className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">Vibration</span>
+                <span className="text-white">{t('vibration', 'settings')}</span>
               </div>
               <div className="w-12 h-6 bg-samsung-blue rounded-full p-1 relative">
                 <div className="w-4 h-4 bg-white rounded-full absolute right-1 transition-all duration-200" />
@@ -477,7 +571,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
           
           {/* Privacy Settings */}
           <div className="mb-6">
-            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">Privacy</h4>
+            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">{t('privacy', 'settings')}</h4>
             
             <button 
               className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
@@ -485,7 +579,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
             >
               <div className="flex items-center space-x-3">
                 <MapPin className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">Location Services</span>
+                <span className="text-white">{t('locationServices', 'settings')}</span>
               </div>
               <div className="w-12 h-6 bg-white/20 rounded-full p-1 relative">
                 <div className="w-4 h-4 bg-white rounded-full absolute left-1 transition-all duration-200" />
@@ -498,7 +592,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
             >
               <div className="flex items-center space-x-3">
                 <Shield className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">App Permissions</span>
+                <span className="text-white">{t('appPermissions', 'settings')}</span>
               </div>
               <ChevronRight className="w-5 h-5 text-white/40" />
             </button>
@@ -506,7 +600,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
           
           {/* Phone Settings */}
           <div className="mb-6">
-            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">Device</h4>
+            <h4 className="text-white/60 text-sm font-medium mb-3 uppercase tracking-wide">{t('device', 'settings')}</h4>
             
             <button 
               className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
@@ -514,7 +608,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
             >
               <div className="flex items-center space-x-3">
                 <HardDrive className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">Storage</span>
+                <span className="text-white">{t('storage', 'settings')}</span>
               </div>
               <span className="text-white/60">12GB used</span>
             </button>
@@ -525,7 +619,7 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
             >
               <div className="flex items-center space-x-3">
                 <Info className="w-5 h-5 text-samsung-blue" />
-                <span className="text-white">About Phone</span>
+                <span className="text-white">{t('aboutPhone', 'settings')}</span>
               </div>
               <ChevronRight className="w-5 h-5 text-white/40" />
             </button>
