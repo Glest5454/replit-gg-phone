@@ -25,12 +25,59 @@ function OpenPhone()
         local phoneNumber = playerData.charinfo and playerData.charinfo.phone or "Unknown"
         local playerName = playerData.charinfo and (playerData.charinfo.firstname .. " " .. playerData.charinfo.lastname) or "Unknown"
         
+        -- Get player job information
+        local jobInfo = {
+            name = playerData.job and playerData.job.name or "unemployed",
+            label = playerData.job and playerData.job.label or "Unemployed",
+            grade = playerData.job and playerData.job.grade and playerData.job.grade.name or "None",
+            gradeLabel = playerData.job and playerData.job.grade and playerData.job.grade.level or 0,
+            onDuty = playerData.job and playerData.job.onduty or false
+        }
+        
+        -- Get player vehicles (this would need to be implemented based on your vehicle system)
+        local vehicles = {}
+        if playerData.vehicles then
+            for _, vehicle in pairs(playerData.vehicles) do
+                table.insert(vehicles, {
+                    plate = vehicle.plate,
+                    model = vehicle.vehicle,
+                    name = vehicle.vehicle,
+                    garage = vehicle.garage or "Unknown",
+                    state = vehicle.state or 1, -- 1: in garage, 0: out, 2: impounded
+                    fuel = vehicle.fuel or 100,
+                    engine = vehicle.engine or 1000.0,
+                    body = vehicle.body or 1000.0
+                })
+            end
+        end
+        
+        -- Get player location for Maps app
+        local playerPed = PlayerPedId()
+        local coords = GetEntityCoords(playerPed)
+        local heading = GetEntityHeading(playerPed)
+        local streetName, crossingRoad = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
+        local streetLabel = GetStreetNameFromHashKey(streetName)
+        local crossingLabel = GetStreetNameFromHashKey(crossingRoad)
+        
+        local locationInfo = {
+            x = coords.x,
+            y = coords.y,
+            z = coords.z,
+            heading = heading,
+            street = streetLabel or "Unknown Street",
+            crossing = crossingLabel or "Unknown",
+            zone = GetLabelText(GetNameOfZone(coords.x, coords.y, coords.z)) or "Unknown Zone"
+        }
+        
         SendNUIMessage({
             action = 'openPhone',
             playerData = {
                 ...playerData,
                 phoneNumber = phoneNumber,
-                playerName = playerName
+                playerName = playerName,
+                job = jobInfo,
+                vehicles = vehicles,
+                location = locationInfo
             }
         })
         
@@ -335,6 +382,43 @@ end)
 
 RegisterNUICallback('getPhoneSettings', function(data, cb)
     TriggerServerEvent('gg-phone:server:getPhoneSettings')
+    cb('ok')
+end)
+
+-- Vehicle Management Callbacks for Garage App
+RegisterNUICallback('getPlayerVehicles', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getPlayerVehicles')
+    cb('ok')
+end)
+
+RegisterNUICallback('requestValet', function(data, cb)
+    TriggerServerEvent('gg-phone:server:requestValet', data.vehiclePlate, data.location)
+    cb('ok')
+end)
+
+-- Enhanced Location Services Callbacks for Maps App
+RegisterNUICallback('shareLocation', function(data, cb)
+    TriggerServerEvent('gg-phone:server:shareLocation', data.targetNumber, data.locationData)
+    cb('ok')
+end)
+
+RegisterNUICallback('getNearbyPlayers', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getNearbyPlayers')
+    cb('ok')
+end)
+
+RegisterNUICallback('saveFavoriteLocation', function(data, cb)
+    TriggerServerEvent('gg-phone:server:saveFavoriteLocation', data.name, data.address, data.coords, data.category)
+    cb('ok')
+end)
+
+RegisterNUICallback('getFavoriteLocations', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getFavoriteLocations')
+    cb('ok')
+end)
+
+RegisterNUICallback('deleteFavoriteLocation', function(data, cb)
+    TriggerServerEvent('gg-phone:server:deleteFavoriteLocation', data.locationId)
     cb('ok')
 end)
 
@@ -709,6 +793,95 @@ AddEventHandler('gg-phone:client:voiceCallEnded', function()
     SendNUIMessage({
         action = 'voiceCallEnded'
     })
+end)
+
+-- Vehicle Management Events for Garage App
+RegisterNetEvent('gg-phone:client:playerVehiclesLoaded')
+AddEventHandler('gg-phone:client:playerVehiclesLoaded', function(vehicles)
+    SendNUIMessage({
+        action = 'playerVehiclesLoaded',
+        vehicles = vehicles
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:valetSuccess')
+AddEventHandler('gg-phone:client:valetSuccess', function(data)
+    SendNUIMessage({
+        action = 'valetSuccess',
+        data = data
+    })
+    QBCore.Functions.Notify(data.message, 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:valetError')
+AddEventHandler('gg-phone:client:valetError', function(error)
+    SendNUIMessage({
+        action = 'valetError',
+        error = error
+    })
+    QBCore.Functions.Notify(error, 'error')
+end)
+
+-- Enhanced Location Services for Maps App
+RegisterNetEvent('gg-phone:client:locationShared')
+AddEventHandler('gg-phone:client:locationShared', function(data)
+    SendNUIMessage({
+        action = 'locationShared',
+        data = data
+    })
+    QBCore.Functions.Notify('Location shared by ' .. data.senderName, 'info')
+end)
+
+RegisterNetEvent('gg-phone:client:locationSharedSuccess')
+AddEventHandler('gg-phone:client:locationSharedSuccess', function(data)
+    SendNUIMessage({
+        action = 'locationSharedSuccess',
+        data = data
+    })
+    QBCore.Functions.Notify(data.message, 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:locationSharedError')
+AddEventHandler('gg-phone:client:locationSharedError', function(error)
+    SendNUIMessage({
+        action = 'locationSharedError',
+        error = error
+    })
+    QBCore.Functions.Notify(error, 'error')
+end)
+
+RegisterNetEvent('gg-phone:client:nearbyPlayersLoaded')
+AddEventHandler('gg-phone:client:nearbyPlayersLoaded', function(players)
+    SendNUIMessage({
+        action = 'nearbyPlayersLoaded',
+        players = players
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:favoriteLocationSaved')
+AddEventHandler('gg-phone:client:favoriteLocationSaved', function(location)
+    SendNUIMessage({
+        action = 'favoriteLocationSaved',
+        location = location
+    })
+    QBCore.Functions.Notify('Favorite location saved', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:favoriteLocationsLoaded')
+AddEventHandler('gg-phone:client:favoriteLocationsLoaded', function(locations)
+    SendNUIMessage({
+        action = 'favoriteLocationsLoaded',
+        locations = locations
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:favoriteLocationDeleted')
+AddEventHandler('gg-phone:client:favoriteLocationDeleted', function(locationId)
+    SendNUIMessage({
+        action = 'favoriteLocationDeleted',
+        locationId = locationId
+    })
+    QBCore.Functions.Notify('Favorite location deleted', 'success')
 end)
 
 -- Utility Functions

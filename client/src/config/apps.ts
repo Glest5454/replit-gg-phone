@@ -14,7 +14,8 @@ import {
   MapPin,
   Phone,
   Globe,
-  Package
+  Package,
+  Car
 } from 'lucide-react';
 import contactsPng from '@apps/contacts.png';
 import settingsPng from '@apps/settings.png';
@@ -489,6 +490,34 @@ export const appsConfig: AppConfig[] = [
     },
   },
   {
+    id: 'garage',
+    name: 'Garage',
+    icon: Car,
+    iconType: 'lucide',
+    color: 'from-orange-500 to-red-600',
+    category: 'utilities',
+    isActive: true,
+    isVisible: true,
+    isEssential: false,
+    isInstalled: false,
+    order: 0,
+    screen: 'garage',
+    description: 'Manage your vehicles and request valet services',
+    version: '1.0.0',
+    developer: 'Phone System',
+    rating: 4.5,
+    downloads: 1000,
+    appSize: '15.2 MB',
+    permissions: ['vehicles', 'location'],
+    settings: {
+      hasSettings: false,
+    },
+    notifications: {
+      enabled: true,
+      types: ['info', 'success', 'warning'],
+    },
+  },
+  {
     id: 'mail',
     name: 'Mail',
     icon: mailPng,
@@ -953,6 +982,7 @@ export const getTranslatedApps = (language: string = 'en') => {
       'messages': 'Mesajlar',
       'test': 'Test',
       'apps': 'Uygulamalar',
+      'garage': 'Garaj'
 
     },
     en: {
@@ -974,6 +1004,7 @@ export const getTranslatedApps = (language: string = 'en') => {
       'messages': 'Messages',
       'test': 'Test',
       'apps': 'Apps',
+      'garage': 'Garage'
     }
   };
 

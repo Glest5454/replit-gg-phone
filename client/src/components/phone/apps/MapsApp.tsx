@@ -16,7 +16,12 @@ import {
   Bookmark,
   Share,
   ArrowLeft,
-  MoreVertical
+  MoreVertical,
+  User,
+  Heart,
+  Plus,
+  Trash2,
+  Users
 } from "lucide-react";
 import { useNotificationContext } from "@/context/NotificationContext";
 
@@ -39,6 +44,41 @@ interface Route {
   steps: string[];
 }
 
+interface PlayerLocation {
+  x: number;
+  y: number;
+  z: number;
+  heading: number;
+  street: string;
+  crossing: string;
+  zone: string;
+}
+
+interface NearbyPlayer {
+  id: string;
+  name: string;
+  phone: string;
+  distance: number;
+  coords: {
+    x: number;
+    y: number;
+    z: number;
+  };
+}
+
+interface FavoriteLocation {
+  id: string;
+  name: string;
+  address: string;
+  coordinates: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  category: string;
+  created_at: string;
+}
+
 interface MapsAppProps {
   onBack: () => void;
 }
@@ -59,14 +99,49 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
   const [searchResults, setSearchResults] = useState<Location[]>([]);
   const [showRoute, setShowRoute] = useState(false);
   const [routeInfo, setRouteInfo] = useState<Route | null>(null);
-  const [activeTab, setActiveTab] = useState<"explore" | "search" | "saved">("explore");
+  const [activeTab, setActiveTab] = useState<"explore" | "search" | "saved" | "nearby" | "favorites">("explore");
   const [savedPlaces, setSavedPlaces] = useState<Location[]>([]);
+  const [favoriteLocations, setFavoriteLocations] = useState<FavoriteLocation[]>([]);
+  const [nearbyPlayers, setNearbyPlayers] = useState<NearbyPlayer[]>([]);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showFavoriteModal, setShowFavoriteModal] = useState(false);
+  const [shareTarget, setShareTarget] = useState("");
+  const [favoriteName, setFavoriteName] = useState("");
+  const [favoriteCategory, setFavoriteCategory] = useState("personal");
+  const [playerLocation, setPlayerLocation] = useState<PlayerLocation | null>(null);
+  
   const { showInfo, showSuccess, showWarning, showError } = useNotificationContext();
 
   useEffect(() => {
     loadNearbyPlaces();
     loadSavedPlaces();
+    loadFavoriteLocations();
+    loadNearbyPlayers();
+    loadPlayerLocation();
   }, []);
+
+  const loadPlayerLocation = () => {
+    // Listen for player location data from FiveM
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.action === 'openPhone' && event.data.playerData?.location) {
+        const location = event.data.playerData.location;
+        setPlayerLocation(location);
+        
+        // Update current location with player's actual location
+        setCurrentLocation({
+          id: "current",
+          name: "Your Location",
+          address: `${location.street}, ${location.zone}`,
+          category: "current",
+          lat: location.x,
+          lng: location.y,
+        });
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  };
 
   const loadNearbyPlaces = () => {
     // Mock nearby places - in real app this would be API call
@@ -152,6 +227,48 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
     ]);
   };
 
+  const loadFavoriteLocations = () => {
+    // Request favorite locations from server
+    if ('alt' in window) {
+      fetch(`https://gg-phone/getFavoriteLocations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+    }
+
+    // Listen for response
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.action === 'favoriteLocationsLoaded') {
+        setFavoriteLocations(event.data.locations || []);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  };
+
+  const loadNearbyPlayers = () => {
+    // Request nearby players from server
+    if ('alt' in window) {
+      fetch(`https://gg-phone/getNearbyPlayers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+    }
+
+    // Listen for response
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.action === 'nearbyPlayersLoaded') {
+        setNearbyPlayers(event.data.players || []);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  };
+
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
 
@@ -213,7 +330,75 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
   };
 
   const shareLocation = (location: Location) => {
-    showSuccess("Location shared", `Shared ${location.name} location`, "maps");
+    setSelectedLocation(location);
+    setShowShareModal(true);
+  };
+
+  const sendLocationShare = () => {
+    if (!shareTarget.trim() || !selectedLocation) return;
+
+    // Send location share request to server
+    if ('alt' in window) {
+      fetch(`https://gg-phone/shareLocation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetNumber: shareTarget,
+          locationData: {
+            name: selectedLocation.name,
+            address: selectedLocation.address,
+            coords: { x: selectedLocation.lat, y: selectedLocation.lng, z: 0 },
+            category: selectedLocation.category
+          }
+        })
+      });
+    }
+
+    setShowShareModal(false);
+    setShareTarget("");
+    showSuccess("Location shared", `Shared ${selectedLocation.name} with ${shareTarget}`, "maps");
+  };
+
+  const saveToFavorites = (location: Location) => {
+    setSelectedLocation(location);
+    setFavoriteName(location.name);
+    setShowFavoriteModal(true);
+  };
+
+  const saveFavoriteLocation = () => {
+    if (!favoriteName.trim() || !selectedLocation) return;
+
+    // Save favorite location to server
+    if ('alt' in window) {
+      fetch(`https://gg-phone/saveFavoriteLocation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: favoriteName,
+          address: selectedLocation.address,
+          coords: { x: selectedLocation.lat, y: selectedLocation.lng, z: 0 },
+          category: favoriteCategory
+        })
+      });
+    }
+
+    setShowFavoriteModal(false);
+    setFavoriteName("");
+    showSuccess("Saved to favorites", `${favoriteName} added to favorites`, "maps");
+  };
+
+  const deleteFavoriteLocation = (locationId: string) => {
+    // Delete favorite location from server
+    if ('alt' in window) {
+      fetch(`https://gg-phone/deleteFavoriteLocation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locationId })
+      });
+    }
+
+    setFavoriteLocations(prev => prev.filter(loc => loc.id !== locationId));
+    showSuccess("Deleted", "Favorite location removed", "maps");
   };
 
   const callPlace = (phone?: string) => {
@@ -284,8 +469,94 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
           >
             <Share className="h-3 w-3" />
           </Button>
+          <Button
+            onClick={() => saveToFavorites(location)}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/10 rounded-samsung-sm text-xs px-2 py-1 h-7"
+          >
+            <Heart className="h-3 w-3" />
+          </Button>
         </div>
       )}
+    </div>
+  );
+
+  const renderNearbyPlayerCard = (player: NearbyPlayer) => (
+    <div key={player.id} className="bg-surface-dark/30 rounded-samsung-sm p-3 mb-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="bg-samsung-blue rounded-full p-2">
+            <User className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-white text-sm">{player.name}</h3>
+            <p className="text-white/60 text-xs">{player.phone}</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-white/80 text-sm font-medium">{player.distance}m</p>
+          <Button
+            onClick={() => shareLocation({
+              id: `player_${player.id}`,
+              name: `${player.name}'s Location`,
+              address: `${player.distance}m away`,
+              category: "Player",
+              lat: player.coords.x,
+              lng: player.coords.y
+            })}
+            size="sm"
+            variant="ghost"
+            className="text-samsung-blue hover:bg-samsung-blue/10 rounded-samsung-sm text-xs px-2 py-1 h-7"
+          >
+            <Share className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderFavoriteLocationCard = (location: FavoriteLocation) => (
+    <div key={location.id} className="bg-surface-dark/30 rounded-samsung-sm p-3 mb-2">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <h3 className="font-semibold text-white text-sm">{location.name}</h3>
+          <p className="text-white/60 text-xs mt-1">{location.address}</p>
+          <div className="flex items-center space-x-2 mt-2">
+            <Badge variant="secondary" className="text-xs bg-purple-500/20 text-purple-500 border-purple-500/30">
+              {location.category}
+            </Badge>
+            <span className="text-xs text-white/40">
+              {new Date(location.created_at).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center space-x-1">
+          <Button
+            onClick={() => getDirections({
+              id: location.id,
+              name: location.name,
+              address: location.address,
+              category: location.category,
+              lat: location.coordinates.x,
+              lng: location.coordinates.y
+            })}
+            size="sm"
+            className="bg-samsung-blue hover:bg-samsung-blue/80 text-white border-0 rounded-samsung-sm text-xs px-2 py-1 h-7"
+          >
+            <Navigation className="h-3 w-3 mr-1" />
+            Go
+          </Button>
+          <Button
+            onClick={() => deleteFavoriteLocation(location.id)}
+            variant="ghost"
+            size="sm"
+            className="text-red-400 hover:bg-red-500/10 rounded-samsung-sm text-xs px-2 py-1 h-7"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 
@@ -346,13 +617,14 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
               <Car className="h-4 w-4 mr-2" />
               Start Navigation
             </Button>
-            <Button 
+            {/*<Button 
               variant="outline" 
               onClick={() => shareLocation(selectedLocation)}
-              className="border-white/20 text-white hover:bg-white/10 rounded-samsung-sm"
+              className="border-white/20 text-black hover:bg-white/10 rounded-samsung-sm"
             >
               <Share className="h-4 w-4" />
             </Button>
+            */}
           </div>
         </div>
       </div>
@@ -409,18 +681,31 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
           <div className="bg-samsung-blue rounded-full p-2">
             <MapPin className="h-4 w-4 text-white" />
           </div>
-          <div>
+          <div className="flex-1">
             <p className="font-medium text-white">{currentLocation.name}</p>
             <p className="text-sm text-white/60">{currentLocation.address}</p>
+            {playerLocation && (
+              <p className="text-xs text-white/40 mt-1">
+                {playerLocation.street} • {playerLocation.zone}
+              </p>
+            )}
           </div>
+          <Button
+            onClick={() => shareLocation(currentLocation)}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/10 rounded-samsung-sm text-xs px-2 py-1 h-7"
+          >
+            <Share className="h-3 w-3" />
+          </Button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-white/10">
+      <div className="flex border-b border-white/10 overflow-x-auto">
         <button
           onClick={() => setActiveTab("explore")}
-          className={`flex-1 py-3 px-4 text-center font-medium transition-colors duration-200 ${
+          className={`flex-shrink-0 py-3 px-4 text-center font-medium transition-colors duration-200 ${
             activeTab === "explore"
               ? "text-samsung-blue border-b-2 border-samsung-blue"
               : "text-white/70"
@@ -430,7 +715,7 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
         </button>
         <button
           onClick={() => setActiveTab("search")}
-          className={`flex-1 py-3 px-4 text-center font-medium transition-colors duration-200 ${
+          className={`flex-shrink-0 py-3 px-4 text-center font-medium transition-colors duration-200 ${
             activeTab === "search"
               ? "text-samsung-blue border-b-2 border-samsung-blue"
               : "text-white/70"
@@ -440,13 +725,35 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
         </button>
         <button
           onClick={() => setActiveTab("saved")}
-          className={`flex-1 py-3 px-4 text-center font-medium transition-colors duration-200 ${
+          className={`flex-shrink-0 py-3 px-4 text-center font-medium transition-colors duration-200 ${
             activeTab === "saved"
               ? "text-samsung-blue border-b-2 border-samsung-blue"
               : "text-white/70"
           }`}
         >
           Saved
+        </button>
+        <button
+          onClick={() => setActiveTab("nearby")}
+          className={`flex-shrink-0 py-3 px-4 text-center font-medium transition-colors duration-200 ${
+            activeTab === "nearby"
+              ? "text-samsung-blue border-b-2 border-samsung-blue"
+              : "text-white/70"
+          }`}
+        >
+          <Users className="h-3 w-3 mr-1 inline" />
+          Nearby
+        </button>
+        <button
+          onClick={() => setActiveTab("favorites")}
+          className={`flex-shrink-0 py-3 px-4 text-center font-medium transition-colors duration-200 ${
+            activeTab === "favorites"
+              ? "text-samsung-blue border-b-2 border-samsung-blue"
+              : "text-white/70"
+          }`}
+        >
+          <Heart className="h-3 w-3 mr-1 inline" />
+          Favorites
         </button>
       </div>
 
@@ -501,7 +808,143 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
             )}
           </div>
         )}
+
+        {activeTab === "nearby" && (
+          <div>
+            <h2 className="text-base font-semibold text-white mb-3">Nearby Players</h2>
+            {nearbyPlayers.length > 0 ? (
+              nearbyPlayers.map(player => renderNearbyPlayerCard(player))
+            ) : (
+              <div className="text-center py-6">
+                <Users className="h-10 w-10 text-white/40 mx-auto mb-3" />
+                <p className="text-white/60">No nearby players</p>
+                <p className="text-sm text-white/40 mt-2">
+                  Players within 100 meters will appear here
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "favorites" && (
+          <div>
+            <h2 className="text-base font-semibold text-white mb-3">Favorite Locations</h2>
+            {favoriteLocations.length > 0 ? (
+              favoriteLocations.map(location => renderFavoriteLocationCard(location))
+            ) : (
+              <div className="text-center py-6">
+                <Heart className="h-10 w-10 text-white/40 mx-auto mb-3" />
+                <p className="text-white/60">No favorite locations yet</p>
+                <p className="text-sm text-white/40 mt-2">
+                  Save locations to your favorites for quick access
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Share Location Modal */}
+      {showShareModal && selectedLocation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-samsung-lg p-6 w-96 max-w-[90vw]">
+            <h3 className="text-white text-lg font-semibold mb-4">
+              Share Location
+            </h3>
+            
+            <div className="mb-4">
+              <p className="text-white/80 text-sm mb-2">Location: {selectedLocation.name}</p>
+              <p className="text-white/60 text-sm mb-4">{selectedLocation.address}</p>
+              
+              <label className="block text-white/80 text-sm mb-2">
+                Phone Number
+              </label>
+              <Input
+                value={shareTarget}
+                onChange={(e) => setShareTarget(e.target.value)}
+                placeholder="Enter phone number"
+                className="bg-surface-dark/50 text-black placeholder-white/60 border-white/10 focus:border-samsung-blue rounded-samsung-sm"
+              />
+            </div>
+
+            <div className="flex space-x-3">
+              <Button
+                onClick={() => setShowShareModal(false)}
+                variant="outline"
+                className="flex-1 border-white/20 text-black hover:bg-white/10 rounded-samsung-sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={sendLocationShare}
+                className="flex-1 bg-samsung-blue hover:bg-samsung-blue/80 text-white border-0 rounded-samsung-sm"
+              >
+                <Share className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save to Favorites Modal */}
+      {showFavoriteModal && selectedLocation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-samsung-lg p-6 w-96 max-w-[90vw]">
+            <h3 className="text-white text-lg font-semibold mb-4">
+              Save to Favorites
+            </h3>
+            
+            <div className="mb-4">
+              <p className="text-white/80 text-sm mb-2">Location: {selectedLocation.name}</p>
+              <p className="text-white/60 text-sm mb-4">{selectedLocation.address}</p>
+              
+              <label className="block text-white/80 text-sm mb-2">
+                Name
+              </label>
+              <Input
+                value={favoriteName}
+                onChange={(e) => setFavoriteName(e.target.value)}
+                placeholder="Enter a name for this location"
+                className="bg-surface-dark/50 text-black placeholder-white/60 border-white/10 focus:border-samsung-blue rounded-samsung-sm"
+              />
+              
+              <label className="block text-white/80 text-sm mb-2 mt-3">
+                Category
+              </label>
+              <select
+                value={favoriteCategory}
+                onChange={(e) => setFavoriteCategory(e.target.value)}
+                className="w-full bg-surface-dark/50 text-black border border-white/10 focus:border-samsung-blue rounded-samsung-sm p-2"
+              >
+                <option value="personal">Personal</option>
+                <option value="work">Work</option>
+                <option value="home">Home</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="shopping">Shopping</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div className="flex space-x-3">
+              <Button
+                onClick={() => setShowFavoriteModal(false)}
+                variant="outline"
+                className="flex-1 border-white/20 text-black hover:bg-white/10 rounded-samsung-sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={saveFavoriteLocation}
+                className="flex-1 bg-samsung-blue hover:bg-samsung-blue/80 text-white border-0 rounded-samsung-sm"
+              >
+                <Heart className="h-4 w-4 mr-2" />
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

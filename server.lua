@@ -734,9 +734,16 @@ AddEventHandler('gg-phone:server:savePhoto', function(imageUrl, filter, effects,
     if not Player then return end
     
     local citizenId = Player.PlayerData.citizenid
+    local metadata = {
+        filter = filter or '',
+        effects = effects or '',
+        cssFilter = cssFilter or '',
+        location = 'Unknown',
+        timestamp = os.date('%Y-%m-%d %H:%M:%S')
+    }
     
-    MySQL.insert('INSERT INTO phone_photos (user_id, image_url, filter, effects, css_filter, created_at) VALUES (?, ?, ?, ?, ?, NOW())', {
-        citizenId, imageUrl, filter or '', effects or '', cssFilter or ''
+    MySQL.insert('INSERT INTO phone_photos (user_id, image_url, filter, effects, css_filter, metadata) VALUES (?, ?, ?, ?, ?, ?)', {
+        citizenId, imageUrl, filter or '', effects or '', cssFilter or '', json.encode(metadata)
     }, function(insertId)
         if insertId then
             TriggerClientEvent('gg-phone:client:photoSaved', src, {
@@ -763,6 +770,248 @@ AddEventHandler('gg-phone:server:deletePhoto', function(photoId)
     }, function(affectedRows)
         if affectedRows > 0 then
             TriggerClientEvent('gg-phone:client:photoDeleted', src, photoId)
+        end
+    end)
+end)
+
+-- Vehicle Management Events for Garage App
+RegisterServerEvent('gg-phone:server:getPlayerVehicles')
+AddEventHandler('gg-phone:server:getPlayerVehicles', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Query player vehicles from database (adjust table name based on your vehicle system)
+    MySQL.query('SELECT * FROM player_vehicles WHERE citizenid = ? ORDER BY garage ASC', {citizenId}, function(result)
+        if result then
+            -- Process vehicle data
+            local vehicles = {}
+            for _, vehicle in ipairs(result) do
+                table.insert(vehicles, {
+                    id = vehicle.id,
+                    plate = vehicle.plate,
+                    model = vehicle.vehicle,
+                    name = vehicle.vehicle,
+                    garage = vehicle.garage or "Unknown",
+                    state = vehicle.state or 1, -- 1: in garage, 0: out, 2: impounded
+                    fuel = vehicle.fuel or 100,
+                    engine = vehicle.engine or 1000.0,
+                    body = vehicle.body or 1000.0,
+                    lastUsed = vehicle.lastused,
+                    isOwned = true
+                })
+            end
+            
+            TriggerClientEvent('gg-phone:client:playerVehiclesLoaded', src, vehicles)
+        else
+            TriggerClientEvent('gg-phone:client:playerVehiclesLoaded', src, {})
+        end
+    end)
+end)
+
+-- Valet Service Event
+RegisterServerEvent('gg-phone:server:requestValet')
+AddEventHandler('gg-phone:server:requestValet', function(vehiclePlate, location)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    local playerName = Player.PlayerData.charinfo.firstname .. " " .. Player.PlayerData.charinfo.lastname
+    
+    -- Check if vehicle exists and belongs to player
+    MySQL.query('SELECT * FROM player_vehicles WHERE citizenid = ? AND plate = ?', {citizenId, vehiclePlate}, function(result)
+        if result and #result > 0 then
+            local vehicle = result[1]
+            
+            -- Check if vehicle is not impounded and not already out
+            if vehicle.state == 2 then
+                TriggerClientEvent('gg-phone:client:valetError', src, 'Vehicle is impounded and cannot be retrieved')
+                return
+            end
+            
+            if vehicle.state == 0 then
+                TriggerClientEvent('gg-phone:client:valetError', src, 'Vehicle is already out and cannot be retrieved')
+                return
+            end
+            
+            -- Calculate valet fee based on distance (you can customize this)
+            local valetFee = 50 -- Base fee
+            
+            -- Check if player has enough money
+            if Player.Functions.GetMoney('cash') >= valetFee then
+                -- Deduct valet fee
+                Player.Functions.RemoveMoney('cash', valetFee, 'Valet Service')
+                
+                -- Update vehicle state to out
+                MySQL.update('UPDATE player_vehicles SET state = 0, garage = ? WHERE id = ?', {location or 'Unknown', vehicle.id})
+                
+                -- Notify player
+                TriggerClientEvent('gg-phone:client:valetSuccess', src, {
+                    message = 'Valet service requested successfully',
+                    fee = valetFee,
+                    vehicle = vehicle.plate,
+                    location = location or 'Your location'
+                })
+                
+                -- Notify nearby players about valet service (optional)
+                local players = QBCore.Functions.GetPlayers()
+                for _, playerId in ipairs(players) do
+                    if playerId ~= src then
+                        local targetPlayer = QBCore.Functions.GetPlayer(playerId)
+                        if targetPlayer then
+                            local targetCoords = GetEntityCoords(GetPlayerPed(playerId))
+                            local playerCoords = GetEntityCoords(GetPlayerPed(src))
+                            local distance = #(targetCoords - playerCoords)
+                            
+                            if distance <= 50.0 then -- Within 50 meters
+                                TriggerClientEvent('QBCore:Notify', playerId, playerName .. ' has requested valet service', 'info')
+                            end
+                        end
+                    end
+                end
+            else
+                TriggerClientEvent('gg-phone:client:valetError', src, 'Not enough cash for valet service ($' .. valetFee .. ')')
+            end
+        else
+            TriggerClientEvent('gg-phone:client:valetError', src, 'Vehicle not found or does not belong to you')
+        end
+    end)
+end)
+
+-- Enhanced Location Services for Maps App
+RegisterServerEvent('gg-phone:server:shareLocation')
+AddEventHandler('gg-phone:server:shareLocation', function(targetNumber, locationData)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local senderNumber = Player.PlayerData.charinfo.phone
+    local senderName = Player.PlayerData.charinfo.firstname .. " " .. Player.PlayerData.charinfo.lastname
+    
+    -- Find target player by phone number
+    local targetPlayer = GetPlayerByPhone(targetNumber)
+    
+    if targetPlayer then
+        -- Send location to target player
+        TriggerClientEvent('gg-phone:client:locationShared', targetPlayer.PlayerData.source, {
+            senderNumber = senderNumber,
+            senderName = senderName,
+            location = locationData,
+            timestamp = os.date('%Y-%m-%d %H:%M:%S')
+        })
+        
+        -- Notify sender
+        TriggerClientEvent('gg-phone:client:locationSharedSuccess', src, {
+            message = 'Location shared with ' .. targetNumber,
+            target = targetNumber
+        })
+    else
+        TriggerClientEvent('gg-phone:client:locationSharedError', src, 'Phone number not found')
+    end
+end)
+
+-- Get nearby players for location sharing
+RegisterServerEvent('gg-phone:server:getNearbyPlayers')
+AddEventHandler('gg-phone:server:getNearbyPlayers', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local players = QBCore.Functions.GetPlayers()
+    local nearbyPlayers = {}
+    local playerCoords = GetEntityCoords(GetPlayerPed(src))
+    
+    for _, playerId in ipairs(players) do
+        if playerId ~= src then
+            local targetPlayer = QBCore.Functions.GetPlayer(playerId)
+            if targetPlayer then
+                local targetCoords = GetEntityCoords(GetPlayerPed(playerId))
+                local distance = #(targetCoords - playerCoords)
+                
+                if distance <= 100.0 then -- Within 100 meters
+                    table.insert(nearbyPlayers, {
+                        id = playerId,
+                        name = targetPlayer.PlayerData.charinfo.firstname .. " " .. targetPlayer.PlayerData.charinfo.lastname,
+                        phone = targetPlayer.PlayerData.charinfo.phone,
+                        distance = math.floor(distance),
+                        coords = {
+                            x = targetCoords.x,
+                            y = targetCoords.y,
+                            z = targetCoords.z
+                        }
+                    })
+                end
+            end
+        end
+    end
+    
+    TriggerClientEvent('gg-phone:client:nearbyPlayersLoaded', src, nearbyPlayers)
+end)
+
+-- Save favorite locations for Maps app
+RegisterServerEvent('gg-phone:server:saveFavoriteLocation')
+AddEventHandler('gg-phone:server:saveFavoriteLocation', function(name, address, coords, category)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.insert('INSERT INTO phone_favorite_locations (user_id, name, address, coordinates, category, created_at) VALUES (?, ?, ?, ?, ?, NOW())', {
+        citizenId, name, address, json.encode(coords), category or 'personal'
+    }, function(insertId)
+        if insertId then
+            TriggerClientEvent('gg-phone:client:favoriteLocationSaved', src, {
+                id = insertId,
+                name = name,
+                address = address,
+                coordinates = coords,
+                category = category
+            })
+        end
+    end)
+end)
+
+-- Get favorite locations
+RegisterServerEvent('gg-phone:server:getFavoriteLocations')
+AddEventHandler('gg-phone:server:getFavoriteLocations', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.query('SELECT * FROM phone_favorite_locations WHERE user_id = ? ORDER BY created_at DESC', {citizenId}, function(result)
+        if result then
+            -- Parse coordinates JSON
+            for i, location in ipairs(result) do
+                if location.coordinates then
+                    location.coordinates = json.decode(location.coordinates)
+                end
+            end
+            
+            TriggerClientEvent('gg-phone:client:favoriteLocationsLoaded', src, result)
+        else
+            TriggerClientEvent('gg-phone:client:favoriteLocationsLoaded', src, {})
+        end
+    end)
+end)
+
+-- Delete favorite location
+RegisterServerEvent('gg-phone:server:deleteFavoriteLocation')
+AddEventHandler('gg-phone:server:deleteFavoriteLocation', function(locationId)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.update('DELETE FROM phone_favorite_locations WHERE id = ? AND user_id = ?', {locationId, citizenId}, function(affectedRows)
+        if affectedRows > 0 then
+            TriggerClientEvent('gg-phone:client:favoriteLocationDeleted', src, locationId)
         end
     end)
 end)

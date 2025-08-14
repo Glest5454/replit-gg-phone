@@ -18,6 +18,7 @@ export type Screen =
   | 'mail'
   | 'darkchat'
   | 'maps'
+  | 'garage'
   | 'browser'
   | 'apps'
   | 'test'

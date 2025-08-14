@@ -35,7 +35,9 @@ Config.EnabledApps = {
     twitter = true, -- Warble
     spotify = true,
     clock = true,
-    yellowpages = true
+    yellowpages = true,
+    maps = true,
+    garage = true
 }
 
 -- App Permissions

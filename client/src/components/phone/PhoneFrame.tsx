@@ -26,6 +26,7 @@ import { HomeIndicator } from './HomeIndicator';
 import { useTaskManager } from '@/context/TaskManagerContext';
 import { Grid3X3, X, Trash2 } from 'lucide-react';
 import { getAppById } from '@/config/apps';
+import { GarageApp } from './apps/GarageApp';
 
 export const PhoneFrame = () => {
   const { 
@@ -202,6 +203,8 @@ export const PhoneFrame = () => {
         return <BrowserApp onBack={goBack} />;
       case 'apps':
         return <AppsApp />;
+      case 'garage':
+        return <GarageApp onBack={goBack} />;
       case 'test':
         return <div className="flex items-center justify-center h-full text-white">Test App</div>;
       default:

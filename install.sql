@@ -1,5 +1,3 @@
--- Samsung Galaxy S25 Phone Script - Database Installation
--- This file contains all necessary database tables for the enhanced phone functionality
 
 -- Core Phone Tables
 
@@ -89,6 +87,27 @@ CREATE TABLE IF NOT EXISTS `phone_photos` (
     KEY `user_id` (`user_id`),
     KEY `created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Phone Favorite Locations Table for Maps App
+CREATE TABLE IF NOT EXISTS `phone_favorite_locations` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `user_id` varchar(50) NOT NULL,
+    `name` varchar(100) NOT NULL,
+    `address` varchar(255) DEFAULT NULL,
+    `coordinates` json NOT NULL,
+    `category` varchar(50) DEFAULT 'personal',
+    `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`),
+    KEY `category` (`category`),
+    KEY `created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Default data for new tables
+INSERT IGNORE INTO `phone_favorite_locations` (`user_id`, `name`, `address`, `coordinates`, `category`) VALUES
+('default', 'Home', '123 Grove Street, Los Santos', '{"x": 34.0422, "y": -118.2337, "z": 0}', 'home'),
+('default', 'Work', 'Maze Bank Building, Los Santos', '{"x": 34.0562, "y": -118.2477, "z": 0}', 'work');
 
 -- Enhanced App Tables
 
@@ -400,3 +419,7 @@ GROUP BY user_id;
 -- Grant permissions (adjust according to your database setup)
 -- GRANT SELECT, INSERT, UPDATE, DELETE ON phone_* TO 'your_username'@'localhost';
 -- FLUSH PRIVILEGES;
+
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS `idx_favorite_locations_user_category` ON `phone_favorite_locations` (`user_id`, `category`);
+CREATE INDEX IF NOT EXISTS `idx_favorite_locations_created` ON `phone_favorite_locations` (`created_at`);
