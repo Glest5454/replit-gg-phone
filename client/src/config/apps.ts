@@ -34,6 +34,7 @@ import darkchatPng from '@apps/darkchat.png';
 import mapsPng from '@apps/maps.png';
 import browserPng from '@apps/browser.png';
 import messagesPng from '@apps/messages.png';
+import garagePng from '@apps/garage.png';
 
 export interface AppConfig {
   id: string;
@@ -492,8 +493,8 @@ export const appsConfig: AppConfig[] = [
   {
     id: 'garage',
     name: 'Garage',
-    icon: Car,
-    iconType: 'lucide',
+    icon: garagePng,
+    iconType: 'png',
     color: 'from-orange-500 to-red-600',
     category: 'utilities',
     isActive: true,

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
   Car, 
@@ -44,7 +43,6 @@ export const GarageApp = ({ onBack }: GarageAppProps) => {
   const [loading, setLoading] = useState(true);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showValetModal, setShowValetModal] = useState(false);
-  const [valetLocation, setValetLocation] = useState("");
   const [activeTab, setActiveTab] = useState<"garage" | "out" | "impounded">("garage");
   const { showInfo, showSuccess, showWarning, showError } = useNotificationContext();
 
@@ -152,11 +150,6 @@ export const GarageApp = ({ onBack }: GarageAppProps) => {
   };
 
   const requestValet = (vehicle: Vehicle) => {
-    if (!valetLocation.trim()) {
-      showWarning("Location Required", "Please enter a location for valet service", "garage");
-      return;
-    }
-
     if (vehicle.state === 2) {
       showError("Vehicle Impounded", "Cannot request valet for impounded vehicles", "garage");
       return;
@@ -167,21 +160,20 @@ export const GarageApp = ({ onBack }: GarageAppProps) => {
       return;
     }
 
-    // Request valet service
+    // Request valet service - vehicle will be delivered to player's current location
     if ('alt' in window) {
       fetch(`https://gg-phone/requestValet`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           vehiclePlate: vehicle.plate,
-          location: valetLocation
+          location: "Player's Current Location" // Valet will find the player
         })
       });
     }
 
     setShowValetModal(false);
-    setValetLocation("");
-    showInfo("Valet Requested", `Requesting valet service for ${vehicle.plate}`, "garage");
+    showSuccess("Valet Requested", `Valet service requested for ${vehicle.plate}. The vehicle will be delivered to your current location.`, "garage");
   };
 
   const renderVehicleCard = (vehicle: Vehicle) => (
@@ -414,15 +406,15 @@ export const GarageApp = ({ onBack }: GarageAppProps) => {
               <p className="text-white/80 text-sm mb-2">Vehicle: {selectedVehicle.name}</p>
               <p className="text-white/60 text-sm mb-4">Plate: {selectedVehicle.plate}</p>
               
-              <label className="block text-white/80 text-sm mb-2">
-                Delivery Location
-              </label>
-              <Input
-                value={valetLocation}
-                onChange={(e) => setValetLocation(e.target.value)}
-                placeholder="Enter location (e.g., Current Location)"
-                className="bg-surface-dark/50 text-black placeholder-white/60 border-white/10 focus:border-samsung-blue rounded-samsung-sm"
-              />
+              <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-samsung-sm">
+                <div className="flex items-center space-x-2">
+                  <MapPin className="h-4 w-4 text-blue-500" />
+                  <span className="text-blue-500 text-sm font-medium">Valet will bring your vehicle to your current location</span>
+                </div>
+                <p className="text-blue-400/80 text-xs mt-2">
+                  The valet driver will locate you and deliver your vehicle directly to where you are standing.
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center space-x-2 mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-samsung-sm">
