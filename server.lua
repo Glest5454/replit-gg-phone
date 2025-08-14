@@ -478,10 +478,10 @@ AddEventHandler('gg-phone:server:createNoteCategory', function(name, color)
     
     MySQL.insert('INSERT INTO phone_note_categories (user_id, name, color, created_at) VALUES (?, ?, ?, NOW())', {
         citizenId, name, color or '#fbbf24'
-    }, function(insertId)
-        if insertId then
+            }, function(insertId)
+                if insertId then
             TriggerClientEvent('gg-phone:client:noteCategoryCreated', src, {
-                id = insertId,
+                        id = insertId,
                 name = name,
                 color = color
             })
@@ -579,8 +579,8 @@ AddEventHandler('gg-phone:server:deleteAlarm', function(alarmId)
     }, function(affectedRows)
         if affectedRows > 0 then
             TriggerClientEvent('gg-phone:client:alarmDeleted', src, alarmId)
-        end
-    end)
+                end
+            end)
 end)
 
 -- Spotify App Events
@@ -663,9 +663,9 @@ AddEventHandler('gg-phone:server:registerBusiness', function(name, category, des
                     description = description,
                     phone = phone,
                     address = address
-                })
-            end
-        end)
+                    })
+                end
+            end)
     end)
 end)
 
@@ -700,11 +700,11 @@ AddEventHandler('gg-phone:server:savePhoneSettings', function(settings)
     
     MySQL.update('INSERT INTO phone_settings (user_id, settings, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE settings = ?, updated_at = NOW()', {
         citizenId, settingsJson, settingsJson
-    }, function(affectedRows)
-        if affectedRows > 0 then
+            }, function(affectedRows)
+                if affectedRows > 0 then
             TriggerClientEvent('gg-phone:client:phoneSettingsSaved', src, settings)
-        end
-    end)
+                end
+            end)
 end)
 
 RegisterServerEvent('gg-phone:server:getPhoneSettings')
@@ -744,17 +744,17 @@ AddEventHandler('gg-phone:server:savePhoto', function(imageUrl, filter, effects,
     
     MySQL.insert('INSERT INTO phone_photos (user_id, image_url, filter, effects, css_filter, metadata) VALUES (?, ?, ?, ?, ?, ?)', {
         citizenId, imageUrl, filter or '', effects or '', cssFilter or '', json.encode(metadata)
-    }, function(insertId)
-        if insertId then
+            }, function(insertId)
+                if insertId then
             TriggerClientEvent('gg-phone:client:photoSaved', src, {
-                id = insertId,
+                        id = insertId,
                 imageUrl = imageUrl,
                 filter = filter,
                 effects = effects,
                 cssFilter = cssFilter
-            })
-        end
-    end)
+                    })
+                end
+            end)
 end)
 
 RegisterServerEvent('gg-phone:server:deletePhoto')
@@ -801,8 +801,8 @@ AddEventHandler('gg-phone:server:getPlayerVehicles', function()
                     body = vehicle.body or 1000.0,
                     lastUsed = vehicle.lastused,
                     isOwned = true
-                })
-            end
+                    })
+                end
             
             TriggerClientEvent('gg-phone:client:playerVehiclesLoaded', src, vehicles)
         else

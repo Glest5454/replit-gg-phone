@@ -4,14 +4,14 @@
 -- Phone Contacts Table
 CREATE TABLE IF NOT EXISTS `phone_contacts` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
-    `owner_id` varchar(50) NOT NULL,
-    `name` varchar(100) NOT NULL,
-    `phone_number` varchar(20) NOT NULL,
+  `owner_id` varchar(50) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `phone_number` varchar(20) NOT NULL,
     `avatar` varchar(255) DEFAULT '',
-    `favorite` tinyint(1) DEFAULT 0,
-    `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `favorite` tinyint(1) DEFAULT 0,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
     `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
+  PRIMARY KEY (`id`),
     KEY `owner_id` (`owner_id`),
     KEY `phone_number` (`phone_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -25,23 +25,23 @@ CREATE TABLE IF NOT EXISTS `phone_messages` (
     `message_type` varchar(20) DEFAULT 'text',
     `metadata` json DEFAULT NULL,
     `timestamp` timestamp DEFAULT CURRENT_TIMESTAMP,
-    `is_read` tinyint(1) DEFAULT 0,
-    PRIMARY KEY (`id`),
-    KEY `sender_id` (`sender_id`),
-    KEY `receiver_id` (`receiver_id`),
+  `is_read` tinyint(1) DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `sender_id` (`sender_id`),
+  KEY `receiver_id` (`receiver_id`),
     KEY `timestamp` (`timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Phone Notes Table
 CREATE TABLE IF NOT EXISTS `phone_notes` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
-    `user_id` varchar(50) NOT NULL,
+  `user_id` varchar(50) NOT NULL,
     `title` varchar(255) NOT NULL,
-    `content` text NOT NULL,
-    `color` varchar(7) DEFAULT '#fbbf24',
+  `content` text NOT NULL,
+  `color` varchar(7) DEFAULT '#fbbf24',
     `category_id` int(11) DEFAULT NULL,
-    `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     KEY `user_id` (`user_id`),
     KEY `category_id` (`category_id`)
@@ -54,8 +54,8 @@ CREATE TABLE IF NOT EXISTS `phone_note_categories` (
     `name` varchar(100) NOT NULL,
     `color` varchar(7) DEFAULT '#fbbf24',
     `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `user_id` (`user_id`)
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Phone Transactions Table
@@ -126,14 +126,14 @@ CREATE TABLE IF NOT EXISTS `phone_calculations` (
 -- Phone Alarms Table
 CREATE TABLE IF NOT EXISTS `phone_alarms` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
-    `user_id` varchar(50) NOT NULL,
+  `user_id` varchar(50) NOT NULL,
     `time` time NOT NULL,
     `days` json DEFAULT NULL,
     `label` varchar(100) DEFAULT 'Alarm',
     `sound` varchar(100) DEFAULT 'default',
     `enabled` tinyint(1) DEFAULT 1,
-    `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
     KEY `user_id` (`user_id`),
     KEY `time` (`time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -188,39 +188,39 @@ CREATE TABLE IF NOT EXISTS `phone_settings` (
 -- Twitter Accounts Table
 CREATE TABLE IF NOT EXISTS `twitter_accounts` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
-    `user_id` varchar(50) NOT NULL,
-    `username` varchar(50) NOT NULL UNIQUE,
+  `user_id` varchar(50) NOT NULL,
+  `username` varchar(50) NOT NULL UNIQUE,
     `email` varchar(100) NOT NULL UNIQUE,
     `password_hash` varchar(255) NOT NULL,
-    `display_name` varchar(100) NOT NULL,
+  `display_name` varchar(100) NOT NULL,
     `avatar` varchar(255) DEFAULT NULL,
     `bio` text DEFAULT NULL,
-    `verified` tinyint(1) DEFAULT 0,
+  `verified` tinyint(1) DEFAULT 0,
     `followers_count` int(11) DEFAULT 0,
     `following_count` int(11) DEFAULT 0,
     `last_login` timestamp NULL DEFAULT NULL,
-    `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
     `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `user_id` (`user_id`),
-    KEY `username` (`username`)
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Twitter Tweets Table
 CREATE TABLE IF NOT EXISTS `twitter_tweets` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `author_id` int(11) NOT NULL,
-    `content` text NOT NULL,
+  `content` text NOT NULL,
     `image_url` varchar(500) DEFAULT NULL,
     `location` varchar(100) DEFAULT NULL,
     `likes_count` int(11) DEFAULT 0,
     `retweets_count` int(11) DEFAULT 0,
     `replies_count` int(11) DEFAULT 0,
     `is_deleted` tinyint(1) DEFAULT 0,
-    `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
     `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `author_id` (`author_id`),
+  PRIMARY KEY (`id`),
+  KEY `author_id` (`author_id`),
     KEY `created_at` (`created_at`),
     KEY `is_deleted` (`is_deleted`),
     FOREIGN KEY (`author_id`) REFERENCES `twitter_accounts`(`id`) ON DELETE CASCADE
@@ -259,15 +259,15 @@ CREATE TABLE IF NOT EXISTS `twitter_tweet_retweets` (
 -- Mail Accounts Table
 CREATE TABLE IF NOT EXISTS `mail_accounts` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
-    `user_id` varchar(50) NOT NULL,
+  `user_id` varchar(50) NOT NULL,
     `email` varchar(100) NOT NULL UNIQUE,
-    `password` varchar(255) NOT NULL,
-    `display_name` varchar(100) NOT NULL,
-    `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `password` varchar(255) NOT NULL,
+  `display_name` varchar(100) NOT NULL,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
     `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `user_id` (`user_id`),
-    KEY `email` (`email`)
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Phone Mails Table
@@ -276,13 +276,13 @@ CREATE TABLE IF NOT EXISTS `phone_mails` (
     `sender_id` int(11) NOT NULL,
     `receiver_email` varchar(100) NOT NULL,
     `subject` varchar(255) NOT NULL,
-    `content` text NOT NULL,
-    `read` tinyint(1) DEFAULT 0,
-    `starred` tinyint(1) DEFAULT 0,
-    `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `sender_id` (`sender_id`),
-    KEY `receiver_email` (`receiver_email`),
+  `content` text NOT NULL,
+  `read` tinyint(1) DEFAULT 0,
+  `starred` tinyint(1) DEFAULT 0,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `sender_id` (`sender_id`),
+  KEY `receiver_email` (`receiver_email`),
     KEY `created_at` (`created_at`),
     FOREIGN KEY (`sender_id`) REFERENCES `mail_accounts`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -298,8 +298,8 @@ CREATE TABLE IF NOT EXISTS `phone_notifications` (
     `type` varchar(50) DEFAULT 'info',
     `app` varchar(50) DEFAULT NULL,
     `read` tinyint(1) DEFAULT 0,
-    `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
     KEY `user_id` (`user_id`),
     KEY `type` (`type`),
     KEY `created_at` (`created_at`)

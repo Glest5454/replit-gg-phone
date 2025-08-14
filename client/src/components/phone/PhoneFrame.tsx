@@ -27,6 +27,7 @@ import { useTaskManager } from '@/context/TaskManagerContext';
 import { Grid3X3, X, Trash2 } from 'lucide-react';
 import { getAppById } from '@/config/apps';
 import { GarageApp } from './apps/GarageApp';
+import { WallpaperApp } from './apps/WallpaperApp';
 
 export const PhoneFrame = () => {
   const { 
@@ -174,7 +175,7 @@ export const PhoneFrame = () => {
       case 'twitter':
         return <TwitterApp onBack={goBack} />;
       case 'settings':
-        return <SettingsApp onBack={goBack} onToggleTheme={toggleTheme} theme={phoneState.theme} setWallpaper={setWallpaper} setBrightness={setBrightness} playerData={playerData} refreshLockScreenState={refreshLockScreenState} />;
+        return <SettingsApp onBack={goBack} onToggleTheme={toggleTheme} theme={phoneState.theme} setWallpaper={setWallpaper} setBrightness={setBrightness} playerData={playerData} refreshLockScreenState={refreshLockScreenState} onNavigate={navigateToScreen} />;
       case 'calculator':
         return <CalculatorApp onBack={goBack} />;
       case 'camera':
@@ -207,6 +208,8 @@ export const PhoneFrame = () => {
         return <GarageApp onBack={goBack} />;
       case 'test':
         return <div className="flex items-center justify-center h-full text-white">Test App</div>;
+      case 'wallpaper':
+        return <WallpaperApp onBack={goBack} setWallpaper={setWallpaper} currentWallpaper={phoneState.wallpaper} />;
       default:
         return <HomeScreen onAppOpen={navigateToScreen} />;
     }

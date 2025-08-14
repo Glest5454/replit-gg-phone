@@ -2,6 +2,7 @@ import { ArrowLeft, Search, Moon, Sun, Volume2, Smartphone, MapPin, Shield, Hard
 import { useState, useEffect } from 'react';
 import { useLanguage, type Language } from '@/hooks/useLanguage';
 import { useNotifications } from '@/utils/notifications';
+import { type Screen } from '@/hooks/usePhone';
 
 interface SettingsAppProps {
   onBack: () => void;
@@ -14,9 +15,10 @@ interface SettingsAppProps {
     playerName?: string;
   };
   refreshLockScreenState?: () => void;
+  onNavigate: (appName: Screen) => void;
 }
 
-export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBrightness, playerData, refreshLockScreenState }: SettingsAppProps) => {
+export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBrightness, playerData, refreshLockScreenState, onNavigate }: SettingsAppProps) => {
   const { language, setLanguage: setAppLanguage, t } = useLanguage();
   const { showInfo, showSuccess, showWarning, showError, showMessageNotification, showCallNotification, showTwitterNotification } = useNotifications();
   const [brightness, setBrightnessLocal] = useState(75);
@@ -319,18 +321,21 @@ export const SettingsApp = ({ onBack, onToggleTheme, theme, setWallpaper, setBri
             
             <button 
               className="oneui-button w-full flex items-center justify-between p-4 bg-surface-dark/30 rounded-samsung-sm mb-3"
-              onClick={() => setShowWallpaperSelector(!showWallpaperSelector)}
+              onClick={() => onNavigate('wallpaper')}
               data-testid="wallpaper-settings"
             >
               <div className="flex items-center space-x-3">
                 <div className="w-5 h-5 rounded-sm bg-gradient-to-br from-blue-500 to-purple-600 border border-white/20"></div>
                 <span className="text-white">{t('wallpaper', 'settings')}</span>
               </div>
-              <span className="text-white/60">{wallpapers.find(w => w.id === wallpaper)?.name || 'Default'}</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-white/60">{wallpapers.find(w => w.id === wallpaper)?.name || 'Default'}</span>
+                <span className="text-white/40">→</span>
+              </div>
             </button>
             
             {showWallpaperSelector && (
-              <div className="p-2 bg-surface-dark/20 rounded-samsung-sm mb-3 ml-8">
+              <div className="p-2 bg-surface-dark/20 rounded-samsung-sm mb-2">
                 {/* Custom URL Input */}
                 <div className="mb-3">
                   <div className="text-white text-sm mb-2">Custom Image URL:</div>

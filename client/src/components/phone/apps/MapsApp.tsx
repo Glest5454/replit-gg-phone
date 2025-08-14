@@ -1343,7 +1343,7 @@ export const MapsApp = ({ onBack }: MapsAppProps) => {
                 <p className="text-sm text-white/40 mt-2">
                   Players within 100 meters will appear here
                 </p>
-              </div>
+      </div>
             )}
           </div>
         )}

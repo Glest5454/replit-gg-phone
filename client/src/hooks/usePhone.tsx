@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 
-export type Screen = 
+export type Screen =
   | 'lock'
   | 'home'
   | 'banking'
@@ -22,7 +22,8 @@ export type Screen =
   | 'browser'
   | 'apps'
   | 'test'
-  | 'phone';   
+  | 'phone'
+  | 'wallpaper';
 
 export interface PhoneState {
   currentScreen: Screen;
