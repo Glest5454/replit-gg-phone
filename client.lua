@@ -3,10 +3,20 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local phoneOpen = false
 local phoneData = {}
+local isPhoneItem = Config.PhoneItem and Config.PhoneItem.useable
 
 -- Phone UI Functions
 function OpenPhone()
     if not phoneOpen then
+        -- Check if player has phone item if enabled
+        if isPhoneItem then
+            local hasPhone = QBCore.Functions.HasItem(Config.PhoneItem.name)
+            if not hasPhone then
+                QBCore.Functions.Notify('You need a phone to use this feature', 'error')
+                return
+            end
+        end
+        
         phoneOpen = true
         SetNuiFocus(true, true)
         
@@ -29,7 +39,9 @@ function OpenPhone()
         TriggerServerEvent('gg-phone:server:getContacts')
         TriggerServerEvent('gg-phone:server:getTransactions')
         TriggerServerEvent('gg-phone:server:getPhotos')
-        TriggerServerEvent('gg-phone:server:getPhotos')
+        
+        -- Trigger phone opened event for other resources
+        TriggerEvent('gg-phone:client:phoneOpened')
     end
 end
 
@@ -40,8 +52,26 @@ function ClosePhone()
         SendNUIMessage({
             action = 'closePhone'
         })
+        
+        -- Trigger phone closed event for other resources
+        TriggerEvent('gg-phone:client:phoneClosed')
     end
 end
+
+-- CFX Native Functions
+function IsPhoneOpen()
+    return phoneOpen
+end
+
+function GetPhoneData()
+    return phoneData
+end
+
+-- Export functions for other resources
+exports('IsPhoneOpen', IsPhoneOpen)
+exports('GetPhoneData', GetPhoneData)
+exports('OpenPhone', OpenPhone)
+exports('ClosePhone', ClosePhone)
 
 -- Keybind to open phone
 RegisterCommand('phone', function()
@@ -52,7 +82,7 @@ RegisterCommand('phone', function()
     end
 end)
 
-RegisterKeyMapping('phone', 'Open Phone', 'keyboard', 'F1')
+RegisterKeyMapping('phone', 'Open Phone', 'keyboard', Config.PhoneSettings.openKey)
 
 -- NUI Callbacks
 RegisterNUICallback('closePhone', function(data, cb)
@@ -94,7 +124,17 @@ end)
 
 -- Contacts Callbacks
 RegisterNUICallback('addContact', function(data, cb)
-    TriggerServerEvent('gg-phone:server:addContact', data.name, data.phoneNumber)
+    TriggerServerEvent('gg-phone:server:addContact', data.name, data.phoneNumber, data.avatar, data.favorite)
+    cb('ok')
+end)
+
+RegisterNUICallback('updateContact', function(data, cb)
+    TriggerServerEvent('gg-phone:server:updateContact', data.id, data.name, data.phoneNumber, data.avatar, data.favorite)
+    cb('ok')
+end)
+
+RegisterNUICallback('deleteContact', function(data, cb)
+    TriggerServerEvent('gg-phone:server:deleteContact', data.id)
     cb('ok')
 end)
 
@@ -191,6 +231,113 @@ RegisterNUICallback('getEmails', function(data, cb)
     cb('ok')
 end)
 
+-- Camera Callbacks with Screenshot-basic
+RegisterNUICallback('takePhoto', function(data, cb)
+    if Config.Integrations.screenshot_basic then
+        -- Use screenshot-basic
+        exports['screenshot-basic']:requestScreenshotUpload(GetConvar('screenshot-basic:url', ''), 'files[]', function(data)
+            local resp = json.decode(data)
+            if resp and resp.files and resp.files[1] then
+                local imageUrl = resp.files[1]
+                TriggerServerEvent('gg-phone:server:savePhoto', imageUrl, data.filter, data.effects, data.cssFilter)
+            else
+                TriggerEvent('gg-phone:client:cameraError', 'Failed to upload photo')
+            end
+        end)
+    else
+        -- Fallback to server-side screenshot
+        TriggerServerEvent('gg-phone:server:takePhoto', data.filter, data.effects, data.cssFilter)
+    end
+    cb('ok')
+end)
+
+RegisterNUICallback('getPhotos', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getPhotos')
+    cb('ok')
+end)
+
+RegisterNUICallback('deletePhoto', function(data, cb)
+    TriggerServerEvent('gg-phone:server:deletePhoto', data.photoId)
+    cb('ok')
+end)
+
+-- Gallery Callbacks
+RegisterNUICallback('savePhotoToGallery', function(data, cb)
+    TriggerServerEvent('gg-phone:server:savePhotoToGallery', data.photoUrl, data.metadata)
+    cb('ok')
+end)
+
+-- Notes App Enhanced Callbacks
+RegisterNUICallback('getNoteCategories', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getNoteCategories')
+    cb('ok')
+end)
+
+RegisterNUICallback('createNoteCategory', function(data, cb)
+    TriggerServerEvent('gg-phone:server:createNoteCategory', data.name, data.color)
+    cb('ok')
+end)
+
+-- Calculator Callbacks
+RegisterNUICallback('saveCalculation', function(data, cb)
+    TriggerServerEvent('gg-phone:server:saveCalculation', data.expression, data.result)
+    cb('ok')
+end)
+
+RegisterNUICallback('getCalculationHistory', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getCalculationHistory')
+    cb('ok')
+end)
+
+-- Clock App Callbacks
+RegisterNUICallback('setAlarm', function(data, cb)
+    TriggerServerEvent('gg-phone:server:setAlarm', data.time, data.days, data.label, data.sound)
+    cb('ok')
+end)
+
+RegisterNUICallback('getAlarms', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getAlarms')
+    cb('ok')
+end)
+
+RegisterNUICallback('deleteAlarm', function(data, cb)
+    TriggerServerEvent('gg-phone:server:deleteAlarm', data.alarmId)
+    cb('ok')
+end)
+
+-- Spotify App Callbacks
+RegisterNUICallback('savePlaylist', function(data, cb)
+    TriggerServerEvent('gg-phone:server:savePlaylist', data.name, data.songs, data.isPublic)
+    cb('ok')
+end)
+
+RegisterNUICallback('getPlaylists', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getPlaylists')
+    cb('ok')
+end)
+
+-- Yellow Pages Callbacks
+RegisterNUICallback('registerBusiness', function(data, cb)
+    TriggerServerEvent('gg-phone:server:registerBusiness', data.name, data.category, data.description, data.phone, data.address)
+    cb('ok')
+end)
+
+RegisterNUICallback('getBusinesses', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getBusinesses', data.category)
+    cb('ok')
+end)
+
+-- Settings Callbacks
+RegisterNUICallback('savePhoneSettings', function(data, cb)
+    TriggerServerEvent('gg-phone:server:savePhoneSettings', data.settings)
+    cb('ok')
+end)
+
+RegisterNUICallback('getPhoneSettings', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getPhoneSettings')
+    cb('ok')
+end)
+
 -- Server Event Handlers
 RegisterNetEvent('gg-phone:client:transactionSuccess')
 AddEventHandler('gg-phone:client:transactionSuccess', function(transaction)
@@ -244,6 +391,24 @@ AddEventHandler('gg-phone:client:contactAdded', function(contact)
         contact = contact
     })
     QBCore.Functions.Notify('Contact added successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:contactUpdated')
+AddEventHandler('gg-phone:client:contactUpdated', function(contact)
+    SendNUIMessage({
+        action = 'contactUpdated',
+        contact = contact
+    })
+    QBCore.Functions.Notify('Contact updated successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:contactDeleted')
+AddEventHandler('gg-phone:client:contactDeleted', function(contactId)
+    SendNUIMessage({
+        action = 'contactDeleted',
+        contactId = contactId
+    })
+    QBCore.Functions.Notify('Contact deleted successfully', 'success')
 end)
 
 RegisterNetEvent('gg-phone:client:messageSent')
@@ -456,17 +621,6 @@ AddEventHandler('gg-phone:client:transactionsLoaded', function(transactions)
     })
 end)
 
--- Camera Callbacks
-RegisterNUICallback('takePhoto', function(data, cb)
-    TriggerServerEvent('gg-phone:server:takePhoto', data.filter, data.effects, data.cssFilter)
-    cb('ok')
-end)
-
-RegisterNUICallback('getPhotos', function(data, cb)
-    TriggerServerEvent('gg-phone:server:getPhotos')
-    cb('ok')
-end)
-
 -- Camera Event Handlers
 RegisterNetEvent('gg-phone:client:photoTaken')
 AddEventHandler('gg-phone:client:photoTaken', function(photo)
@@ -491,4 +645,84 @@ AddEventHandler('gg-phone:client:cameraError', function(error)
         error = error
     })
 end)
+
+-- Enhanced App Data Events
+RegisterNetEvent('gg-phone:client:noteCategoriesLoaded')
+AddEventHandler('gg-phone:client:noteCategoriesLoaded', function(categories)
+    SendNUIMessage({
+        action = 'noteCategoriesLoaded',
+        categories = categories
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:calculationHistoryLoaded')
+AddEventHandler('gg-phone:client:calculationHistoryLoaded', function(calculations)
+    SendNUIMessage({
+        action = 'calculationHistoryLoaded',
+        calculations = calculations
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:alarmsLoaded')
+AddEventHandler('gg-phone:client:alarmsLoaded', function(alarms)
+    SendNUIMessage({
+        action = 'alarmsLoaded',
+        alarms = alarms
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:playlistsLoaded')
+AddEventHandler('gg-phone:client:playlistsLoaded', function(playlists)
+    SendNUIMessage({
+        action = 'playlistsLoaded',
+        playlists = playlists
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:businessesLoaded')
+AddEventHandler('gg-phone:client:businessesLoaded', function(businesses)
+    SendNUIMessage({
+        action = 'businessesLoaded',
+        businesses = businesses
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:phoneSettingsLoaded')
+AddEventHandler('gg-phone:client:phoneSettingsLoaded', function(settings)
+    SendNUIMessage({
+        action = 'phoneSettingsLoaded',
+        settings = settings
+    })
+end)
+
+-- pma-voice Integration Events
+RegisterNetEvent('gg-phone:client:voiceCallStarted')
+AddEventHandler('gg-phone:client:voiceCallStarted', function(targetNumber)
+    SendNUIMessage({
+        action = 'voiceCallStarted',
+        targetNumber = targetNumber
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:voiceCallEnded')
+AddEventHandler('gg-phone:client:voiceCallEnded', function()
+    SendNUIMessage({
+        action = 'voiceCallEnded'
+    })
+end)
+
+-- Utility Functions
+function GetPhoneNumber()
+    local playerData = QBCore.Functions.GetPlayerData()
+    return playerData.charinfo and playerData.charinfo.phone or "Unknown"
+end
+
+function GetPlayerName()
+    local playerData = QBCore.Functions.GetPlayerData()
+    return playerData.charinfo and (playerData.charinfo.firstname .. " " .. playerData.charinfo.lastname) or "Unknown"
+end
+
+-- Export utility functions
+exports('GetPhoneNumber', GetPhoneNumber)
+exports('GetPlayerName', GetPlayerName)
 

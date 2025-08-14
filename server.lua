@@ -170,21 +170,23 @@ end)
 
 -- Contacts Events
 RegisterServerEvent('gg-phone:server:addContact')
-AddEventHandler('gg-phone:server:addContact', function(name, phoneNumber)
+AddEventHandler('gg-phone:server:addContact', function(name, phoneNumber, avatar, favorite)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
     if not Player then return end
     
     local citizenId = Player.PlayerData.citizenid
     
-    MySQL.insert('INSERT INTO phone_contacts (owner_id, name, phone_number, created_at) VALUES (?, ?, ?, NOW())', {
-        citizenId, name, phoneNumber
+    MySQL.insert('INSERT INTO phone_contacts (owner_id, name, phone_number, avatar, favorite, created_at) VALUES (?, ?, ?, ?, ?, NOW())', {
+        citizenId, name, phoneNumber, avatar or '', favorite or false
     }, function(insertId)
         if insertId then
             TriggerClientEvent('gg-phone:client:contactAdded', src, {
                 id = insertId,
                 name = name,
-                phoneNumber = phoneNumber
+                phoneNumber = phoneNumber,
+                avatar = avatar,
+                favorite = favorite
             })
         end
     end)
@@ -201,7 +203,7 @@ AddEventHandler('gg-phone:server:sendMessage', function(targetNumber, message, m
     local senderNumber = Player.PlayerData.charinfo.phone
     
     -- Find target player by phone number
-    local targetPlayer = QBCore.Functions.GetPlayerByPhone(targetNumber)
+    local targetPlayer = GetPlayerByPhone(targetNumber)
     
     if targetPlayer then
         local targetCitizenId = targetPlayer.PlayerData.citizenid
@@ -250,7 +252,7 @@ AddEventHandler('gg-phone:server:getMessages', function(targetNumber)
     local citizenId = Player.PlayerData.citizenid
     
     -- Find target player by phone number
-    local targetPlayer = QBCore.Functions.GetPlayerByPhone(targetNumber)
+    local targetPlayer = GetPlayerByPhone(targetNumber)
     
     if targetPlayer then
         local targetCitizenId = targetPlayer.PlayerData.citizenid
@@ -347,7 +349,7 @@ AddEventHandler('gg-phone:server:startCall', function(targetNumber)
     local Player = QBCore.Functions.GetPlayer(src)
     if not Player then return end
     
-    local targetPlayer = QBCore.Functions.GetPlayerByPhone(targetNumber)
+    local targetPlayer = GetPlayerByPhone(targetNumber)
     
     if targetPlayer then
         -- Start voice call using pma-voice
@@ -369,415 +371,6 @@ AddEventHandler('gg-phone:server:endCall', function()
     exports['pma-voice']:removePlayerFromCall(src)
     
     TriggerClientEvent('gg-phone:client:callEnded', src)
-end)
-
--- Twitter Events
-RegisterServerEvent('gg-phone:server:twitterRegister')
-AddEventHandler('gg-phone:server:twitterRegister', function(username, email, password, displayName)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    -- Check if username or email exists
-    MySQL.query('SELECT id FROM twitter_accounts WHERE username = ? OR email = ?', {username, email}, function(result)
-        if #result > 0 then
-            TriggerClientEvent('gg-phone:client:twitterError', src, 'Username or email already exists')
-        else
-            -- Hash password (in production, use proper hashing)
-            local passwordHash = password -- TODO: Implement proper hashing
-            
-            MySQL.insert('INSERT INTO twitter_accounts (username, email, password_hash, display_name, avatar, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())', {
-                username, email, passwordHash, displayName, string.sub(displayName, 1, 2):upper(), citizenId
-            }, function(insertId)
-                if insertId then
-                    TriggerClientEvent('gg-phone:client:twitterRegistered', src, {
-                        id = insertId,
-                        username = username,
-                        displayName = displayName
-                    })
-                end
-            end)
-        end
-    end)
-end)
-
-RegisterServerEvent('gg-phone:server:twitterLogin')
-AddEventHandler('gg-phone:server:twitterLogin', function(username, password)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    -- Check credentials
-    MySQL.query('SELECT * FROM twitter_accounts WHERE username = ? AND password_hash = ?', {username, password}, function(result)
-        if #result > 0 then
-            local account = result[1]
-            
-            -- Update last login
-            MySQL.update('UPDATE twitter_accounts SET last_login = NOW() WHERE id = ?', {account.id})
-            
-            TriggerClientEvent('gg-phone:client:twitterLoggedIn', src, {
-                id = account.id,
-                username = account.username,
-                displayName = account.display_name,
-                avatar = account.avatar,
-                bio = account.bio,
-                verified = account.verified,
-                followersCount = account.followers_count,
-                followingCount = account.following_count
-            })
-        else
-            TriggerClientEvent('gg-phone:client:twitterError', src, 'Invalid credentials')
-        end
-    end)
-end)
-
-RegisterServerEvent('gg-phone:server:postTweet')
-AddEventHandler('gg-phone:server:postTweet', function(content, imageUrl, location)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    -- Get user's twitter account
-    MySQL.query('SELECT * FROM twitter_accounts WHERE user_id = ?', {citizenId}, function(result)
-        if #result > 0 then
-            local twitterAccount = result[1]
-            
-            MySQL.insert('INSERT INTO twitter_tweets (author_id, content, image_url, location, created_at) VALUES (?, ?, ?, ?, NOW())', {
-                twitterAccount.id, content, imageUrl, location
-            }, function(insertId)
-                if insertId then
-                    TriggerClientEvent('gg-phone:client:tweetPosted', src, {
-                        id = insertId,
-                        content = content,
-                        imageUrl = imageUrl,
-                        location = location
-                    })
-                    
-                    -- Broadcast to all players
-                    TriggerClientEvent('gg-phone:client:newTweet', -1, {
-                        id = insertId,
-                        content = content,
-                        imageUrl = imageUrl,
-                        location = location,
-                        author = twitterAccount.display_name,
-                        username = twitterAccount.username,
-                        avatar = twitterAccount.avatar,
-                        verified = twitterAccount.verified,
-                        time = 'now'
-                    })
-                end
-            end)
-        else
-            TriggerClientEvent('gg-phone:client:twitterError', src, 'No Twitter account found')
-        end
-    end)
-end)
-
-RegisterServerEvent('gg-phone:server:getTweets')
-AddEventHandler('gg-phone:server:getTweets', function()
-    local src = source
-    
-    MySQL.query([[
-        SELECT 
-            t.*,
-            ta.username,
-            ta.display_name,
-            ta.avatar,
-            ta.verified,
-            ta.followers_count,
-            ta.following_count
-        FROM twitter_tweets t
-        JOIN twitter_accounts ta ON t.author_id = ta.id
-        WHERE t.is_deleted = 0
-        ORDER BY t.created_at DESC
-        LIMIT 50
-    ]], {}, function(result)
-        TriggerClientEvent('gg-phone:client:tweetsLoaded', src, result)
-    end)
-end)
-
-RegisterServerEvent('gg-phone:server:likeTweet')
-AddEventHandler('gg-phone:server:likeTweet', function(tweetId)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    -- Get user's twitter account
-    MySQL.query('SELECT id FROM twitter_accounts WHERE user_id = ?', {citizenId}, function(result)
-        if #result > 0 then
-            local twitterAccountId = result[1].id
-            
-            -- Check if already liked
-            MySQL.query('SELECT id FROM twitter_tweet_likes WHERE tweet_id = ? AND user_id = ?', {tweetId, twitterAccountId}, function(likes)
-                if #likes > 0 then
-                    -- Unlike
-                    MySQL.update('DELETE FROM twitter_tweet_likes WHERE tweet_id = ? AND user_id = ?', {tweetId, twitterAccountId})
-                    MySQL.update('UPDATE twitter_tweets SET likes_count = likes_count - 1 WHERE id = ?', {tweetId})
-                    TriggerClientEvent('gg-phone:client:tweetUnliked', src, tweetId)
-                else
-                    -- Like
-                    MySQL.insert('INSERT INTO twitter_tweet_likes (tweet_id, user_id) VALUES (?, ?)', {tweetId, twitterAccountId})
-                    MySQL.update('UPDATE twitter_tweets SET likes_count = likes_count + 1 WHERE id = ?', {tweetId})
-                    TriggerClientEvent('gg-phone:client:tweetLiked', src, tweetId)
-                end
-            end)
-        end
-    end)
-end)
-
-RegisterServerEvent('gg-phone:server:retweetTweet')
-AddEventHandler('gg-phone:server:retweetTweet', function(tweetId)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    -- Get user's twitter account
-    MySQL.query('SELECT id FROM twitter_accounts WHERE user_id = ?', {citizenId}, function(result)
-        if #result > 0 then
-            local twitterAccountId = result[1].id
-            
-            -- Check if already retweeted
-            MySQL.query('SELECT id FROM twitter_tweet_retweets WHERE tweet_id = ? AND user_id = ?', {tweetId, twitterAccountId}, function(retweets)
-                if #retweets > 0 then
-                    -- Unretweet
-                    MySQL.update('DELETE FROM twitter_tweet_retweets WHERE tweet_id = ? AND user_id = ?', {tweetId, twitterAccountId})
-                    MySQL.update('UPDATE twitter_tweets SET retweets_count = retweets_count - 1 WHERE id = ?', {tweetId})
-                    TriggerClientEvent('gg-phone:client:tweetUnretweeted', src, tweetId)
-                else
-                    -- Retweet
-                    MySQL.insert('INSERT INTO twitter_tweet_retweets (tweet_id, user_id) VALUES (?, ?)', {tweetId, twitterAccountId})
-                    MySQL.update('UPDATE twitter_tweets SET retweets_count = retweets_count + 1 WHERE id = ?', {tweetId})
-                    TriggerClientEvent('gg-phone:client:tweetRetweeted', src, tweetId)
-                end
-            end)
-        end
-    end)
-end)
-
-RegisterServerEvent('gg-phone:server:updateTwitterProfile')
-AddEventHandler('gg-phone:server:updateTwitterProfile', function(displayName, bio, avatar)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    MySQL.query('SELECT id FROM twitter_accounts WHERE user_id = ?', {citizenId}, function(result)
-        if #result > 0 then
-            local twitterAccountId = result[1].id
-            
-            MySQL.update('UPDATE twitter_accounts SET display_name = ?, bio = ?, avatar = ? WHERE id = ?', {
-                displayName, bio, avatar, twitterAccountId
-            }, function(affectedRows)
-                if affectedRows > 0 then
-                    TriggerClientEvent('gg-phone:client:profileUpdated', src, {
-                        displayName = displayName,
-                        bio = bio,
-                        avatar = avatar
-                    })
-                end
-            end)
-        end
-    end)
-end)
-
-RegisterServerEvent('gg-phone:server:changeTwitterPassword')
-AddEventHandler('gg-phone:server:changeTwitterPassword', function(currentPassword, newPassword)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    MySQL.query('SELECT id FROM twitter_accounts WHERE user_id = ? AND password_hash = ?', {citizenId, currentPassword}, function(result)
-        if #result > 0 then
-            local twitterAccountId = result[1].id
-            
-            -- Hash new password (in production, use proper hashing)
-            local newPasswordHash = newPassword -- TODO: Implement proper hashing
-            
-            MySQL.update('UPDATE twitter_accounts SET password_hash = ? WHERE id = ?', {
-                newPasswordHash, twitterAccountId
-            }, function(affectedRows)
-                if affectedRows > 0 then
-                    TriggerClientEvent('gg-phone:client:passwordChanged', src)
-                end
-            end)
-        else
-            TriggerClientEvent('gg-phone:client:twitterError', src, 'Current password is incorrect')
-        end
-    end)
-end)
-
-RegisterServerEvent('gg-phone:server:twitterLogout')
-AddEventHandler('gg-phone:server:twitterLogout', function()
-    local src = source
-    TriggerClientEvent('gg-phone:client:twitterLoggedOut', src)
-end)
-
--- Mail Events
-RegisterServerEvent('gg-phone:server:createMailAccount')
-AddEventHandler('gg-phone:server:createMailAccount', function(email, password, displayName)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    MySQL.query('SELECT id FROM mail_accounts WHERE email = ?', {email}, function(result)
-        if #result > 0 then
-            TriggerClientEvent('gg-phone:client:mailError', src, 'Email already exists')
-        else
-            MySQL.insert('INSERT INTO mail_accounts (user_id, email, password, display_name, created_at) VALUES (?, ?, ?, ?, NOW())', {
-                citizenId, email, password, displayName
-            }, function(insertId)
-                if insertId then
-                    TriggerClientEvent('gg-phone:client:mailAccountCreated', src, {
-                        id = insertId,
-                        email = email,
-                        displayName = displayName
-                    })
-                end
-            end)
-        end
-    end)
-end)
-
-RegisterServerEvent('gg-phone:server:sendMail')
-AddEventHandler('gg-phone:server:sendMail', function(receiverEmail, subject, content)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    MySQL.query('SELECT id FROM mail_accounts WHERE user_id = ?', {citizenId}, function(result)
-        if #result > 0 then
-            local senderAccountId = result[1].id
-            
-            MySQL.insert('INSERT INTO phone_mails (sender_id, receiver_email, subject, content, created_at) VALUES (?, ?, ?, ?, NOW())', {
-                senderAccountId, receiverEmail, subject, content
-            }, function(insertId)
-                if insertId then
-                    TriggerClientEvent('gg-phone:client:mailSent', src, {
-                        id = insertId,
-                        receiverEmail = receiverEmail,
-                        subject = subject,
-                        content = content
-                    })
-                end
-            end)
-        else
-            TriggerClientEvent('gg-phone:client:mailError', src, 'No mail account found')
-        end
-    end)
-end)
-
--- Mail Login
-RegisterServerEvent('gg-phone:server:loginMailAccount')
-AddEventHandler('gg-phone:server:loginMailAccount', function(email, password)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    MySQL.query('SELECT * FROM mail_accounts WHERE email = ? AND password = ? AND user_id = ?', {email, password, citizenId}, function(result)
-        if #result > 0 then
-            TriggerClientEvent('gg-phone:client:mailAccountLoggedIn', src, result[1])
-        else
-            TriggerClientEvent('gg-phone:client:mailError', src, 'Invalid email or password')
-        end
-    end)
-end)
-
--- Get Emails for current account
-RegisterServerEvent('gg-phone:server:getEmails')
-AddEventHandler('gg-phone:server:getEmails', function()
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    MySQL.query('SELECT ma.id, ma.email, ma.display_name FROM mail_accounts ma WHERE ma.user_id = ?', {citizenId}, function(accounts)
-        if #accounts > 0 then
-            local accountId = accounts[1].id
-            
-            -- Get received emails
-            MySQL.query([[
-                SELECT 
-                    pm.id,
-                    pm.sender_id,
-                    pm.receiver_email,
-                    pm.subject,
-                    pm.content,
-                    pm.read,
-                    pm.starred,
-                    pm.created_at,
-                    ma.email as sender_email,
-                    ma.display_name as sender_name
-                FROM phone_mails pm
-                JOIN mail_accounts ma ON pm.sender_id = ma.id
-                WHERE pm.receiver_email = ?
-                ORDER BY pm.created_at DESC
-                LIMIT 100
-            ]], {accounts[1].email}, function(receivedEmails)
-                
-                -- Get sent emails
-                MySQL.query([[
-                    SELECT 
-                        pm.id,
-                        pm.sender_id,
-                        pm.receiver_email,
-                        pm.subject,
-                        pm.content,
-                        pm.read,
-                        pm.starred,
-                        pm.created_at,
-                        'sent' as direction
-                    FROM phone_mails pm
-                    WHERE pm.sender_id = ?
-                    ORDER BY pm.created_at DESC
-                    LIMIT 100
-                ]], {accountId}, function(sentEmails)
-                    
-                    -- Combine and format emails
-                    local allEmails = {}
-                    
-                    -- Add received emails
-                    for i, email in ipairs(receivedEmails) do
-                        email.direction = 'received'
-                        table.insert(allEmails, email)
-                    end
-                    
-                    -- Add sent emails
-                    for i, email in ipairs(sentEmails) do
-                        table.insert(allEmails, email)
-                    end
-                    
-                    -- Sort by creation date
-                    table.sort(allEmails, function(a, b)
-                        return a.created_at > b.created_at
-                    end)
-                    
-                    TriggerClientEvent('gg-phone:client:emailsLoaded', src, allEmails)
-                end)
-            end)
-        else
-            TriggerClientEvent('gg-phone:client:mailError', src, 'No mail account found')
-        end
-    end)
 end)
 
 -- Get Data Events
@@ -818,4 +411,437 @@ AddEventHandler('gg-phone:server:getTransactions', function()
     MySQL.query('SELECT * FROM phone_transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 50', {citizenId}, function(result)
         TriggerClientEvent('gg-phone:client:transactionsLoaded', src, result)
     end)
+end)
+
+RegisterServerEvent('gg-phone:server:getPhotos')
+AddEventHandler('gg-phone:server:getPhotos', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.query('SELECT * FROM phone_photos WHERE user_id = ? ORDER BY created_at DESC', {citizenId}, function(result)
+        TriggerClientEvent('gg-phone:client:photosLoaded', src, result)
+    end)
+end)
+
+-- Enhanced Contact Events
+RegisterServerEvent('gg-phone:server:updateContact')
+AddEventHandler('gg-phone:server:updateContact', function(contactId, name, phoneNumber, avatar, favorite)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.update('UPDATE phone_contacts SET name = ?, phone_number = ?, avatar = ?, favorite = ? WHERE id = ? AND owner_id = ?', {
+        name, phoneNumber, avatar or '', favorite or false, contactId, citizenId
+    }, function(affectedRows)
+        if affectedRows > 0 then
+            TriggerClientEvent('gg-phone:client:contactUpdated', src, {
+                id = contactId,
+                name = name,
+                phoneNumber = phoneNumber,
+                avatar = avatar,
+                favorite = favorite
+            })
+        end
+    end)
+end)
+
+RegisterServerEvent('gg-phone:server:deleteContact')
+AddEventHandler('gg-phone:server:deleteContact', function(contactId)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.update('DELETE FROM phone_contacts WHERE id = ? AND owner_id = ?', {
+        contactId, citizenId
+    }, function(affectedRows)
+        if affectedRows > 0 then
+            TriggerClientEvent('gg-phone:client:contactDeleted', src, contactId)
+        end
+    end)
+end)
+
+-- Enhanced Notes Events
+RegisterServerEvent('gg-phone:server:createNoteCategory')
+AddEventHandler('gg-phone:server:createNoteCategory', function(name, color)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.insert('INSERT INTO phone_note_categories (user_id, name, color, created_at) VALUES (?, ?, ?, NOW())', {
+        citizenId, name, color or '#fbbf24'
+    }, function(insertId)
+        if insertId then
+            TriggerClientEvent('gg-phone:client:noteCategoryCreated', src, {
+                id = insertId,
+                name = name,
+                color = color
+            })
+        end
+    end)
+end)
+
+RegisterServerEvent('gg-phone:server:getNoteCategories')
+AddEventHandler('gg-phone:server:getNoteCategories', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.query('SELECT * FROM phone_note_categories WHERE user_id = ? ORDER BY name ASC', {citizenId}, function(result)
+        TriggerClientEvent('gg-phone:client:noteCategoriesLoaded', src, result)
+    end)
+end)
+
+-- Calculator Events
+RegisterServerEvent('gg-phone:server:saveCalculation')
+AddEventHandler('gg-phone:server:saveCalculation', function(expression, result)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.insert('INSERT INTO phone_calculations (user_id, expression, result, created_at) VALUES (?, ?, ?, NOW())', {
+        citizenId, expression, result
+    })
+end)
+
+RegisterServerEvent('gg-phone:server:getCalculationHistory')
+AddEventHandler('gg-phone:server:getCalculationHistory', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.query('SELECT * FROM phone_calculations WHERE user_id = ? ORDER BY created_at DESC LIMIT 20', {citizenId}, function(result)
+        TriggerClientEvent('gg-phone:client:calculationHistoryLoaded', src, result)
+    end)
+end)
+
+-- Clock App Events
+RegisterServerEvent('gg-phone:server:setAlarm')
+AddEventHandler('gg-phone:server:setAlarm', function(time, days, label, sound)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.insert('INSERT INTO phone_alarms (user_id, time, days, label, sound, created_at) VALUES (?, ?, ?, ?, ?, NOW())', {
+        citizenId, time, days or '{}', label or 'Alarm', sound or 'default'
+    }, function(insertId)
+        if insertId then
+            TriggerClientEvent('gg-phone:client:alarmSet', src, {
+                id = insertId,
+                time = time,
+                days = days,
+                label = label,
+                sound = sound
+            })
+        end
+    end)
+end)
+
+RegisterServerEvent('gg-phone:server:getAlarms')
+AddEventHandler('gg-phone:server:getAlarms', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.query('SELECT * FROM phone_alarms WHERE user_id = ? ORDER BY time ASC', {citizenId}, function(result)
+        TriggerClientEvent('gg-phone:client:alarmsLoaded', src, result)
+    end)
+end)
+
+RegisterServerEvent('gg-phone:server:deleteAlarm')
+AddEventHandler('gg-phone:server:deleteAlarm', function(alarmId)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.update('DELETE FROM phone_alarms WHERE id = ? AND user_id = ?', {
+        alarmId, citizenId
+    }, function(affectedRows)
+        if affectedRows > 0 then
+            TriggerClientEvent('gg-phone:client:alarmDeleted', src, alarmId)
+        end
+    end)
+end)
+
+-- Spotify App Events
+RegisterServerEvent('gg-phone:server:savePlaylist')
+AddEventHandler('gg-phone:server:savePlaylist', function(name, songs, isPublic)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    local songsJson = json.encode(songs or {})
+    
+    MySQL.insert('INSERT INTO phone_playlists (user_id, name, songs, is_public, created_at) VALUES (?, ?, ?, ?, NOW())', {
+        citizenId, name, songsJson, isPublic or false
+    }, function(insertId)
+        if insertId then
+            TriggerClientEvent('gg-phone:client:playlistSaved', src, {
+                id = insertId,
+                name = name,
+                songs = songs,
+                isPublic = isPublic
+            })
+        end
+    end)
+end)
+
+RegisterServerEvent('gg-phone:server:getPlaylists')
+AddEventHandler('gg-phone:server:getPlaylists', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.query('SELECT * FROM phone_playlists WHERE user_id = ? OR is_public = 1 ORDER BY created_at DESC', {citizenId}, function(result)
+        -- Parse songs JSON for each playlist
+        for i, playlist in ipairs(result) do
+            if playlist.songs then
+                playlist.songs = json.decode(playlist.songs)
+            end
+        end
+        
+        TriggerClientEvent('gg-phone:client:playlistsLoaded', src, result)
+    end)
+end)
+
+-- Yellow Pages Events
+RegisterServerEvent('gg-phone:server:registerBusiness')
+AddEventHandler('gg-phone:server:registerBusiness', function(name, category, description, phone, address)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Check if player has enough money for registration fee
+    if Player.PlayerData.money.cash < Config.YellowPages.registrationFee then
+        TriggerClientEvent('gg-phone:client:businessError', src, 'Insufficient funds for registration fee')
+        return
+    end
+    
+    -- Check business limit per player
+    MySQL.query('SELECT COUNT(*) as count FROM phone_businesses WHERE owner_id = ?', {citizenId}, function(result)
+        if result[1].count >= Config.YellowPages.maxBusinessesPerPlayer then
+            TriggerClientEvent('gg-phone:client:businessError', src, 'Maximum business limit reached')
+            return
+        end
+        
+        -- Deduct registration fee
+        Player.Functions.RemoveMoney('cash', Config.YellowPages.registrationFee, 'Business Registration Fee')
+        
+        MySQL.insert('INSERT INTO phone_businesses (owner_id, name, category, description, phone, address, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())', {
+            citizenId, name, category, description, phone, address, Config.YellowPages.moderationRequired and 'pending' or 'approved'
+        }, function(insertId)
+            if insertId then
+                TriggerClientEvent('gg-phone:client:businessRegistered', src, {
+                    id = insertId,
+                    name = name,
+                    category = category,
+                    description = description,
+                    phone = phone,
+                    address = address
+                })
+            end
+        end)
+    end)
+end)
+
+RegisterServerEvent('gg-phone:server:getBusinesses')
+AddEventHandler('gg-phone:server:getBusinesses', function(category)
+    local src = source
+    
+    local query = 'SELECT * FROM phone_businesses WHERE status = "approved"'
+    local params = {}
+    
+    if category and category ~= 'all' then
+        query = query .. ' AND category = ?'
+        table.insert(params, category)
+    end
+    
+    query = query .. ' ORDER BY created_at DESC'
+    
+    MySQL.query(query, params, function(result)
+        TriggerClientEvent('gg-phone:client:businessesLoaded', src, result)
+    end)
+end)
+
+-- Phone Settings Events
+RegisterServerEvent('gg-phone:server:savePhoneSettings')
+AddEventHandler('gg-phone:server:savePhoneSettings', function(settings)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    local settingsJson = json.encode(settings)
+    
+    MySQL.update('INSERT INTO phone_settings (user_id, settings, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE settings = ?, updated_at = NOW()', {
+        citizenId, settingsJson, settingsJson
+    }, function(affectedRows)
+        if affectedRows > 0 then
+            TriggerClientEvent('gg-phone:client:phoneSettingsSaved', src, settings)
+        end
+    end)
+end)
+
+RegisterServerEvent('gg-phone:server:getPhoneSettings')
+AddEventHandler('gg-phone:server:getPhoneSettings', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.query('SELECT settings FROM phone_settings WHERE user_id = ?', {citizenId}, function(result)
+        if #result > 0 and result[1].settings then
+            local settings = json.decode(result[1].settings)
+            TriggerClientEvent('gg-phone:client:phoneSettingsLoaded', src, settings)
+        else
+            -- Return default settings
+            TriggerClientEvent('gg-phone:client:phoneSettingsLoaded', src, Config.DefaultSettings)
+        end
+    end)
+end)
+
+-- Enhanced Photo Events with Screenshot-basic
+RegisterServerEvent('gg-phone:server:savePhoto')
+AddEventHandler('gg-phone:server:savePhoto', function(imageUrl, filter, effects, cssFilter)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.insert('INSERT INTO phone_photos (user_id, image_url, filter, effects, css_filter, created_at) VALUES (?, ?, ?, ?, ?, NOW())', {
+        citizenId, imageUrl, filter or '', effects or '', cssFilter or ''
+    }, function(insertId)
+        if insertId then
+            TriggerClientEvent('gg-phone:client:photoSaved', src, {
+                id = insertId,
+                imageUrl = imageUrl,
+                filter = filter,
+                effects = effects,
+                cssFilter = cssFilter
+            })
+        end
+    end)
+end)
+
+RegisterServerEvent('gg-phone:server:deletePhoto')
+AddEventHandler('gg-phone:server:deletePhoto', function(photoId)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    MySQL.update('DELETE FROM phone_photos WHERE id = ? AND user_id = ?', {
+        photoId, citizenId
+    }, function(affectedRows)
+        if affectedRows > 0 then
+            TriggerClientEvent('gg-phone:client:photoDeleted', src, photoId)
+        end
+    end)
+end)
+
+-- Enhanced pma-voice Integration
+RegisterServerEvent('gg-phone:server:startVoiceCall')
+AddEventHandler('gg-phone:server:startVoiceCall', function(targetNumber)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local targetPlayer = GetPlayerByPhone(targetNumber)
+    
+    if targetPlayer then
+        -- Create unique call ID
+        local callId = 'phone-' .. src .. '-' .. GetGameTimer()
+        
+        -- Add both players to voice call
+        exports['pma-voice']:addPlayerToCall(src, callId)
+        exports['pma-voice']:addPlayerToCall(targetPlayer.PlayerData.source, callId)
+        
+        -- Store call data
+        phoneData[callId] = {
+            caller = src,
+            receiver = targetPlayer.PlayerData.source,
+            startTime = GetGameTimer(),
+            status = 'active'
+        }
+        
+        TriggerClientEvent('gg-phone:client:voiceCallStarted', src, targetNumber)
+        TriggerClientEvent('gg-phone:client:incomingVoiceCall', targetPlayer.PlayerData.source, Player.PlayerData.charinfo.phone)
+    else
+        TriggerClientEvent('gg-phone:client:callError', src, 'Phone number not found')
+    end
+end)
+
+RegisterServerEvent('gg-phone:server:endVoiceCall')
+AddEventHandler('gg-phone:server:endVoiceCall', function()
+    local src = source
+    
+    -- Find and end the call
+    for callId, callData in pairs(phoneData) do
+        if callData.caller == src or callData.receiver == src then
+            -- Remove both players from call
+            exports['pma-voice']:removePlayerFromCall(callData.caller)
+            exports['pma-voice']:removePlayerFromCall(callData.receiver)
+            
+            -- Update call status
+            callData.status = 'ended'
+            callData.endTime = GetGameTimer()
+            
+            -- Notify both players
+            TriggerClientEvent('gg-phone:client:voiceCallEnded', callData.caller)
+            TriggerClientEvent('gg-phone:client:voiceCallEnded', callData.receiver)
+            
+            break
+        end
+    end
+end)
+
+-- Utility Functions
+function GetPlayerByPhone(phoneNumber)
+    local players = QBCore.Functions.GetPlayers()
+    for _, playerId in ipairs(players) do
+        local player = QBCore.Functions.GetPlayer(playerId)
+        if player and player.PlayerData.charinfo.phone == phoneNumber then
+            return player
+        end
+    end
+    return nil
+end
+
+-- Export functions for other resources
+exports('GetPlayerByPhone', GetPlayerByPhone)
+exports('IsPlayerOnCall', function(playerId)
+    for callId, callData in pairs(phoneData) do
+        if callData.caller == playerId or callData.receiver == playerId then
+            return true, callId
+        end
+    end
+    return false, nil
 end)

@@ -34,7 +34,8 @@ const translations: Translations = {
     yes: { english: 'Yes', turkish: 'Evet' },
     no: { english: 'No', turkish: 'Hayır' },
     ok: { english: 'OK', turkish: 'Tamam' },
-    language: { english: 'Language', turkish: 'Dil' }
+    language: { english: 'Language', turkish: 'Dil' },
+    editMode: { english: 'Edit Mode', turkish: 'Düzenleme Modu' }
   },
   homeScreen: {
     contacts: { english: 'Contacts', turkish: 'Rehber' },

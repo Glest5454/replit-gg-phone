@@ -79,13 +79,22 @@ export const usePhone = () => {
       ...prev,
       currentScreen: screen
     }));
+
   }, []);
 
   const goBack = useCallback(() => {
+    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
+    if (phoneScreen) {
+      phoneScreen.classList.add('sliding-in');
+    }
+    setTimeout(() => {
+      phoneScreen?.classList.remove('sliding-in');
+    }, 500);
     setPhoneState(prev => ({
       ...prev,
       currentScreen: 'home'
     }));
+
   }, []);
 
   const unlock = useCallback(() => {

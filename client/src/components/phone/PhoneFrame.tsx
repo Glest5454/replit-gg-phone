@@ -65,7 +65,7 @@ export const PhoneFrame = () => {
   useEffect(() => {
     // Apply saved settings on phone load
     const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
-    
+   
     if (phoneScreen) {
       // Apply saved theme
       phoneScreen.classList.remove('phone-dark-mode', 'phone-light-mode');
@@ -117,6 +117,7 @@ export const PhoneFrame = () => {
 
   const handleHomePress = () => {
     navigateToScreen('home');
+    
   };
 
   // Function to render app icon based on iconType
@@ -224,7 +225,8 @@ export const PhoneFrame = () => {
         <div className="phone-screen 
         absolute top-10 left-7 right-8 bottom-4
          bg-black rounded-[45px] 
-         overflow-hidden">
+         overflow-hidden"
+         >
           <StatusBar />
           <div className="w-full h-full pt-10">
             {renderCurrentScreen()}
@@ -264,6 +266,7 @@ export const PhoneFrame = () => {
                       onClick={() => {
                         navigateToScreen(app.id as any);
                         closeTaskManager();
+                       
                       }}
                     >
                        {/* Remove button */}

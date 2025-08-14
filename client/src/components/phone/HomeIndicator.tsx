@@ -102,11 +102,13 @@ export const HomeIndicator = ({ onHomePress }: HomeIndicatorProps) => {
 
   // Mouse event handlers for desktop testing
   const handleMouseDown = (e: React.MouseEvent) => {
-   
+    e.preventDefault();
     setIsPressed(true);
     setStartY(e.clientY);
     setCurrentY(e.clientY);
     setIsDragging(true);
+    //add animation when mouse down
+  
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -118,20 +120,25 @@ export const HomeIndicator = ({ onHomePress }: HomeIndicatorProps) => {
   };
 
   const handleMouseUp = (e: React.MouseEvent) => {
+    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
     
+    if (phoneScreen) {
+      phoneScreen.classList.add('sliding-in');
+    }
+    setTimeout(() => {
+      phoneScreen?.classList.remove('sliding-in');
+    }, 500);
+
     if (isDragging) {
       const deltaY = startY - e.clientY;
-   
       // If dragged up more than 30px, open task manager
       if (deltaY > 30) {
        
         openTaskManager();
       } else {
         // Otherwise, treat as home button press
-       
         onHomePress();
       }
-      
       setIsDragging(false);
       setStartY(0);
       setCurrentY(0);
@@ -139,18 +146,6 @@ export const HomeIndicator = ({ onHomePress }: HomeIndicatorProps) => {
     setIsPressed(false);
   };
 
-  const handleMouseLeave = () => {
-  
-    // Don't reset dragging here, let global handlers take care of it
-  };
-
-  const handleAppOpen = (appId: string) => {
-    // Function moved to PhoneFrame
-  };
-
-  const handleAppRemove = (appId: string, e: React.MouseEvent) => {
-    // Function moved to PhoneFrame
-  };
 
   return (
     <>
@@ -160,13 +155,13 @@ export const HomeIndicator = ({ onHomePress }: HomeIndicatorProps) => {
         className={`absolute bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-200 touch-none ${
           isPressed ? 'scale-95' : 'scale-100'
         }`}
-        onTouchStart={handleTouchStart}
+        /*onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onTouchEnd={handleTouchEnd}*/
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
+  
         style={{ touchAction: 'none' }} // Prevent default touch actions
       >
         <div className="w-36 h-1 bg-white/60 rounded-full cursor-pointer select-none">

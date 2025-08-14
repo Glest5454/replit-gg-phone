@@ -125,7 +125,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: false,
     isInstalled: false,
-    order: 1,
+    order: 0,
     screen: 'banking',
     description: 'Manage your finances and banking',
     version: '1.0.0',
@@ -154,7 +154,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: false,
     isInstalled: false,
-    order: 2,
+    order: 0,
     screen: 'twitter',
     description: 'Stay connected with social media',
     version: '1.0.0',
@@ -184,7 +184,7 @@ export const appsConfig: AppConfig[] = [
     isDockApp: true,
     isEssential: true,
     isInstalled: true,
-    order: 3,
+    order: 0,
     screen: 'settings',
     description: 'Phone settings and configuration',
     version: '1.0.0',
@@ -212,7 +212,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: true,
     isInstalled: true,
-    order: 4,
+    order: 0,
     screen: 'calculator',
     description: 'Basic calculator functionality',
     version: '1.0.0',
@@ -241,7 +241,7 @@ export const appsConfig: AppConfig[] = [
     isDockApp: true,
     isEssential: true,
     isInstalled: true,
-    order: 5,
+    order: 0,
     screen: 'camera',
     description: 'Take photos and videos',
     version: '1.0.0',
@@ -266,7 +266,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: true,
     isInstalled: true,
-    order: 6,
+    order: 0,
     screen: 'gallery',
     description: 'View and manage your photos',
     version: '1.0.0',
@@ -295,7 +295,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: false,
     isInstalled: false,
-    order: 7,
+    order: 0,
     screen: 'notes',
     description: 'Create and manage notes',
     version: '1.0.0',
@@ -324,7 +324,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: false,
     isInstalled: false,
-    order: 8,
+    order: 0,
     screen: 'spotify',
     description: 'Listen to music and podcasts',
     version: '1.0.0',
@@ -353,7 +353,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: true,
     isInstalled: true,
-    order: 9,
+    order: 0,
     screen: 'clock',
     description: 'Clock and alarm functionality',
     version: '1.0.0',
@@ -382,7 +382,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: false,
     isInstalled: false,
-    order: 10,
+    order: 0,
     screen: 'yellowpages',
     description: 'Business directory and contacts',
     version: '1.0.0',
@@ -412,7 +412,7 @@ export const appsConfig: AppConfig[] = [
     isDockApp: true,
     isEssential: true,
     isInstalled: true,
-    order: 11,
+    order: 0,
     screen: 'contacts',
     description: 'Manage contacts, make calls, and view call history',
     version: '1.0.0',
@@ -441,7 +441,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: false,
     isInstalled: false,
-    order: 12,
+    order: 0,
     screen: 'darkchat',
     description: 'Anonymous messaging and chat rooms',
     version: '1.0.0',
@@ -470,7 +470,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: true,
     isInstalled: true,
-    order: 13,
+    order: 0,
     screen: 'maps',
     description: 'Navigation and location services',
     version: '1.0.0',
@@ -498,7 +498,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: false,
     isInstalled: false,
-    order: 14,
+    order: 0,
     screen: 'mail',
     description: 'Manage your email',
     version: '1.0.0',
@@ -519,7 +519,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: false,
     isInstalled: false,
-    order: 15,
+    order: 0,
     screen: 'browser',
     description: 'Web browsing and search',
     version: '1.0.0',
@@ -549,7 +549,7 @@ export const appsConfig: AppConfig[] = [
     isDockApp: true,
     isEssential: true,
     isInstalled: true,
-    order: 16,
+    order: 0,
     screen: 'messages',
     description: 'Send and receive messages',
     version: '1.0.0',
@@ -579,7 +579,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: true,
     isInstalled: true,
-    order: 18,
+    order: 0,
     screen: 'apps',
     description: 'Download and manage applications',
     version: '1.0.0',
@@ -608,7 +608,7 @@ export const appsConfig: AppConfig[] = [
     isVisible: true,
     isEssential: false,
     isInstalled: false,
-    order: 17,
+    order: 0,
     screen: 'test',
     description: 'Demo application for testing app installation system',
     version: '1.0.0',
@@ -641,7 +641,6 @@ export class AppManager {
   private constructor() {
     this.userId = this.getUserId();
     this.loadAppStates();
-    this.loadGridOrder();
   }
 
   public static getInstance(): AppManager {
@@ -842,88 +841,8 @@ export class AppManager {
     return { total, installed, essential };
   }
 
-  // Update app grid order
-  public updateAppOrder(appId: string, newOrder: number): boolean {
-    try {
-      const app = appsConfig.find(a => a.id === appId);
-      if (app) {
-        app.order = newOrder;
-        //console.log(`[AppManager] Updated ${appId} order to ${newOrder}`);
-        // Force appsConfig to update
-        this.saveGridOrder();
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error updating app order:', error);
-      return false;
-    }
-  }
 
-  // Get current grid order for installed apps
-  public getGridOrder(): { appId: string; order: number }[] {
-    const installedApps = Array.from(this.installedApps);
-    return appsConfig
-      .filter(app => installedApps.includes(app.id))
-      .map(app => ({ appId: app.id, order: app.order }))
-      .sort((a, b) => a.order - b.order);
-  }
-  // Load grid positions from localStorage (single key)
-  public loadGridOrder(): void {
-    try {
-      const stored = localStorage.getItem('phone-grid-positions');
-      if (stored) {
-        const gridPositions = JSON.parse(stored);
-        //console.log('[AppManager] Loading saved grid positions:', gridPositions);
-        
-        // Apply saved positions to appsConfig
-        gridPositions.forEach(({ appId, position }: { appId: string; position: number }) => {
-          const app = appsConfig.find(a => a.id === appId);
-          if (app) {
-            app.order = position;
-            //console.log(`[AppManager] Applied position ${position} to ${appId}`);
-          }
-        });
-      } else {
-        // Only initialize if no saved positions exist
-        console.log('[AppManager] No saved grid positions found, initializing defaults');
-        this.initializeDefaultPositions();
-      }
-    } catch (error) {
-      console.error('Error loading grid positions:', error);
-      // Only initialize on error if no saved positions exist
-      if (!localStorage.getItem('phone-grid-positions')) {
-        this.initializeDefaultPositions();
-      }
-    }
-  }
-   // Initialize default grid positions (only when needed)
-   private initializeDefaultPositions(): void {
-    const installedApps = Array.from(this.installedApps);
-    console.log('[AppManager] Initializing default positions for:', installedApps);
-    
-    // Don't override existing order values
-    installedApps.forEach((appId, index) => {
-      const app = appsConfig.find(a => a.id === appId);
-      if (app && app.order === undefined) {
-        app.order = index;
-        console.log(`[AppManager] Set default position ${index} for ${appId}`);
-      }
-    });
-    
-    this.saveGridOrder();
-  }
-     // Save grid positions to localStorage (single key)
-    public saveGridOrder(): void {
-      try {
-        const gridPositions = this.getGridPositions();
-        // Use a single, consistent key for grid positions
-        localStorage.setItem('phone-grid-positions', JSON.stringify(gridPositions));
-        //console.log('[AppManager] Grid positions saved:', gridPositions);
-      } catch (error) {
-        //console.error('Error saving grid positions:', error);
-      }
-    }
+
 
   // Show notification (can be customized)
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
@@ -965,31 +884,7 @@ export class AppManager {
       return false;
     }
   }
-    // Update app grid position (0-based index)
-  public updateAppPosition(appId: string, newPosition: number): boolean {
-    try {
-      const app = appsConfig.find(a => a.id === appId);
-      if (app) {
-        app.order = newPosition;
-        console.log(`[AppManager] Updated ${appId} position to ${newPosition}`);
-        console.log(localStorage.getItem('phone-grid-positions'))
-        this.saveGridOrder();
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error updating app position:', error);
-      return false;
-    }
-  }
-  // Get current grid positions for installed apps
-  public getGridPositions(): { appId: string; position: number }[] {
-    const installedApps = Array.from(this.installedApps);
-    return appsConfig
-      .filter(app => installedApps.includes(app.id))
-      .map((app, index) => ({ appId: app.id, position: index }))
-      .sort((a, b) => a.position - b.position);
-  }
+ 
 
 }
 

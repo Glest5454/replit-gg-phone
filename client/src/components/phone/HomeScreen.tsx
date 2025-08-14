@@ -4,7 +4,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { getTranslatedApps, getTranslatedDockApps, getAppsWithInstallStatus, getAppManager } from '@/config/apps';
 import { useTaskManager } from '@/context/TaskManagerContext';
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { Edit3, X, Check } from 'lucide-react';
+import { Edit3, X, Check, RefreshCw } from 'lucide-react';
 
 interface HomeScreenProps {
   onAppOpen: (screen: Screen) => void;
@@ -30,10 +30,37 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
   
   const apps = useMemo(() => {
     const translatedApps = getTranslatedApps(language === 'english' ? 'en' : 'tr');
-    // Only show installed apps in home screen and sort by order
+    // Only show installed apps in home screen
     const installedApps = translatedApps.filter(app => allApps.find((a: any) => a.id === app.id)?.isInstalled);
-    const sortedApps = installedApps.sort((a, b) => a.order - b.order);
-    //console.log('HomeScreen: apps recalculated, showing apps:', sortedApps.map(a => ({ id: a.id, name: a.name, isInstalled: true })));
+    
+    // Get saved order from localStorage or assign based on current position
+    const savedOrder = JSON.parse(localStorage.getItem('phone-app-order') || '{}');
+    
+    // Assign order based on saved positions or current array index
+    const orderedApps = installedApps.map((app, index) => ({
+      ...app,
+      order: savedOrder[app.id] !== undefined ? savedOrder[app.id] : index
+    }));
+    
+    // Sort by order
+    const sortedApps = orderedApps.sort((a, b) => a.order - b.order);
+    
+    // Auto-save order for new apps that don't have saved positions
+    const newOrder = { ...savedOrder };
+    let hasNewApps = false;
+    
+    installedApps.forEach((app, index) => {
+      if (savedOrder[app.id] === undefined) {
+        newOrder[app.id] = index;
+        hasNewApps = true;
+      }
+    });
+    
+    // Save new order if we have new apps
+    if (hasNewApps) {
+      localStorage.setItem('phone-app-order', JSON.stringify(newOrder));
+    }
+    
     return sortedApps;
   }, [language, allApps, refreshTrigger]);
 
@@ -156,6 +183,68 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
     setIsDragging(false);
   }, [isDragging, startX, currentX, currentPage, totalPages]);
 
+  // Drag & Drop handlers
+  const handleDragStart = useCallback((e: React.DragEvent, appId: string) => {
+    if (!isEditMode) return;
+    setDraggedApp(appId);
+    e.dataTransfer.effectAllowed = 'move';
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+  }, [isEditMode]);
+
+  const handleDragOver = useCallback((e: React.DragEvent, appId: string) => {
+    if (!isEditMode || !draggedApp || draggedApp === appId) return;
+    e.preventDefault();
+    setDragOverApp(appId);
+  }, [isEditMode, draggedApp]);
+
+  const handleDrop = useCallback((e: React.DragEvent, targetAppId: string) => {
+    if (!isEditMode || !draggedApp || draggedApp === targetAppId) return;
+    e.preventDefault();
+    
+    // Get current app order
+    const currentOrder = JSON.parse(localStorage.getItem('phone-app-order') || '{}');
+    
+    // Find the dragged and target apps
+    const draggedAppData = apps.find(app => app.id === draggedApp);
+    const targetAppData = apps.find(app => app.id === targetAppId);
+    
+    if (draggedAppData && targetAppData) {
+      // Swap their order values
+      const tempOrder = currentOrder[draggedApp] || draggedAppData.order;
+      currentOrder[draggedApp] = currentOrder[targetAppId] || targetAppData.order;
+      currentOrder[targetAppId] = tempOrder;
+      
+      // Save to localStorage
+      localStorage.setItem('phone-app-order', JSON.stringify(currentOrder));
+      
+      // Force re-render
+      setRefreshTrigger(prev => prev + 1);
+      
+      if (navigator.vibrate) {
+        navigator.vibrate(100);
+      }
+    }
+    
+    setDraggedApp(null);
+    setDragOverApp(null);
+  }, [isEditMode, draggedApp, apps]);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedApp(null);
+    setDragOverApp(null);
+  }, []);
+
+  // Reset app order to default
+  const resetAppOrder = useCallback(() => {
+    localStorage.removeItem('phone-app-order');
+    setRefreshTrigger(prev => prev + 1);
+    if (navigator.vibrate) {
+      navigator.vibrate(100);
+    }
+  }, []);
+
   // Get current page apps
   const getCurrentPageApps = useMemo(() => {
     const startIndex = currentPage * appsPerPage;
@@ -182,92 +271,13 @@ export const HomeScreen = ({ onAppOpen }: HomeScreenProps) => {
     }
   }, []);
 
-  // Edit mode toggle
+  // Toggle edit mode
   const toggleEditMode = useCallback(() => {
     setIsEditMode(prev => !prev);
-    if (navigator.vibrate) {
-      navigator.vibrate(30);
-    }
-  }, []);
-
-  // Exit edit mode
-  const exitEditMode = useCallback(() => {
-    setIsEditMode(false);
-    setDraggedApp(null);
-    setDragOverApp(null);
-    if (navigator.vibrate) {
-      navigator.vibrate(30);
-    }
-  }, []);
-
-  // Drag & Drop handlers
-  const handleDragStart = useCallback((e: React.DragEvent, appId: string) => {
-    if (!isEditMode) return;
-    setDraggedApp(appId);
-    e.dataTransfer.effectAllowed = 'move';
-    if (navigator.vibrate) {
-      navigator.vibrate(50);
-    }
-  }, [isEditMode]);
-
-  const handleDragOver = useCallback((e: React.DragEvent, appId: string) => {
-    if (!isEditMode || !draggedApp || draggedApp === appId) return;
-    e.preventDefault();
-    setDragOverApp(appId);
-  }, [isEditMode, draggedApp]);
-
-    // ... existing code ...
-
-const handleDrop = useCallback((e: React.DragEvent, targetAppId: string) => {
-  if (!isEditMode || !draggedApp || draggedApp === targetAppId) return;
-  e.preventDefault();
-  
-  console.log(`[DragDrop] Dropping ${draggedApp} onto ${targetAppId}`);
-  
-  const appManager = getAppManager();
-  const draggedAppData = apps.find(app => app.id === draggedApp);
-  const targetAppData = apps.find(app => app.id === targetAppId);
-  
-  if (draggedAppData && targetAppData) {
-    console.log(`[DragDrop] Before swap: ${draggedApp}=${draggedAppData.order}, ${targetAppId}=${targetAppData.order}`);
-    
-    // Simple position swap (0, 1, 2, 3...)
-    const tempPosition = draggedAppData.order;
-    appManager.updateAppPosition(draggedApp, targetAppData.order);
-    appManager.updateAppPosition(targetAppId, tempPosition);
-    
-    let getTargetItem = JSON.parse(localStorage.getItem('phone-grid-positions') || '[]');
-    let swapApp = getTargetItem.find((item: any) => item.appId === draggedApp);
-    swapApp.position = targetAppData.order;
-    let swapApp2 = getTargetItem.find((item: any) => item.appId === targetAppId);
-    swapApp2.position = tempPosition;
-    //save swapApp to getTargetItem
-    //
-
-    localStorage.setItem('phone-grid-positions', JSON.stringify(getTargetItem));
-    console.log(getTargetItem)
-    console.log(`[DragDrop] After swap: ${draggedApp}=${targetAppData.order}, ${targetAppId}=${tempPosition}`);
-    
-     // Save to localStorage
-     appManager.saveGridOrder();
-    // Force re-render by updating refresh trigger
-    setRefreshTrigger(prev => prev + 1);
-    
-    if (navigator.vibrate) {
-      navigator.vibrate(100);
-    }
-  }
-  
-  setDraggedApp(null);
-  setDragOverApp(null);
-}, [isEditMode, draggedApp, apps]);
-
-// ... existing code ...
-
-  const handleDragEnd = useCallback(() => {
     setDraggedApp(null);
     setDragOverApp(null);
   }, []);
+
 
   // Get wallpaper from localStorage or use default
   const wallpaper = localStorage.getItem('phone-wallpaper') || 'default';
@@ -342,25 +352,27 @@ const handleDrop = useCallback((e: React.DragEvent, targetAppId: string) => {
       className="absolute inset-0 flex flex-col"
       style={getBackgroundStyle}
     >
+    
       {/* Edit Mode Header */}
       {isEditMode && (
-        <div className="absolute top-0 left-0 right-0 z-20 bg-black/80 backdrop-blur-xl border-b border-white/20 p-4">
+        <div className="absolute top-0 left-0 right-0 z-20 bg-black/80 backdrop-blur-xl border-b border-white/20 p-4 mt-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <Edit3 className="w-4 h-4 text-white" />
               </div>
-              <span className="text-white font-medium">Edit Apps</span>
+          2   <span className="text-white font-medium">{t('editMode')}</span>
             </div>
             <div className="flex items-center space-x-2">
               <button
-                onClick={exitEditMode}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                onClick={resetAppOrder}
+                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors"
+                title="Sıfırla"
               >
-                <X className="w-4 h-4" />
+                <RefreshCw className="w-4 h-4" />
               </button>
               <button
-                onClick={exitEditMode}
+                onClick={() => setIsEditMode(false)}
                 className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
               >
                 <Check className="w-4 h-4" />
@@ -400,8 +412,18 @@ const handleDrop = useCallback((e: React.DragEvent, targetAppId: string) => {
                  } ${
                    dragOverApp === app.id ? 'ring-2 ring-blue-400 scale-110' : ''
                  }`}
+                 //add animation when app is opened
+                 onClick={() => {
+                   const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
+                   if (phoneScreen) {
+                     phoneScreen.classList.add('sliding-in');
+                     setTimeout(() => {
+                       phoneScreen?.classList.remove('sliding-in');
+                     }, 500);
+                   }
+                 }}
                >
-                                  <button
+                 <button
                    onClick={() => !isEditMode && handleAppOpen(app.screen as Screen)}
                    onMouseDown={(e) => {
                      if (!isEditMode) {
@@ -433,12 +455,16 @@ const handleDrop = useCallback((e: React.DragEvent, targetAppId: string) => {
                        document.addEventListener('touchend', handleTouchEnd);
                      }
                    }}
-                   className="flex flex-col items-center space-y-2 group transition-transform duration-200 hover:scale-110"
+                   className={`flex flex-col items-center space-y-2 transition-all duration-200 ${
+                     isEditMode ? 'hover:scale-105' : 'hover:scale-110'
+                   }`}
                  >
-                   <div className={`w-14 h-14 rounded-[18px] flex items-center justify-center shadow-lg ${
+                   <div className={`w-14 h-14 rounded-[18px] flex items-center justify-center shadow-lg transition-all duration-200 ${
                      app.iconType === 'lucide' 
                        ? `bg-gradient-to-br ${app.color} ` 
                        : ''
+                   } ${
+                     isEditMode ? 'ring-2 ring-white/20' : ''
                    }`}>
                      {app.iconType === 'png' ? (
                        <img src={app.icon as string} alt={app.name} className="w-14 h-14 object-contain" />
