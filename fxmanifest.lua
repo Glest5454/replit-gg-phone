@@ -1,6 +1,6 @@
 fx_version 'cerulean'
 game 'gta5'
-
+--master2
 author 'Your Name'
 description 'Samsung Galaxy S25 Phone Script with One UI 7 Design - Enhanced with CFX Natives, Screenshot-basic, and pma-voice'
 version '1.0.1'

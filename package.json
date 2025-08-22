@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
+  
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+
     "dev:build": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/dev-index.js --sourcemap --watch",
     "dev:serve": "nodemon --watch dist/dev-index.js --ext js --exec node dist/dev-index.js",
     "dev:esbuild": "concurrently -k -n build,serve -c blue,green \"npm:dev:build\" \"npm:dev:serve\"",
