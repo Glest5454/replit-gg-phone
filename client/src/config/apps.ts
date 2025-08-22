@@ -655,6 +655,36 @@ export const appsConfig: AppConfig[] = [
       enabled: false,
       types: [],
     },
+  },
+  {
+    id: 'settings2',
+    name: 'Settings Pro',
+    icon: settingsPng,
+    iconType: 'png',
+    color: 'from-green-500 to-green-700',
+    category: 'system',
+    isActive: true,
+    isVisible: true,
+    isDockApp: false,
+    isEssential: false,
+    isInstalled: true,
+    order: 100,
+    screen: 'settings2',
+    description: 'Advanced phone settings with metadata persistence',
+    version: '2.0.0',
+    developer: 'Phone System Pro',
+    rating: 4.9,
+    downloads: 856,
+    appSize: '9.1 MB',
+    permissions: ['system', 'metadata'],
+    settings: {
+      hasSettings: false,
+      settingsPath: '/settings2',
+    },
+    notifications: {
+      enabled: false,
+      types: [],
+    },
   }
 
 ];

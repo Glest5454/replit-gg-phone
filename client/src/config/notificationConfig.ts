@@ -21,7 +21,7 @@ export interface NotificationData {
   app: string;
   icon?: string;
   timestamp: Date;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: 'info' | 'success' | 'warning' | 'error' | 'default';
   action?: () => void;
   dismissible?: boolean;
 }
@@ -50,10 +50,11 @@ export const getAppIcon = (app: string) => {
 // Notification type styles
 export const getTypeStyles = (type: NotificationData['type']) => {
   const styles = {
-    info: 'bg-blue-500/20 border-blue-500/30 text-blue-100',
-    success: 'bg-green-500/20 border-green-500/30 text-green-100',
-    warning: 'bg-yellow-500/20 border-yellow-500/30 text-yellow-100',
-    error: 'bg-red-500/20 border-red-500/30 text-red-100',
+    info: 'bg-blue-800/90 border-blue-500/30 text-white',
+    success: 'bg-green-800/90 border-green-500/30 text-white',
+    warning: 'bg-yellow-800/90 border-yellow-500/30 text-white',
+    error: 'bg-red-800/90 border-red-500/30 text-white',
+    default: 'bg-black-800/90 border-white/20 text-white',
   };
   return styles[type];
 };

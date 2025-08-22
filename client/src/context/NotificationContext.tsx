@@ -11,6 +11,7 @@ interface NotificationOptions {
 interface NotificationContextType {
   notifications: NotificationData[];
   removeNotification: (id: string) => void;
+  showDefault: (title: string, message: string, app?: string, options?: any) => string;
   showInfo: (title: string, message: string, app?: string, options?: any) => string;
   showSuccess: (title: string, message: string, app?: string, options?: any) => string;
   showWarning: (title: string, message: string, app?: string, options?: any) => string;
@@ -46,7 +47,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     title: string,
     message: string,
     app: string = 'system',
-    type: NotificationData['type'] = 'info',
+    type: NotificationData['type'] = 'default',
     options: NotificationOptions = {}
   ) => {
     const {
@@ -101,6 +102,11 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     /*console.log('Context: Clearing all notifications');*/
     setNotifications([]);
   }, []);
+
+  const showDefault = useCallback((title: string, message: string, app?: string, options?: NotificationOptions) => {
+    /*console.log('Context: showDefault called:', { title, message, app, options });*/
+    return addNotification(title, message, app, 'default', options);
+  }, [addNotification]);
 
   // Convenience methods for different notification types
   const showInfo = useCallback((title: string, message: string, app?: string, options?: NotificationOptions) => {
@@ -165,6 +171,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
   const contextValue: NotificationContextType = {
     notifications,
     removeNotification,
+    showDefault,
     showInfo,
     showSuccess,
     showWarning,

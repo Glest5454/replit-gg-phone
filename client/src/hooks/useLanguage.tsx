@@ -1,4 +1,5 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { NUIManager } from '../utils/nui';
 
 export type Language = 'english' | 'turkish';
 
@@ -179,14 +180,40 @@ const translations: Translations = {
 };
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('phone-language');
-    return (saved as Language) || 'english';
-  });
+  const [language, setLanguage] = useState<Language>('english');
 
   useEffect(() => {
-    localStorage.setItem('phone-language', language);
-    document.documentElement.setAttribute('data-language', language);
+    loadLanguageFromMetadata();
+  }, []);
+
+  const loadLanguageFromMetadata = async () => {
+    try {
+      // For now, we'll use a callback approach since NUIManager.post doesn't return responses
+      // In a real implementation, you'd need to set up proper event handling
+      NUIManager.post('getPhoneLanguage', {});
+      // For now, just set default language
+      document.documentElement.setAttribute('data-language', language);
+    } catch (error) {
+      console.error('Failed to load language from metadata:', error);
+      // Fallback to default language
+      document.documentElement.setAttribute('data-language', language);
+    }
+  };
+
+  const updateLanguage = async (newLanguage: Language) => {
+    try {
+      setLanguage(newLanguage);
+      document.documentElement.setAttribute('data-language', newLanguage);
+      
+      // Save language to metadata
+      NUIManager.post('savePhoneLanguage', { language: newLanguage });
+    } catch (error) {
+      console.error('Failed to save language to metadata:', error);
+    }
+  };
+
+  useEffect(() => {
+    updateLanguage(language);
   }, [language]);
 
   const t = (key: string, section: string = 'common'): string => {

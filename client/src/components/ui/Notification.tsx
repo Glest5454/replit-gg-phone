@@ -104,13 +104,13 @@ export const Notification = ({ notification, onDismiss, onAction }: Notification
           </div>
         )}
 
-        {/* Progress Bar */}
+        {/* Progress Bar
         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/20 rounded-b-xl overflow-hidden">
           <div 
             className="h-full bg-white/40 transition-all duration-300 ease-out"
             style={{ width: isExpanded ? '100%' : '0%' }}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );

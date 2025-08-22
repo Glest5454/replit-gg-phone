@@ -1,72 +1,100 @@
 import { useState, useEffect } from 'react';
+import { NUIManager } from '../utils/nui';
 
 export const useTheme = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const [brightness, setBrightness] = useState(75);
-  const [language, setLanguage] = useState('English');
+  const [brightness, setBrightness] = useState(70);
+  const [language, setLanguage] = useState('en');
   const [wallpaper, setWallpaper] = useState('default');
+  const [lightDarkMode, setLightDarkMode] = useState<'light' | 'dark' | 'auto'>('auto');
 
+  // Load settings from metadata on component mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('phone-theme') as 'light' | 'dark' | null;
-    const savedBrightness = localStorage.getItem('phone-brightness');
-    const savedLanguage = localStorage.getItem('phone-language');
-    const savedWallpaper = localStorage.getItem('phone-wallpaper');
-    const savedLightDarkMode = localStorage.getItem('phone-light-dark-mode');
-    if (savedTheme) setTheme(savedTheme);
-    if (savedBrightness) setBrightness(parseInt(savedBrightness));
-    if (savedLanguage) setLanguage(savedLanguage);
-    if (savedWallpaper) setWallpaper(savedWallpaper);
-    if (savedLightDarkMode) {
-      const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
-      if (phoneScreen) {
-        phoneScreen.classList.add(savedLightDarkMode === 'light' ? 'phone-light-mode' : 'phone-dark-mode');
-      }
-    }
+    loadSettingsFromMetadata();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('phone-theme', theme);
-    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
-    
-    if (phoneScreen) {
-      if (theme === 'dark') {
-        phoneScreen.classList.add('phone-dark-mode');
-        phoneScreen.classList.remove('phone-light-mode');
-      } else {
-        phoneScreen.classList.add('phone-light-mode');
-        phoneScreen.classList.remove('phone-dark-mode');
-      }
+  const loadSettingsFromMetadata = async () => {
+    try {
+      // Get phone settings from metadata
+      NUIManager.post('getPhoneSettings', {});
+      // For now, use default values since we don't have response handling
+      // In a real implementation, you'd need to set up proper event handling
+    } catch (error) {
+      console.error('Failed to load settings from metadata:', error);
+      // Fallback to default values
     }
-  }, [theme]);
-  
-  useEffect(() => {
-    localStorage.setItem('phone-brightness', brightness.toString());
-    const phoneScreen = document.querySelector('.phone-screen') as HTMLElement;
-    if (phoneScreen) {
-      phoneScreen.style.filter = `brightness(${brightness}%)`;
-    }
-  }, [brightness]);
-
-  useEffect(() => {
-    localStorage.setItem('phone-language', language);
-  }, [language]);
-
-  useEffect(() => {
-    localStorage.setItem('phone-wallpaper', wallpaper);
-  }, [wallpaper]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  return { 
-    theme, 
-    toggleTheme, 
-    brightness, 
-    setBrightness, 
-    language, 
-    setLanguage,
+  const updateTheme = async (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme);
+    
+    try {
+      // Save theme to metadata
+      NUIManager.post('savePhoneTheme', { theme: newTheme });
+    } catch (error) {
+      console.error('Failed to save theme to metadata:', error);
+    }
+  };
+
+  const updateBrightness = async (value: number) => {
+    setBrightness(value);
+    
+    try {
+      // Save brightness to metadata
+      NUIManager.post('savePhoneBrightness', { brightness: value });
+    } catch (error) {
+      console.error('Failed to save brightness to metadata:', error);
+    }
+  };
+
+  const updateLanguage = async (newLanguage: string) => {
+    setLanguage(newLanguage);
+    
+    try {
+      // Save language to metadata
+      NUIManager.post('savePhoneLanguage', { language: newLanguage });
+    } catch (error) {
+      console.error('Failed to save language to metadata:', error);
+    }
+  };
+
+  const updateWallpaper = async (newWallpaper: string) => {
+    setWallpaper(newWallpaper);
+    
+    try {
+      // Save wallpaper to metadata
+      NUIManager.post('savePhoneWallpaper', { wallpaper: newWallpaper });
+    } catch (error) {
+      console.error('Failed to save wallpaper to metadata:', error);
+    }
+  };
+
+  const updateLightDarkMode = async (mode: 'light' | 'dark' | 'auto') => {
+    setLightDarkMode(mode);
+    
+    try {
+      // Save light/dark mode to metadata
+      NUIManager.post('savePhoneSettings', { 
+        settings: { 
+          ...{ theme, brightness, language, wallpaper, lightDarkMode: mode } 
+        } 
+      });
+    } catch (error) {
+      console.error('Failed to save light/dark mode to metadata:', error);
+    }
+  };
+
+  return {
+    theme,
+    brightness,
+    language,
     wallpaper,
-    setWallpaper
+    lightDarkMode,
+    updateTheme,
+    updateBrightness,
+    updateLanguage,
+    updateWallpaper,
+    updateLightDarkMode,
+    loadSettingsFromMetadata
   };
 };

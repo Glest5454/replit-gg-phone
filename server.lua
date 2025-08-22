@@ -3,6 +3,279 @@
 
 local QBCore = exports['qb-core']:GetCoreObject()
 
+-- Metadata Management Functions
+local function GetPlayerMetadata(source, key)
+    local Player = QBCore.Functions.GetPlayer(source)
+    if not Player then return nil end
+    
+    local metadata = Player.PlayerData.metadata
+    return metadata and metadata[key] or nil
+end
+
+local function SetPlayerMetadata(source, key, value)
+    local Player = QBCore.Functions.GetPlayer(source)
+    if not Player then return false end
+    
+    Player.Functions.SetMetaData(key, value)
+    return true
+end
+
+local function GetPlayerMetadataByCitizenId(citizenId, key)
+    local result = MySQL.single.await('SELECT metadata FROM players WHERE citizenid = ?', {citizenId})
+    if result and result.metadata then
+        local metadata = json.decode(result.metadata)
+        return metadata and metadata[key] or nil
+    end
+    return nil
+end
+
+local function SetPlayerMetadataByCitizenId(citizenId, key, value)
+    local result = MySQL.single.await('SELECT metadata FROM players WHERE citizenid = ?', {citizenId})
+    if result then
+        local metadata = json.decode(result.metadata) or {}
+        metadata[key] = value
+        MySQL.update.await('UPDATE players SET metadata = ? WHERE citizenid = ?', {json.encode(metadata), citizenId})
+        return true
+    end
+    return false
+end
+
+-- Phone Settings Metadata Events
+RegisterServerEvent('gg-phone:server:savePhoneSettings')
+AddEventHandler('gg-phone:server:savePhoneSettings', function(settings)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Save to metadata instead of database
+    if SetPlayerMetadataByCitizenId(citizenId, 'phone_settings', settings) then
+        TriggerClientEvent('gg-phone:client:phoneSettingsSaved', src, settings)
+    else
+        TriggerClientEvent('gg-phone:client:phoneSettingsError', src, 'Failed to save settings')
+    end
+end)
+
+RegisterServerEvent('gg-phone:server:getPhoneSettings')
+AddEventHandler('gg-phone:server:getPhoneSettings', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Get from metadata instead of database
+    local settings = GetPlayerMetadataByCitizenId(citizenId, 'phone_settings')
+    if settings then
+        TriggerClientEvent('gg-phone:client:phoneSettingsLoaded', src, settings)
+    else
+        -- Return default settings
+        TriggerClientEvent('gg-phone:client:phoneSettingsLoaded', src, Config.DefaultSettings)
+    end
+end)
+
+-- Phone App States Metadata Events
+RegisterServerEvent('gg-phone:server:saveAppStates')
+AddEventHandler('gg-phone:server:saveAppStates', function(appStates)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Save app states to metadata
+    if SetPlayerMetadataByCitizenId(citizenId, 'phone_app_states', appStates) then
+        TriggerClientEvent('gg-phone:client:appStatesSaved', src, appStates)
+    else
+        TriggerClientEvent('gg-phone:client:appStatesError', src, 'Failed to save app states')
+    end
+end)
+
+RegisterServerEvent('gg-phone:server:getAppStates')
+AddEventHandler('gg-phone:server:getAppStates', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Get app states from metadata
+    local appStates = GetPlayerMetadataByCitizenId(citizenId, 'phone_app_states')
+    if appStates then
+        TriggerClientEvent('gg-phone:client:appStatesLoaded', src, appStates)
+    else
+        TriggerClientEvent('gg-phone:client:appStatesLoaded', src, {})
+    end
+end)
+
+-- Phone Theme and UI Metadata Events
+RegisterServerEvent('gg-phone:server:savePhoneTheme')
+AddEventHandler('gg-phone:server:savePhoneTheme', function(theme)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Save theme to metadata
+    if SetPlayerMetadataByCitizenId(citizenId, 'phone_theme', theme) then
+        TriggerClientEvent('gg-phone:client:phoneThemeSaved', src, theme)
+    end
+end)
+
+RegisterServerEvent('gg-phone:server:savePhoneWallpaper')
+AddEventHandler('gg-phone:server:savePhoneWallpaper', function(wallpaper)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Save wallpaper to metadata
+    if SetPlayerMetadataByCitizenId(citizenId, 'phone_wallpaper', wallpaper) then
+        TriggerClientEvent('gg-phone:client:phoneWallpaperSaved', src, wallpaper)
+    end
+end)
+
+RegisterServerEvent('gg-phone:server:savePhoneBrightness')
+AddEventHandler('gg-phone:server:savePhoneBrightness', function(brightness)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Save brightness to metadata
+    if SetPlayerMetadataByCitizenId(citizenId, 'phone_brightness', brightness) then
+        TriggerClientEvent('gg-phone:client:phoneBrightnessSaved', src, brightness)
+    end
+end)
+
+RegisterServerEvent('gg-phone:server:savePhoneLanguage')
+AddEventHandler('gg-phone:server:savePhoneLanguage', function(language)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Save language to metadata
+    if SetPlayerMetadataByCitizenId(citizenId, 'phone_language', language) then
+        TriggerClientEvent('gg-phone:client:phoneLanguageSaved', src, language)
+    end
+end)
+
+-- Phone Lock Settings Metadata Events
+RegisterServerEvent('gg-phone:server:savePhoneLockSettings')
+AddEventHandler('gg-phone:server:savePhoneLockSettings', function(lockEnabled, customPin)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Save lock settings to metadata
+    local lockSettings = {
+        enabled = lockEnabled,
+        customPin = customPin
+    }
+    
+    if SetPlayerMetadataByCitizenId(citizenId, 'phone_lock_settings', lockSettings) then
+        TriggerClientEvent('gg-phone:client:phoneLockSettingsSaved', src, lockSettings)
+    end
+end)
+
+RegisterServerEvent('gg-phone:server:getPhoneLockSettings')
+AddEventHandler('gg-phone:server:getPhoneLockSettings', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Get lock settings from metadata
+    local lockSettings = GetPlayerMetadataByCitizenId(citizenId, 'phone_lock_settings')
+    if lockSettings then
+        TriggerClientEvent('gg-phone:client:phoneLockSettingsLoaded', src, lockSettings)
+    else
+        -- Return default lock settings
+        local defaultSettings = {
+            enabled = Config.Security.enablePinLock,
+            customPin = Config.Security.defaultPin
+        }
+        TriggerClientEvent('gg-phone:client:phoneLockSettingsLoaded', src, defaultSettings)
+    end
+end)
+
+-- Phone App Order Metadata Events
+RegisterServerEvent('gg-phone:server:savePhoneAppOrder')
+AddEventHandler('gg-phone:server:savePhoneAppOrder', function(appOrder)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Save app order to metadata
+    if SetPlayerMetadataByCitizenId(citizenId, 'phone_app_order', appOrder) then
+        TriggerClientEvent('gg-phone:client:phoneAppOrderSaved', src, appOrder)
+    end
+end)
+
+RegisterServerEvent('gg-phone:server:getPhoneAppOrder')
+AddEventHandler('gg-phone:server:getPhoneAppOrder', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Get app order from metadata
+    local appOrder = GetPlayerMetadataByCitizenId(citizenId, 'phone_app_order')
+    if appOrder then
+        TriggerClientEvent('gg-phone:client:phoneAppOrderLoaded', src, appOrder)
+    else
+        TriggerClientEvent('gg-phone:client:phoneAppOrderLoaded', src, {})
+    end
+end)
+
+-- Phone User ID Metadata Events
+RegisterServerEvent('gg-phone:server:savePhoneUserId')
+AddEventHandler('gg-phone:server:savePhoneUserId', function(userId)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Save user ID to metadata
+    if SetPlayerMetadataByCitizenId(citizenId, 'phone_user_id', userId) then
+        TriggerClientEvent('gg-phone:client:phoneUserIdSaved', src, userId)
+    end
+end)
+
+RegisterServerEvent('gg-phone:server:getPhoneUserId')
+AddEventHandler('gg-phone:server:getPhoneUserId', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local citizenId = Player.PlayerData.citizenid
+    
+    -- Get user ID from metadata
+    local userId = GetPlayerMetadataByCitizenId(citizenId, 'phone_user_id')
+    if userId then
+        TriggerClientEvent('gg-phone:client:phoneUserIdLoaded', src, userId)
+    else
+        -- Generate new user ID if none exists
+        local newUserId = 'user_' .. citizenId .. '_' .. math.random(1000, 9999)
+        if SetPlayerMetadataByCitizenId(citizenId, 'phone_user_id', newUserId) then
+            TriggerClientEvent('gg-phone:client:phoneUserIdLoaded', src, newUserId)
+        end
+    end
+end)
+
 -- Banking Events
 RegisterServerEvent('gg-phone:server:deposit')
 AddEventHandler('gg-phone:server:deposit', function(amount, description)
@@ -685,44 +958,6 @@ AddEventHandler('gg-phone:server:getBusinesses', function(category)
     
     MySQL.query(query, params, function(result)
         TriggerClientEvent('gg-phone:client:businessesLoaded', src, result)
-    end)
-end)
-
--- Phone Settings Events
-RegisterServerEvent('gg-phone:server:savePhoneSettings')
-AddEventHandler('gg-phone:server:savePhoneSettings', function(settings)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    local settingsJson = json.encode(settings)
-    
-    MySQL.update('INSERT INTO phone_settings (user_id, settings, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE settings = ?, updated_at = NOW()', {
-        citizenId, settingsJson, settingsJson
-            }, function(affectedRows)
-                if affectedRows > 0 then
-            TriggerClientEvent('gg-phone:client:phoneSettingsSaved', src, settings)
-                end
-            end)
-end)
-
-RegisterServerEvent('gg-phone:server:getPhoneSettings')
-AddEventHandler('gg-phone:server:getPhoneSettings', function()
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    
-    local citizenId = Player.PlayerData.citizenid
-    
-    MySQL.query('SELECT settings FROM phone_settings WHERE user_id = ?', {citizenId}, function(result)
-        if #result > 0 and result[1].settings then
-            local settings = json.decode(result[1].settings)
-            TriggerClientEvent('gg-phone:client:phoneSettingsLoaded', src, settings)
-        else
-            -- Return default settings
-            TriggerClientEvent('gg-phone:client:phoneSettingsLoaded', src, Config.DefaultSettings)
-        end
     end)
 end)
 

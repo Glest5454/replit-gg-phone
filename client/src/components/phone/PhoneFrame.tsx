@@ -7,6 +7,8 @@ import { HomeScreen } from './HomeScreen';
 import { BankingApp } from './apps/BankingApp';
 import { TwitterApp } from './apps/TwitterApp';
 import { SettingsApp } from './apps/SettingsApp';
+import { SettingsApp2 } from './apps/SettingsApp2';
+
 import { CalculatorApp } from './apps/CalculatorApp';
 import { CameraApp } from './apps/CameraApp';
 import { GalleryApp } from './apps/GalleryApp';
@@ -176,6 +178,8 @@ export const PhoneFrame = () => {
         return <TwitterApp onBack={goBack} />;
       case 'settings':
         return <SettingsApp onBack={goBack} onToggleTheme={toggleTheme} theme={phoneState.theme} setWallpaper={setWallpaper} setBrightness={setBrightness} playerData={playerData} refreshLockScreenState={refreshLockScreenState} onNavigate={navigateToScreen} />;
+      case 'settings2':
+        return <SettingsApp2 onBack={goBack} onToggleTheme={toggleTheme} theme={phoneState.theme} setWallpaper={setWallpaper} setBrightness={setBrightness} playerData={playerData} refreshLockScreenState={refreshLockScreenState} onNavigate={navigateToScreen} />;
       case 'calculator':
         return <CalculatorApp onBack={goBack} />;
       case 'camera':
@@ -206,6 +210,8 @@ export const PhoneFrame = () => {
         return <AppsApp />;
       case 'garage':
         return <GarageApp onBack={goBack} />;
+      case 'phone':
+        return <div className="flex items-center justify-center h-full text-white">Phone App</div>;
       case 'test':
         return <div className="flex items-center justify-center h-full text-white">Test App</div>;
       case 'wallpaper':

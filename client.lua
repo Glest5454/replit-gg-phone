@@ -385,6 +385,174 @@ RegisterNUICallback('getPhoneSettings', function(data, cb)
     cb('ok')
 end)
 
+-- SettingsApp2 Metadata Callbacks
+RegisterNUICallback('savePhoneTheme', function(data, cb)
+    TriggerServerEvent('gg-phone:server:savePhoneTheme', data.theme)
+    cb('ok')
+end)
+
+RegisterNUICallback('savePhoneWallpaper', function(data, cb)
+    TriggerServerEvent('gg-phone:server:savePhoneWallpaper', data.wallpaper)
+    cb('ok')
+end)
+
+RegisterNUICallback('savePhoneBrightness', function(data, cb)
+    TriggerServerEvent('gg-phone:server:savePhoneBrightness', data.brightness)
+    cb('ok')
+end)
+
+RegisterNUICallback('savePhoneLanguage', function(data, cb)
+    TriggerServerEvent('gg-phone:server:savePhoneLanguage', data.language)
+    cb('ok')
+end)
+
+RegisterNUICallback('savePhoneLockSettings', function(data, cb)
+    TriggerServerEvent('gg-phone:server:savePhoneLockSettings', data.lockEnabled, data.customPin)
+    cb('ok')
+end)
+
+RegisterNUICallback('getPhoneLockSettings', function(data, cb)
+    TriggerServerEvent('gg-phone:server:getPhoneLockSettings')
+    cb('ok')
+end)
+
+-- Metadata Event Handlers for Phone Settings
+RegisterNetEvent('gg-phone:client:phoneSettingsSaved')
+AddEventHandler('gg-phone:client:phoneSettingsSaved', function(settings)
+    SendNUIMessage({
+        action = 'phoneSettingsSaved',
+        settings = settings
+    })
+    QBCore.Functions.Notify('Phone settings saved successfully', 'success')
+end)
+
+RegisterNetEvent('gg-phone:client:phoneSettingsError')
+AddEventHandler('gg-phone:client:phoneSettingsError', function(error)
+    SendNUIMessage({
+        action = 'phoneSettingsError',
+        error = error
+    })
+    QBCore.Functions.Notify('Failed to save phone settings: ' .. error, 'error')
+end)
+
+RegisterNetEvent('gg-phone:client:phoneSettingsLoaded')
+AddEventHandler('gg-phone:client:phoneSettingsLoaded', function(settings)
+    SendNUIMessage({
+        action = 'phoneSettingsLoaded',
+        settings = settings
+    })
+end)
+
+-- App States Metadata Event Handlers
+RegisterNetEvent('gg-phone:client:appStatesSaved')
+AddEventHandler('gg-phone:client:appStatesSaved', function(appStates)
+    SendNUIMessage({
+        action = 'appStatesSaved',
+        appStates = appStates
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:appStatesError')
+AddEventHandler('gg-phone:client:appStatesError', function(error)
+    SendNUIMessage({
+        action = 'appStatesError',
+        error = error
+    })
+    QBCore.Functions.Notify('Failed to save app states: ' .. error, 'error')
+end)
+
+RegisterNetEvent('gg-phone:client:appStatesLoaded')
+AddEventHandler('gg-phone:client:appStatesLoaded', function(appStates)
+    SendNUIMessage({
+        action = 'appStatesLoaded',
+        appStates = appStates
+    })
+end)
+
+-- Phone Theme and UI Metadata Event Handlers
+RegisterNetEvent('gg-phone:client:phoneThemeSaved')
+AddEventHandler('gg-phone:client:phoneThemeSaved', function(theme)
+    SendNUIMessage({
+        action = 'phoneThemeSaved',
+        theme = theme
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:phoneWallpaperSaved')
+AddEventHandler('gg-phone:client:phoneWallpaperSaved', function(wallpaper)
+    SendNUIMessage({
+        action = 'phoneWallpaperSaved',
+        wallpaper = wallpaper
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:phoneBrightnessSaved')
+AddEventHandler('gg-phone:client:phoneBrightnessSaved', function(brightness)
+    SendNUIMessage({
+        action = 'phoneBrightnessSaved',
+        brightness = brightness
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:phoneLanguageSaved')
+AddEventHandler('gg-phone:client:phoneLanguageSaved', function(language)
+    SendNUIMessage({
+        action = 'phoneLanguageSaved',
+        language = language
+    })
+end)
+
+-- Phone Lock Settings Metadata Event Handlers
+RegisterNetEvent('gg-phone:client:phoneLockSettingsSaved')
+AddEventHandler('gg-phone:client:phoneLockSettingsSaved', function(lockSettings)
+    SendNUIMessage({
+        action = 'phoneLockSettingsSaved',
+        lockSettings = lockSettings
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:phoneLockSettingsLoaded')
+AddEventHandler('gg-phone:client:phoneLockSettingsLoaded', function(lockSettings)
+    SendNUIMessage({
+        action = 'phoneLockSettingsLoaded',
+        lockSettings = lockSettings
+    })
+end)
+
+-- Phone App Order Metadata Event Handlers
+RegisterNetEvent('gg-phone:client:phoneAppOrderSaved')
+AddEventHandler('gg-phone:client:phoneAppOrderSaved', function(appOrder)
+    SendNUIMessage({
+        action = 'phoneAppOrderSaved',
+        appOrder = appOrder
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:phoneAppOrderLoaded')
+AddEventHandler('gg-phone:client:phoneAppOrderLoaded', function(appOrder)
+    SendNUIMessage({
+        action = 'phoneAppOrderLoaded',
+        appOrder = appOrder
+    })
+end)
+
+-- Phone User ID Metadata Event Handlers
+RegisterNetEvent('gg-phone:client:phoneUserIdSaved')
+AddEventHandler('gg-phone:client:phoneUserIdSaved', function(userId)
+    SendNUIMessage({
+        action = 'phoneUserIdSaved',
+        userId = userId
+    })
+end)
+
+RegisterNetEvent('gg-phone:client:phoneUserIdLoaded')
+AddEventHandler('gg-phone:client:phoneUserIdLoaded', function(userId)
+    SendNUIMessage({
+        action = 'phoneUserIdLoaded',
+        userId = userId
+    })
+end)
+
 -- Vehicle Management Callbacks for Garage App
 RegisterNUICallback('getPlayerVehicles', function(data, cb)
     TriggerServerEvent('gg-phone:server:getPlayerVehicles')
